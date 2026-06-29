@@ -1,83 +1,50 @@
-# MoneyWallet - Expense Manager [BETA]
-[![License](https://img.shields.io/badge/license-GPL%20V3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
-[![Release](https://img.shields.io/github/release/AndreAle94/moneywallet.svg)](https://github.com/AndreAle94/moneywallet/releases/latest)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/andreale94)
+# Maintained MoneyWallet Fork
 
-[<img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" 
-      alt="Download from Google Play" 
-      height="80">](https://play.google.com/store/apps/details?id=com.oriondev.moneywallet)
-[<img src="https://f-droid.org/badge/get-it-on.png"
-      alt="Get it on F-Droid"
-      height="80">](https://f-droid.org/en/packages/com.oriondev.moneywallet)
-      
-![Showcase](https://github.com/AndreAle94/moneywallet/raw/master/pictures/showcase.png)
+[![License: GPLv3](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
-MoneyWallet is an application designed to help you keep track of your expenses. This repository contains the source code of the latest version, completely rewritten from scratch.
+This repository is a maintained fork of [MoneyWallet](https://github.com/AndreAle94/moneywallet), a GPL-licensed Android expense manager.
 
-### Redistributing this app as your own is NOT permitted.
+The immediate goal is to make the FOSS/OpenStreetMap build work reliably on current Android versions, including fixing the startup crash reported by existing users and modernizing the build toolchain.
 
-# Table of Contents
+This fork is not yet a published replacement for the original app. A rebranded release, a new application id, migration notes, and an F-Droid submission are planned before public distribution.
 
-1. [History](#history)
-2. [Donations](#donations)
-3. [Build](#build)
-4. [FAQ](#faq)
-5. [Credits](#credits)
-6. [License](#license)
+> "Maintained MoneyWallet Fork" is a temporary working name. The final name and application id will be chosen before any release.
 
-## History
-I have been working behind this project for a long time, originally born as a tool to learn Android development, it has evolved over time and has recently been completely revised as a university project for the DIMA course at Politecnico di Milano.
-As you may have noticed, the previous version on the PlayStore required a small in-app purchase to handle more than just one wallet. The idea was to invest the money earned to pay for my studies, unfortunately among the interest rates of the PlayStore and the local taxes of the individual countries the profit was practically derisory. I did not had the opportunity to continue the development with continuity due to the university and the little free time available. Only recently I had the opportunity to get the project in hand and I decided to make it open source. In this way, anyone who wants can contribute.
+![Showcase](pictures/showcase.png)
 
-## Donations
-This project is completely free, I decided to completely remove the in-app purchase in favor of a donation policy. It contains no advertising and never will contain it. If you find this application useful you may consider the option of offering me a beer, in real life or through a donation. It would be a very appreciated gesture to support my work.
+## About this fork
+MoneyWallet is an on-device expense manager: multiple wallets, categories, budgets, recurring transactions, multi-currency, reports, and local backup, with no account required. The upstream project has not had a release since 2021 and no longer starts on recent Android for many users. This fork picks up maintenance, beginning with compatibility, and aims to continue it as a privacy-respecting, offline-first expense tracker.
 
-- PayPal: https://www.paypal.me/andreale94
-- BTC: 1J3APoaFT2jcqRzpb8bEt2rwUn3mDpWE5U
-- BCH: qzaw9naw5c367r4du2eg6fvmkr7smwagru53lt67zl
-- ETH: 0x4ee996Bf75a89c75B18b4f0509c8c77B87D81392
-- LTC: LZW1AUMWN4BdUvSu8fujEYVLgqWH2HsLZs
+## Current status
+Modernization is in progress on a development branch and has not been released. The most recent published upstream build does not launch on Android 14 and 15 for users who had auto-backup enabled. Making the app build and start again on current Android is the first priority. Until a release is published, this fork is not an installable replacement for the original app.
 
-## Build
-You can compile the application very simply: just clone this repository locally to your computer and Android Studio will take care of the rest.
-You have four different options to build it with two choices.
-The first choice is which version you want to build:
+## What is being fixed first
+- Modernizing the FOSS/OpenStreetMap Android build to a current toolchain and SDK level.
+- The Android 12+ manifest and PendingIntent requirements needed to run on modern Android.
+- The startup crash caused by a legacy auto-backup path (upstream [#177](https://github.com/AndreAle94/moneywallet/issues/177) and [#286](https://github.com/AndreAle94/moneywallet/issues/286)).
+- Verifying the core flow (create a wallet, add income and expense, totals, relaunch persistence) on Android 14 and 15.
 
-- proprietary: this build flavor is designed to integrate Google Drive and Dropbox for a better user experience. It contains proprietary libraries (not open source) and requires the inclusion of valid api-keys to use these services. These keys must be registered in the file called gradle.properties in the root folder of the project before compiling.
-- floss: this build flavor is designed to contain only open source code and for this reason the integration with Google Drive and Dropbox has been removed.
+Progress is tracked in this repository's [issues](https://github.com/herrerad85/moneywallet/issues) and milestones.
 
-The second choice is which map provider you want to use and you can choose between:
+## Build from source
+The fully open-source variant uses OpenStreetMap and no proprietary services. Build it with the `floss` and `osm` flavors:
 
-- gmap: this build flavor uses Google Map as map provider and requires you to provide a valid API-key. This key must be registered in the file called gradle.properties in the root folder of the project before compiling.
-- osm: this build flavor uses OpenStreetMap as map provider.
+```
+./gradlew assembleFlossOsmDebug
+```
 
-To decide what kind of build to compile, use the appropriate menu of gradle to choose the desired combination of build flavors.
-If you want to build only open source code (e.g. for the F-Droid market) you should use 'floss' and 'osm'.
+Requirements: a recent Android SDK and a JDK. The `proprietary` flavor (Google Drive, Dropbox) and the `gmap` flavor (Google Maps) need API keys in `gradle.properties` and are not the focus of this fork. The build-toolchain modernization is landing on the development branch, so the most reliable build comes from there once it is published.
 
-The current release in Google Play Store uses 'proprietary' and 'osm' with some changes to integrate also the Crashlytics framework and the In-App billing library.
+Note on icons: the original precompiled app bundled an icon pack that is not redistributable; only the small free subset is in the source tree. Providing a distributable icon set is part of the rebranded-release work.
 
-## FAQ
-1. why does the precompiled binary contain a huge icon pack while there are only a few icons in the source code?
-  The icon pack license clearly states that the icons can not be distributed publicly. If you want to have the same package of icons you will have to buy them on their website. The few icons in the repository come from their small free icon pack with a license that allows their free use.
-2. Is this project still in development? Currently I do not have much time to devote to the project, as already explained I am a university student close to graduation and very busy. I can work on it from time to time but I can't promise continued and lasting support.
-3. Can i contribute to this project? Oh yes! You can freely fork this project and open new pull requests. Translations in other languages are also welcome (you will be credited within the application).
+## Roadmap
+- Android 14/15 compatibility: modernize the build, fix the startup crash, verify core flows.
+- Rebranded release: choose a fork name and application id, present the README and license cleanly for a GPL fork, add build and migration docs, and submit to F-Droid.
+- Backup, export, and sync: fix export and import under scoped storage, add WebDAV/Nextcloud sync (upstream [#67](https://github.com/AndreAle94/moneywallet/issues/67)), and a local-file, Syncthing-friendly option.
 
-## Credits
-- [Adam Lapinski](http://www.yeti-designs.com): author of the awesome logo.
-- [Freepik](https://www.freepik.com): source of first-start images.
-- [RoundIcons](https://roundicons.com): source of the internal icon-pack.
+See the pinned [roadmap issue](https://github.com/herrerad85/moneywallet/issues/15) for current details.
 
-## License
-    Copyright (c) 2018.
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+## Upstream and license
+This is a fork of [AndreAle94/moneywallet](https://github.com/AndreAle94/moneywallet). MoneyWallet is free software licensed under the GNU General Public License v3.0, and this fork remains under the same license. See [LICENSE.md](LICENSE.md).
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+Original work and credits: MoneyWallet was created by its upstream author and contributors. Logo by Adam Lapinski; first-start images from Freepik; internal icon set from RoundIcons.
