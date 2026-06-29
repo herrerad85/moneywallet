@@ -74,13 +74,13 @@ public class DailyBroadcastReceiver extends BroadcastReceiver {
 
     private static PendingIntent createNotificationIntent(Context context) {
         Intent intent = new Intent(context, DailyBroadcastReceiver.class);
-        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Intent i = new Intent(context, NewEditTransactionActivity.class);
-        PendingIntent pending = PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pending = PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NotificationContract.NOTIFICATION_CHANNEL_REMINDER)
                 .setSmallIcon(Utils.isAtLeastLollipop() ? R.drawable.ic_notification : R.mipmap.ic_launcher)
                 .setContentTitle(context.getString(R.string.notification_title_daily_reminder_title))

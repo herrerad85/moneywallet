@@ -28,7 +28,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.core.hardware.fingerprint.FingerprintManagerCompat;
+import androidx.biometric.BiometricManager;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.recyclerview.widget.RecyclerView;
@@ -266,7 +266,12 @@ public class UtilitySettingFragment extends PreferenceFragmentCompat {
     }
 
     private boolean isFingerprintAuthSupported(Context context) {
-        return FingerprintManagerCompat.from(context).isHardwareDetected();
+        // Hardware present and usable, or present but not yet enrolled (the lock screen then
+        // guides the user to set up a fingerprint). Mirrors the old isHardwareDetected() semantics.
+        int status = BiometricManager.from(context).canAuthenticate(
+                BiometricManager.Authenticators.BIOMETRIC_STRONG);
+        return status == BiometricManager.BIOMETRIC_SUCCESS
+                || status == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED;
     }
 
     private void setupCurrentDailyReminder() {

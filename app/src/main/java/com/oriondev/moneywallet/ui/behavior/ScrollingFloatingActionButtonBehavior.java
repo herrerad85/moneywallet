@@ -42,7 +42,7 @@ public class ScrollingFloatingActionButtonBehavior extends CoordinatorLayout.Beh
 
     public ScrollingFloatingActionButtonBehavior(Context context, AttributeSet attrs) {
         super(context, attrs);
-        TypedArray styledAttributes = context.getTheme().obtainStyledAttributes(new int[]{R.attr.actionBarSize});
+        TypedArray styledAttributes = context.getTheme().obtainStyledAttributes(new int[]{android.R.attr.actionBarSize});
         mToolbarHeight = (int) styledAttributes.getDimension(0, 0);
         styledAttributes.recycle();
     }

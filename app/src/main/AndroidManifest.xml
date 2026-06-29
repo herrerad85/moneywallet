@@ -23,7 +23,7 @@
     package="com.oriondev.moneywallet">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -40,7 +40,8 @@
         android:requestLegacyExternalStorage="true"
         android:fullBackupContent="@xml/backup_rules"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".ui.activity.LauncherActivity">
+        <activity android:name=".ui.activity.LauncherActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -55,7 +56,8 @@
         <activity android:name=".ui.activity.BackupListActivity" />
         <activity android:name=".ui.activity.NewEditCurrencyActivity" />
         <activity android:name=".ui.activity.NewEditWalletActivity" />
-        <activity android:name=".ui.activity.NewEditTransactionActivity">
+        <activity android:name=".ui.activity.NewEditTransactionActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -132,7 +134,8 @@
         <receiver android:name=".broadcast.RecurrenceBroadcastReceiver" />
         <receiver android:name=".broadcast.AutoBackupBroadcastReceiver" />
         <receiver android:name=".broadcast.NotificationBroadcastReceiver" />
-        <receiver android:name=".broadcast.BootBroadcastReceiver">
+        <receiver android:name=".broadcast.BootBroadcastReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>

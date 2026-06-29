@@ -382,30 +382,28 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_import_data:
-                if (mImportFormatEditText.validate() && mImportFileEditText.validate()) {
-                    ThemedDialog.buildMaterialDialog(this)
-                            .title(R.string.title_warning)
-                            .content(R.string.message_data_import_without_backup)
-                            .positiveText(android.R.string.ok)
-                            .negativeText(android.R.string.cancel)
-                            .onPositive(new MaterialDialog.SingleButtonCallback() {
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_import_data) {
+            if (mImportFormatEditText.validate() && mImportFileEditText.validate()) {
+                ThemedDialog.buildMaterialDialog(this)
+                        .title(R.string.title_warning)
+                        .content(R.string.message_data_import_without_backup)
+                        .positiveText(android.R.string.ok)
+                        .negativeText(android.R.string.cancel)
+                        .onPositive(new MaterialDialog.SingleButtonCallback() {
 
-                                @Override
-                                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                    importData();
-                                }
+                            @Override
+                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                importData();
+                            }
 
-                            })
-                            .show();
-                }
-                break;
-            case R.id.action_export_data:
-                if (mExportFormatEditText.validate() && mWalletsEditText.validate() && mExportFolderEditText.validate()) {
-                    exportData();
-                }
-                break;
+                        })
+                        .show();
+            }
+        } else if (itemId == R.id.action_export_data) {
+            if (mExportFormatEditText.validate() && mWalletsEditText.validate() && mExportFolderEditText.validate()) {
+                exportData();
+            }
         }
         return false;
     }

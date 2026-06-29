@@ -110,10 +110,9 @@ public abstract class NewEditItemActivity extends SinglePanelScrollActivity {
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_save_changes:
-                onSaveChanges(mMode);
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_save_changes) {
+            onSaveChanges(mMode);
         }
         return false;
     }

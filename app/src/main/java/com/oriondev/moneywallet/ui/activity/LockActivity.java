@@ -21,13 +21,15 @@ package com.oriondev.moneywallet.ui.activity;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.hardware.fingerprint.FingerprintManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricPrompt;
+import androidx.core.content.ContextCompat;
 
 import com.andrognito.patternlockview.PatternLockView;
 import com.andrognito.patternlockview.listener.PatternLockViewListener;
@@ -35,8 +37,6 @@ import com.andrognito.patternlockview.utils.PatternLockUtils;
 import com.andrognito.pinlockview.IndicatorDots;
 import com.andrognito.pinlockview.PinLockListener;
 import com.andrognito.pinlockview.PinLockView;
-import com.multidots.fingerprintauth.FingerPrintAuthCallback;
-import com.multidots.fingerprintauth.FingerPrintAuthHelper;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.LockMode;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
@@ -147,49 +147,56 @@ public class LockActivity extends ThemedActivity {
     private String mNewCode = null;
     private int mCurrentStep = 0;
     private LockMode mCurrentLockMode;
-    private FingerPrintAuthHelper mFingerprintAuth;
+    private BiometricPrompt mBiometricPrompt;
+    private BiometricPrompt.PromptInfo mPromptInfo;
+    private boolean mResumed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         unpackIntent(getIntent(), savedInstanceState);
         initializeUi(savedInstanceState);
-        mFingerprintAuth = FingerPrintAuthHelper.getHelper(this, new FingerPrintAuthCallback() {
+        mBiometricPrompt = new BiometricPrompt(this, ContextCompat.getMainExecutor(this),
+                new BiometricPrompt.AuthenticationCallback() {
 
             @Override
-            public void onNoFingerPrintHardwareFound() {
-                // not handled because the fingerprint availability is checked
-                // before starting this activity.
-            }
-
-            @Override
-            public void onNoFingerPrintRegistered() {
-                mFingerprintHelpTextView.setText(R.string.help_fingerprint_not_initialized);
-            }
-
-            @Override
-            public void onBelowMarshmallow() {
-                // not handled because the fingerprint availability is checked
-                // before starting this activity.
-            }
-
-            @Override
-            public void onAuthSuccess(FingerprintManager.CryptoObject cryptoObject) {
+            public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
                 onFingerprintScan(true, 0, null);
             }
 
             @Override
-            public void onAuthFailed(int errorCode, String errorMessage) {
-                onFingerprintScan(false, errorCode, errorMessage);
+            public void onAuthenticationFailed() {
+                // A biometric was presented but not recognized. The system prompt stays open for
+                // retry; just reflect the failed attempt in the in-app help text.
+                onFingerprintScan(false, 0, null);
+            }
+
+            @Override
+            public void onAuthenticationError(int errorCode, CharSequence errString) {
+                // Terminal error (cancel, lockout, hardware issue). Fail soft: show help text and
+                // let the user retry by tapping the fingerprint area. Never crash or disable the lock.
+                onFingerprintScan(false, errorCode, errString);
             }
 
         });
+        mPromptInfo = new BiometricPrompt.PromptInfo.Builder()
+                .setTitle(getString(R.string.app_name))
+                .setNegativeButtonText(getString(android.R.string.cancel))
+                .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                .build();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mFingerprintAuth.startAuth();
+        mResumed = true;
+        maybeShowBiometricPrompt();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mResumed = false;
     }
 
     @Override
@@ -198,14 +205,6 @@ public class LockActivity extends ThemedActivity {
         outState.putString(SS_NEW_CODE, mNewCode);
         outState.putInt(SS_CURRENT_STEP, mCurrentStep);
         outState.putSerializable(SS_CURRENT_LOCK_MODE, mCurrentLockMode);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            mFingerprintAuth.stopAuth();
-        }
     }
 
     private void unpackIntent(Intent intent, Bundle savedInstanceState) {
@@ -244,6 +243,8 @@ public class LockActivity extends ThemedActivity {
         mPatternLockView = findViewById(R.id.pattern_lock_view);
         mFingerprintLayout = findViewById(R.id.fingerprint_layout);
         mFingerprintHelpTextView = findViewById(R.id.fingerprint_help_text_view);
+        // tapping the fingerprint area re-shows the system biometric prompt (e.g. after a cancel)
+        mFingerprintLayout.setOnClickListener(v -> maybeShowBiometricPrompt());
         // enable ui
         indicatorDotsView.setPinLength(PIN_CODE_LENGTH);
         mPinLockView.setPinLength(PIN_CODE_LENGTH);
@@ -347,6 +348,25 @@ public class LockActivity extends ThemedActivity {
         mFingerprintLayout.setVisibility(lockMode == LockMode.FINGERPRINT ? View.VISIBLE : View.GONE);
     }
 
+    /**
+     * Shows the system biometric prompt, but only when fingerprint is the active lock mode and the
+     * current flow actually verifies with a fingerprint scan (change-key is not supported for
+     * fingerprint). If biometrics are configured but currently unavailable, it fails soft with the
+     * existing help text instead of crashing or disabling the lock.
+     */
+    private void maybeShowBiometricPrompt() {
+        if (!mResumed || mCurrentLockMode != LockMode.FINGERPRINT || mAction == ACTION_CHANGE_KEY) {
+            return;
+        }
+        int status = BiometricManager.from(this).canAuthenticate(
+                BiometricManager.Authenticators.BIOMETRIC_STRONG);
+        if (status == BiometricManager.BIOMETRIC_SUCCESS) {
+            mBiometricPrompt.authenticate(mPromptInfo);
+        } else {
+            mFingerprintHelpTextView.setText(R.string.help_fingerprint_not_initialized);
+        }
+    }
+
     private void onPinCodeComplete(String code) {
         switch (mAction) {
             case ACTION_UNLOCK:
@@ -433,6 +453,7 @@ public class LockActivity extends ThemedActivity {
                             mFingerprintHelpTextView.setText(R.string.help_create_fingerprint);
                         }
                         showLayout(mCurrentLockMode);
+                        maybeShowBiometricPrompt();
                     } else {
                         mPinHelpTextView.setText(R.string.help_insert_pin_code_failed);
                     }
@@ -547,6 +568,7 @@ public class LockActivity extends ThemedActivity {
                         }
                         mPatternLockView.clearPattern();
                         showLayout(mCurrentLockMode);
+                        maybeShowBiometricPrompt();
                     } else {
                         mPatternLockView.setViewMode(PatternLockView.PatternViewMode.WRONG);
                         mSequenceHelpTextView.setText(R.string.help_insert_pin_code_failed);

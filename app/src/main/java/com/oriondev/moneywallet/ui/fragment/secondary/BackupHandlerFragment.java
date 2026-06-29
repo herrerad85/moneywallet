@@ -295,18 +295,16 @@ public class BackupHandlerFragment extends Fragment implements BackupFileAdapter
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_disconnect:
-                try {
-                    mBackendService.teardown(getActivity());
-                } catch (BackendException e) {
-                    e.printStackTrace();
-                }
-                break;
-            case R.id.action_auto_backup:
-                String tag = getTag() + "::AutoBackupSettingDialog";
-                mAutoBackupSettingDialog.show(getChildFragmentManager(), tag, mBackendService.getId());
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_disconnect) {
+            try {
+                mBackendService.teardown(getActivity());
+            } catch (BackendException e) {
+                e.printStackTrace();
+            }
+        } else if (itemId == R.id.action_auto_backup) {
+            String tag = getTag() + "::AutoBackupSettingDialog";
+            mAutoBackupSettingDialog.show(getChildFragmentManager(), tag, mBackendService.getId());
         }
         return false;
     }

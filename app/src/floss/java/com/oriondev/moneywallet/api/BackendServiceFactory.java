@@ -79,7 +79,7 @@ public class BackendServiceFactory {
                 case SERVICE_ID_EXTERNAL_MEMORY:
                     return new LocalFile(encoded);
                 case SERVICE_ID_SAF:
-                    return new SAFFile(encoded);
+                    return SAFFile.decode(encoded);
             }
         }
         return null;

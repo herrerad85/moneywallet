@@ -105,21 +105,18 @@ public class CategoryItemFragment extends SecondaryPanelFragment implements Load
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_show_transaction_list:
-                Intent intent = new Intent(getActivity(), TransactionListActivity.class);
-                intent.putExtra(TransactionListActivity.CATEGORY_ID, getItemId());
-                startActivity(intent);
-                break;
-            case R.id.action_edit_item:
-                intent = new Intent(getActivity(), NewEditCategoryActivity.class);
-                intent.putExtra(NewEditItemActivity.MODE, NewEditItemActivity.Mode.EDIT_ITEM);
-                intent.putExtra(NewEditItemActivity.ID, getItemId());
-                startActivity(intent);
-                break;
-            case R.id.action_delete_item:
-                showDeleteDialog(getActivity());
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_show_transaction_list) {
+            Intent intent = new Intent(getActivity(), TransactionListActivity.class);
+            intent.putExtra(TransactionListActivity.CATEGORY_ID, getItemId());
+            startActivity(intent);
+        } else if (itemId == R.id.action_edit_item) {
+            Intent intent = new Intent(getActivity(), NewEditCategoryActivity.class);
+            intent.putExtra(NewEditItemActivity.MODE, NewEditItemActivity.Mode.EDIT_ITEM);
+            intent.putExtra(NewEditItemActivity.ID, getItemId());
+            startActivity(intent);
+        } else if (itemId == R.id.action_delete_item) {
+            showDeleteDialog(getActivity());
         }
         return false;
     }

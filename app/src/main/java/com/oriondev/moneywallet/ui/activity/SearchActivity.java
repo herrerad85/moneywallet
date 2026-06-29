@@ -149,10 +149,9 @@ public class SearchActivity extends SinglePanelActivity implements LoaderManager
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_filter:
-                showFilterDialog();
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_filter) {
+            showFilterDialog();
         }
         return false;
     }
