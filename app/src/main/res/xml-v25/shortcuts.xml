@@ -9,7 +9,7 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:targetClass="com.oriondev.moneywallet.ui.activity.NewEditTransferActivity"
-            android:targetPackage="com.oriondev.moneywallet" />
+            android:targetPackage="io.github.herrerad85.tallybook" />
 
     </shortcut>
 
@@ -22,7 +22,7 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:targetClass="com.oriondev.moneywallet.ui.activity.NewEditTransactionActivity"
-            android:targetPackage="com.oriondev.moneywallet" />
+            android:targetPackage="io.github.herrerad85.tallybook" />
 
     </shortcut>
 

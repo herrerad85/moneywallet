@@ -28,7 +28,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.oriondev.moneywallet"
+        applicationId "io.github.herrerad85.tallybook"
         minSdk 24
         targetSdk 35
         versionCode 75

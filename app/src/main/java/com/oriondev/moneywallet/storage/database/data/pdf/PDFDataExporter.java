@@ -52,7 +52,7 @@ public class PDFDataExporter extends AbstractDataExporter {
         } catch (DocumentException e) {
             throw new IOException(e);
         }
-        mDocument.addAuthor("MoneyWallet - Expense Manager");
+        mDocument.addAuthor("Tallybook - Expense Manager");
         mDocument.open();
     }
 

@@ -2,7 +2,7 @@
 ~ translated by haneefi
 -->
 <resources>
-    <string name="app_name">മണി വാലറ്റ്</string>
+    <string name="app_name">Tallybook</string>
 
     <string name="menu_transaction">"ഇടപാടുകൾ"</string>
     <string name="menu_category">"വിഭാഗങ്ങൾ"</string>
@@ -545,7 +545,7 @@
     <string name="about_hint_translators">"വിവർത്തകർ"</string>
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"നവീകരിക്കുന്നു…"</string>
-    <string name="activity_launcher_first_start_title">"മണി വാലറ്റിലേക്ക് സ്വാഗതം"</string>
+    <string name="activity_launcher_first_start_title">"Tallybookിലേക്ക് സ്വാഗതം"</string>
     <string name="activity_launcher_first_start_content">"നിങ്ങൾ ആദ്യമായാണ് ഈ അപ്ലിക്കേഷൻ ഉപയോഗിക്കുന്നത് അല്ലെങ്കിൽ മുമ്പത്തെ ബാക്കപ്പ് പുന restore സ്ഥാപിക്കാൻ നിങ്ങൾ ആഗ്രഹിക്കുന്നുണ്ടോ?"</string>
     <string name="activity_launcher_first_start_button_first_time">"ആദ്യതവണ"</string>
     <string name="activity_launcher_first_start_button_restore_backup">"ബാക്കപ്പ് പുന ore സ്ഥാപിക്കുക"</string>
