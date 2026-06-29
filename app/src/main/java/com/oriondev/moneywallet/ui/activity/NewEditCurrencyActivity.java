@@ -195,26 +195,24 @@ public class NewEditCurrencyActivity extends SinglePanelScrollActivity {
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_save_changes:
-                onSaveChanges();
-                break;
-            case R.id.action_delete_item:
-                ThemedDialog.buildMaterialDialog(this)
-                        .title(R.string.title_warning)
-                        .content(R.string.message_delete_currency)
-                        .positiveText(android.R.string.ok)
-                        .negativeText(android.R.string.cancel)
-                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_save_changes) {
+            onSaveChanges();
+        } else if (itemId == R.id.action_delete_item) {
+            ThemedDialog.buildMaterialDialog(this)
+                    .title(R.string.title_warning)
+                    .content(R.string.message_delete_currency)
+                    .positiveText(android.R.string.ok)
+                    .negativeText(android.R.string.cancel)
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
 
-                            @Override
-                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                onDelete();
-                            }
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            onDelete();
+                        }
 
-                        })
-                        .show();
-                break;
+                    })
+                    .show();
         }
         return false;
     }

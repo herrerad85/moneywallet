@@ -90,10 +90,9 @@ public class CurrencyConverterActivity extends SinglePanelActivity implements Vi
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.refresh_rate:
-                startService(AbstractCurrencyRateDownloadIntentService.buildIntent(this));
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.refresh_rate) {
+            startService(AbstractCurrencyRateDownloadIntentService.buildIntent(this));
         }
         return false;
     }

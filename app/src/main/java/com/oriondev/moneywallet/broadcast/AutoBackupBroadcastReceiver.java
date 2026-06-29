@@ -25,6 +25,7 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import com.oriondev.moneywallet.api.BackendServiceFactory;
 import com.oriondev.moneywallet.model.IFile;
@@ -40,6 +41,7 @@ import java.util.Set;
 public class AutoBackupBroadcastReceiver extends BroadcastReceiver {
 
     private static final int MILLIS_IN_HOUR = 1000 * 60 * 60;
+    private static final String TAG = "AutoBackup";
 
     public static void scheduleAutoBackupTask(Context context) {
         cancelPendingIntent(context);
@@ -83,7 +85,7 @@ public class AutoBackupBroadcastReceiver extends BroadcastReceiver {
 
     private static PendingIntent createPendingIntent(Context context) {
         Intent intent = new Intent(context, AutoBackupBroadcastReceiver.class);
-        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     @Override
@@ -96,30 +98,43 @@ public class AutoBackupBroadcastReceiver extends BroadcastReceiver {
         Set<String> backendIdSet = BackendManager.getAutoBackupEnabledServices();
         if (backendIdSet != null && !backendIdSet.isEmpty()) {
             for (String backendId : backendIdSet) {
-                long lastTimestamp = BackendManager.getAutoBackupLastTime(backendId);
-                int hourOffset = BackendManager.getAutoBackupHoursOffset(backendId);
-                long nextOccurrence = lastTimestamp + (hourOffset * MILLIS_IN_HOUR);
-                if (nextOccurrence <= System.currentTimeMillis()) {
-                    if (!BackendManager.isAutoBackupWhenDataIsChangedOnly(backendId) || PreferenceManager.getLastTimeDataIsChanged() > lastTimestamp) {
-                        boolean onlyOnWiFi = BackendManager.isAutoBackupOnWiFiOnly(backendId);
-                        IFile folder = BackendServiceFactory.getFile(backendId, BackendManager.getAutoBackupFolder(backendId));
-                        String password = BackendManager.getAutoBackupPassword(backendId);
-                        // build the intent to start the service
-                        Intent intent = new Intent(context, BackupHandlerIntentService.class);
-                        intent.putExtra(BackupHandlerIntentService.ACTION, BackupHandlerIntentService.ACTION_BACKUP);
-                        intent.putExtra(BackupHandlerIntentService.BACKEND_ID, backendId);
-                        intent.putExtra(BackupHandlerIntentService.AUTO_BACKUP, true);
-                        intent.putExtra(BackupHandlerIntentService.ONLY_ON_WIFI, onlyOnWiFi);
-                        intent.putExtra(BackupHandlerIntentService.PARENT_FOLDER, folder);
-                        intent.putExtra(BackupHandlerIntentService.PASSWORD, password);
-                        BackupHandlerIntentService.startInForeground(context, intent);
+                try {
+                    long lastTimestamp = BackendManager.getAutoBackupLastTime(backendId);
+                    int hourOffset = BackendManager.getAutoBackupHoursOffset(backendId);
+                    long nextOccurrence = lastTimestamp + (hourOffset * MILLIS_IN_HOUR);
+                    if (nextOccurrence <= System.currentTimeMillis()) {
+                        if (!BackendManager.isAutoBackupWhenDataIsChangedOnly(backendId) || PreferenceManager.getLastTimeDataIsChanged() > lastTimestamp) {
+                            boolean onlyOnWiFi = BackendManager.isAutoBackupOnWiFiOnly(backendId);
+                            IFile folder = BackendServiceFactory.getFile(backendId, BackendManager.getAutoBackupFolder(backendId));
+                            if (folder == null) {
+                                // Legacy or undecodable backup location (issue #177): skip this
+                                // backend's auto-backup instead of crashing at startup. The backend
+                                // stays configured; the user can re-select the folder. Do not advance
+                                // the timer for a backup that did not run.
+                                Log.w(TAG, "Skipping auto-backup for '" + backendId + "': backup location missing or not decodable");
+                                continue;
+                            }
+                            String password = BackendManager.getAutoBackupPassword(backendId);
+                            // build the intent to start the service
+                            Intent intent = new Intent(context, BackupHandlerIntentService.class);
+                            intent.putExtra(BackupHandlerIntentService.ACTION, BackupHandlerIntentService.ACTION_BACKUP);
+                            intent.putExtra(BackupHandlerIntentService.BACKEND_ID, backendId);
+                            intent.putExtra(BackupHandlerIntentService.AUTO_BACKUP, true);
+                            intent.putExtra(BackupHandlerIntentService.ONLY_ON_WIFI, onlyOnWiFi);
+                            intent.putExtra(BackupHandlerIntentService.PARENT_FOLDER, folder);
+                            intent.putExtra(BackupHandlerIntentService.PASSWORD, password);
+                            BackupHandlerIntentService.startInForeground(context, intent);
+                        }
+                        // register the next occurrence as the last time the auto backup
+                        // for this specific backend has been executed: if an error occur
+                        // and the backup process is interrupted, the error is shown in
+                        // a specific notification (no auto rescheduling because we don't
+                        // know if the error is a recoverable error or a critical one)
+                        BackendManager.setAutoBackupLastTime(backendId, nextOccurrence);
                     }
-                    // register the next occurrence as the last time the auto backup
-                    // for this specific backend has been executed: if an error occur
-                    // and the backup process is interrupted, the error is shown in
-                    // a specific notification (no auto rescheduling because we don't
-                    // know if the error is a recoverable error or a critical one)
-                    BackendManager.setAutoBackupLastTime(backendId, nextOccurrence);
+                } catch (Exception e) {
+                    // Never let a single misconfigured backend crash app startup (issue #177).
+                    Log.w(TAG, "Skipping auto-backup for '" + backendId + "': " + e.getMessage());
                 }
             }
         }

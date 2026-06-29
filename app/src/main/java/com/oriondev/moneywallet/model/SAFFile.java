@@ -48,6 +48,31 @@ public class SAFFile implements IFile {
         }
     }
 
+    /**
+     * Returns true only when the value looks like an encoded SAFFile descriptor (a JSON object),
+     * as opposed to a legacy raw path (e.g. "/storage/emulated/0") persisted by older versions.
+     * Pure check with no Android dependencies, so it is unit-testable.
+     */
+    public static boolean looksEncoded(String encoded) {
+        return encoded != null && encoded.trim().startsWith("{");
+    }
+
+    /**
+     * Decodes an encoded descriptor, returning null instead of throwing when the value is missing,
+     * a legacy path, or otherwise undecodable. Lets callers fail soft rather than crash at startup
+     * (see issue #177, where a legacy auto-backup path crashed the app in Application.onCreate).
+     */
+    public static SAFFile decode(String encoded) {
+        if (!looksEncoded(encoded)) {
+            return null;
+        }
+        try {
+            return new SAFFile(encoded);
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
     public SAFFile(@NonNull DocumentFile documentFile) {
         mIsDir = documentFile.isDirectory();
         mUri = documentFile.getUri();

@@ -874,12 +874,12 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_attach_file:
-                mAttachmentPicker.showPicker();
-                return false;
-            default:
-                return super.onMenuItemClick(item);
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_attach_file) {
+            mAttachmentPicker.showPicker();
+            return false;
+        } else {
+            return super.onMenuItemClick(item);
         }
     }
 

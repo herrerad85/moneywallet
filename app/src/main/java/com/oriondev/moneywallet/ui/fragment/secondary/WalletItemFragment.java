@@ -107,22 +107,18 @@ public class WalletItemFragment extends SecondaryPanelFragment implements Loader
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_archive_item:
-                showArchiveDialog(getActivity());
-                break;
-            case R.id.action_unarchive_item:
-                showUnarchiveDialog(getActivity());
-                break;
-            case R.id.action_edit_item:
-                Intent intent = new Intent(getActivity(), NewEditWalletActivity.class);
-                intent.putExtra(NewEditItemActivity.MODE, NewEditItemActivity.Mode.EDIT_ITEM);
-                intent.putExtra(NewEditItemActivity.ID, getItemId());
-                startActivity(intent);
-                break;
-            case R.id.action_delete_item:
-                showDeleteDialog(getActivity());
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_archive_item) {
+            showArchiveDialog(getActivity());
+        } else if (itemId == R.id.action_unarchive_item) {
+            showUnarchiveDialog(getActivity());
+        } else if (itemId == R.id.action_edit_item) {
+            Intent intent = new Intent(getActivity(), NewEditWalletActivity.class);
+            intent.putExtra(NewEditItemActivity.MODE, NewEditItemActivity.Mode.EDIT_ITEM);
+            intent.putExtra(NewEditItemActivity.ID, getItemId());
+            startActivity(intent);
+        } else if (itemId == R.id.action_delete_item) {
+            showDeleteDialog(getActivity());
         }
         return false;
     }

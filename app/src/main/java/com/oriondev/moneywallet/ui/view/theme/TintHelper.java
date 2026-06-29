@@ -154,7 +154,7 @@ import java.lang.reflect.Field;
             checkBox.setButtonTintList(stateList);
         } else {
             @SuppressLint("PrivateResource")
-            int resource = R.drawable.abc_btn_radio_material;
+            int resource = androidx.appcompat.R.drawable.abc_btn_radio_material;
             Drawable drawable = ContextCompat.getDrawable(context, resource);
             drawable = createTintedDrawable(drawable, stateList);
             checkBox.setButtonDrawable(drawable);
@@ -178,7 +178,7 @@ import java.lang.reflect.Field;
             radioButton.setButtonTintList(stateList);
         } else {
             @SuppressLint("PrivateResource")
-            int resource = R.drawable.abc_btn_radio_material;
+            int resource = androidx.appcompat.R.drawable.abc_btn_radio_material;
             Drawable drawable = ContextCompat.getDrawable(context, resource);
             drawable = createTintedDrawable(drawable, stateList);
             radioButton.setButtonDrawable(drawable);

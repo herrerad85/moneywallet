@@ -114,11 +114,10 @@ public class WalletMultiPanelFragment extends MultiPanelAppBarItemFragment imple
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_sort_items:
-                Intent intent = new Intent(getActivity(), WalletSortActivity.class);
-                startActivity(intent);
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_sort_items) {
+            Intent intent = new Intent(getActivity(), WalletSortActivity.class);
+            startActivity(intent);
         }
         return false;
     }

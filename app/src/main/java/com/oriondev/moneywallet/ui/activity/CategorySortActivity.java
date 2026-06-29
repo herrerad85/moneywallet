@@ -51,10 +51,9 @@ public class CategorySortActivity extends SinglePanelSimpleListActivity implemen
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_save_changes:
-                saveChanges();
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_save_changes) {
+            saveChanges();
         }
         return false;
     }

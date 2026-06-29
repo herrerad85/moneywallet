@@ -69,22 +69,21 @@ public class CategoryMultiPanelViewPagerFragment extends MultiPanelViewPagerItem
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_sort_items:
-                Intent intent = new Intent(getActivity(), CategorySortActivity.class);
-                switch (getViewPagerPosition()) {
-                    case 0:
-                        intent.putExtra(CategorySortActivity.TYPE, Contract.CategoryType.INCOME);
-                        break;
-                    case 1:
-                        intent.putExtra(CategorySortActivity.TYPE, Contract.CategoryType.EXPENSE);
-                        break;
-                    case 2:
-                        intent.putExtra(CategorySortActivity.TYPE, Contract.CategoryType.SYSTEM);
-                        break;
-                }
-                startActivity(intent);
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_sort_items) {
+            Intent intent = new Intent(getActivity(), CategorySortActivity.class);
+            switch (getViewPagerPosition()) {
+                case 0:
+                    intent.putExtra(CategorySortActivity.TYPE, Contract.CategoryType.INCOME);
+                    break;
+                case 1:
+                    intent.putExtra(CategorySortActivity.TYPE, Contract.CategoryType.EXPENSE);
+                    break;
+                case 2:
+                    intent.putExtra(CategorySortActivity.TYPE, Contract.CategoryType.SYSTEM);
+                    break;
+            }
+            startActivity(intent);
         }
         return false;
     }

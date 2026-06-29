@@ -100,10 +100,9 @@ public class PlaceMultiPanelFragment extends MultiPanelCursorListItemFragment im
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_open_map:
-                startActivity(new Intent(getActivity(), MapActivity.class));
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_open_map) {
+            startActivity(new Intent(getActivity(), MapActivity.class));
         }
         return false;
     }
