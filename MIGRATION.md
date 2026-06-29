@@ -6,9 +6,9 @@ Tallybook is a **separate app** from the original MoneyWallet. It uses a differe
 - Installing Tallybook does **not** update or replace MoneyWallet, and it does **not** read MoneyWallet's data automatically.
 - Tallybook starts empty. To bring your data across, migrate it manually using the steps below.
 
-## Intended migration path: Backup and Restore
+## Migration path: Backup and Restore
 
-Tallybook is expected to restore MoneyWallet backups because it preserves the legacy data format, but this still needs end-to-end verification before a public release. The intended flow brings across your wallets, transactions, categories, budgets, and the rest:
+This path is verified. A backup made by the original MoneyWallet restores into Tallybook with full data fidelity, because Tallybook preserves the legacy backup format. The flow brings across your wallets, transactions, categories, budgets, and the rest:
 
 1. In the original **MoneyWallet**: open Settings and create a local **Backup**. If you set a backup password, remember it, you will need it to restore.
 2. Find the backup file in the backup folder the app used, and keep it somewhere safe (for example copy it to your computer, or to another folder on the device).
@@ -18,11 +18,14 @@ Tallybook is expected to restore MoneyWallet backups because it preserves the le
 
 Keep MoneyWallet installed and your backup file safe until you are confident everything came across. This process does not delete anything from MoneyWallet.
 
+## Verification
+
+End-to-end restore was verified on 2026-06-29. A backup produced by the genuine MoneyWallet from F-Droid (version 4.0.5.10, versionCode 75), running on Android 15, restored into Tallybook with full data fidelity: wallets, transactions, categories, amounts, timestamps, and balances all came across, and the data persisted across an app relaunch. Both an unprotected backup and a password-protected, AES-encrypted backup were restored successfully.
+
 ## Notes and current limitations
 
-- **End-to-end restore from the original MoneyWallet into Tallybook is still a required pre-release verification step.** It has not yet been validated end to end, so treat the steps above as the intended path rather than a confirmed one.
-- **Backup/Restore is the intended path** for a complete copy of your data. CSV, Excel, and PDF export are meant for use in other tools, not as a full round-trip migration.
-- **File export/import under modern Android scoped storage still needs follow-up work** and may not behave correctly in every case yet (tracked in the project issues). If a backup file is hard to locate or restore, please open an issue and include your Android version.
+- **Backup/Restore is the recommended path** for a complete copy of your data. CSV, Excel, and PDF export are meant for use in other tools, not as a full round-trip migration.
+- **On Android 15, restore through the Storage Access Framework.** Under scoped storage, the legacy "External Memory" file browser may not list a backup that another app wrote (for example a MoneyWallet `.mwbx` in `Download`). If you do not see your file, use the Storage Access Framework option in Tallybook and keep the backup in a normal, non-restricted folder such as `Download/mwbackup/`. Broader export/import work under scoped storage is tracked in the project issues; if a backup is hard to locate or restore, please open an issue and include your Android version.
 - Coming from a very old (pre-4.0) MoneyWallet? The app also includes a legacy importer for the old database; prefer Backup/Restore where possible and use the legacy import only as a fallback.
 
 ## Why Tallybook is a separate app
