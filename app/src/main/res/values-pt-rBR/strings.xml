@@ -563,7 +563,7 @@
     <string name="about_hint_translators">"Tradutores"</string>
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"Atualizando…"</string>
-    <string name="activity_launcher_first_start_title">"Bem vindo ao MoneyWallet"</string>
+    <string name="activity_launcher_first_start_title">"Bem vindo ao Tallybook"</string>
     <string name="activity_launcher_first_start_content">"É a primeira vez que você usa o aplicativo ou gostaria de restaurar um backup anterior?"</string>
     <string name="activity_launcher_first_start_button_first_time">"Primeira vez"</string>
     <string name="activity_launcher_first_start_button_restore_backup">"Restaurar backup"</string>

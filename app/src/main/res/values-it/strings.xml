@@ -18,7 +18,7 @@
   -->
 
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="app_name">MoneyWallet</string>
+    <string name="app_name">Tallybook</string>
 
     <string name="menu_transaction">"Transazioni"</string>
     <string name="menu_category">"Categorie"</string>
@@ -557,7 +557,7 @@
     <string name="about_hint_translators">"Traduttori"</string>
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"Aggiornamento…"</string>
-    <string name="activity_launcher_first_start_title">"Benvenuto in MoneyWallet"</string>
+    <string name="activity_launcher_first_start_title">"Benvenuto in Tallybook"</string>
     <string name="activity_launcher_first_start_content">"è la prima volta che usi l'applicazione o vuoi ripristinare un backup precedente?"</string>
     <string name="activity_launcher_first_start_button_first_time">"Prima volta"</string>
     <string name="activity_launcher_first_start_button_restore_backup">"Ripristina backup"</string>
