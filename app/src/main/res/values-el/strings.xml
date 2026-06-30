@@ -36,7 +36,6 @@
     <string name="menu_search_atm">"Αναζήτηση ΑΤΜ"</string>
     <string name="menu_search_bank">"Αναζήτηση τράπεζας"</string>
     <string name="menu_setting">"Ρυθμίσεις"</string>
-    <string name="menu_support_developer">"Στήριξε το δημιουργό"</string>
     <string name="menu_about">"Σχετικά"</string>
 
     <!-- Transactions -->
@@ -205,7 +204,6 @@
     <string name="title_activity_backend_explorer">"Εξερεύνηση του backend"</string>
     <string name="title_activity_backend_file_picker">"Επιλογή αρχείου"</string>
     <string name="title_activity_backend_folder_picker">"Επιλογή φακέλου"</string>
-    <string name="title_activity_support_developer">"Υποστήριξε τον προγραμματιστή"</string>
     <string name="title_activity_import_data">"Εισαγωγή δεδομένων"</string>
     <string name="title_activity_export_data">"Εξαγωγή δεδομένων"</string>
 
@@ -541,7 +539,6 @@
 
     <string name="about_hint_version">"Έκδοση εφαρμογής"</string>
     <string name="about_hint_changelog">"Ιστορικό αλλαγών"</string>
-    <string name="about_hint_support">"Υποστήριξε την ανάπτυξη της εφαρμογής"</string>
     <string name="about_hint_rate_app">"Βαθμολόγησε την εφαρμογή"</string>
     <string name="about_hint_open_source_libraries">"Open source libraries"</string>
     <string name="about_hint_report_bug">"Αναφορά για bug"</string>
@@ -559,19 +556,14 @@
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"Γίνεται ενημέρωση.."</string>
     <string name="activity_launcher_first_start_title">"Καλωσήρθατε στο Tallybook"</string>
-    <string name="activity_launcher_first_start_content">"Είναι η πρώτη σας φορά που χρησιμοποιείτε αυτή την εφαρμογή ή θέλετε να επαναφέρετε κάποιο προηγούμενο αντίγραφο ασφαλείας;"</string>
     <string name="activity_launcher_first_start_button_first_time">"Πρώτη φορά"</string>
     <string name="activity_launcher_first_start_button_restore_backup">"Επαναφορά αντίγραφου ασφαλείας"</string>
 
     <string name="activity_intro_title_slide_1">"Όχι πια δυσάρεστες εκπλήξεις"</string>
     <string name="activity_intro_title_slide_2">"Ανακαλύψτε και σχεδιάστε"</string>
     <string name="activity_intro_title_slide_3">"Ανοιχτού κώδικα"</string>
-    <string name="activity_intro_title_slide_4">"Cloud αντίγραφα ασφαλείας"</string>
     <string name="activity_intro_title_slide_5">"Πολύ καλά"</string>
-    <string name="activity_intro_description_slide_1">"Θα σας βοηθήσει να παρακολουθείτε όλα σας τα έξοδα"</string>
     <string name="activity_intro_description_slide_2">"Μπορείτε να αναλύσετε που ξοδεύετε πολλά και να ρυθμίσετε κάποιους προϋπολογιμούς"</string>
-    <string name="activity_intro_description_slide_3">"Το πρότζεκτ πλέον είναι ανοιχτού κώδικα και όλοι μπορούν να συνεισφέρουν"</string>
-    <string name="activity_intro_description_slide_4">"Υποστηριζονται οι πιο διαδεδομένες υπηρεσίες Cloud για να μην χάσετε ποτέ τα δεδομένα σας"</string>
     <string name="activity_intro_description_slide_5">"Θα ανακατευθυνθείτε τώρα στη δημιουργία του πρώτου σας πορτοφολιού"</string>
 
     <string name="help_create_new_pin_code">"Δημιουργήστε έναν νέο κωδικό PIN"</string>
@@ -679,22 +671,5 @@
     <string name="notification_channel_name_exchange_rate">"Ισοτιμίες συναλλάγματος"</string>
     <string name="notification_channel_name_error">"Σφάλμα"</string>
 
-    <string name="activity_donation_first_title">"Σας ευχαριστώ!"</string>
-    <string name="activity_donation_first_content">"Αν σας αρέσει αυτή η εφαρμογή και τη βρίσκετε χρήσιμη, μπορείτε να με κεράσετε μια μπύρα. Έτσι ενισχύετε το project και με παρακινείτε να συνεχίσω την ανάπτυξή του."</string>
-    <string name="activity_donation_second_title">"Γιατί να το κάνω;"</string>
-    <string name="activity_donation_second_content">"Κάποιος μπορεί να πει ότι, "Τα καλύτερα πράγματα στη ζωή είναι δωρέαν" και συμφωνώ απόλυτα. Δεν μπορείς να αγοράσεις φιλίες, αγάπη, ούτε την ανάμνηση ενός πανέμορφου ηλιοβασιλέματος. Για αυτό αποφάσισα να μοιραστώ τον κώδικα της εφαρμογής με όλους δωρεάν. Δυστυχώς όμως, η ζωή δεν είναι δωρέαν. Έχεις μόνο 24 ώρες κάθε μέρα και πρέπει να πάρεις κάποιες αποφάσεις με το πώς θα τις αξιοποιήσεις για να υποστηρίξεις τον εαυτό σου. Αν σας αρέσει αυτό το project και θέλετε να το δείτε να εξελίσετε στο μέλλον, σκεφτείτε το ενδεχόμενο να με στηρίξετε έτσι ώστε να μπορέσω να δώσω περισσότερο προσωπικό χρόνο σε αυτό. Κάθε συμβολή σας έχει τεράστια σημασία."</string>
-    <string name="activity_donation_third_title">"Δεν μπορείτε να συνεισφέρετε χρηματικά; Κανένα πρόβλημα, μπορείτε να βοηθήσετε και με άλλους τρόπους!"</string>
-    <string name="activity_donation_crypto_address_copied">"Η διεύθυνση αντιγράφηκε"</string>
-    <string name="activity_donation_action_share_title">"Μοιράσου"</string>
-    <string name="activity_donation_action_share_content">"Αναφέρετε την εφαρμογή στους φίλους σας"</string>
-    <string name="activity_donation_action_share_message">"Γεια σας, ρίξετ μια ματιά εδώ: %s"</string>
-    <string name="activity_donation_action_share_using">"Μοιραστείτε χρησιμοποιώντας"</string>
-    <string name="activity_donation_action_rate_title">"Βαθμολογήστε"</string>
-    <string name="activity_donation_action_rate_content">"Γράψτε μας μια κριτική 5 αστέρων και πείτε μας πως σας φαίνεται η εφαρμογή"</string>
-    <string name="activity_donation_action_translate_title">"Μεταφράστε"</string>
-    <string name="activity_donation_action_translate_content">"Μεταφράστε τις προτάσεις στην γλώσσα σας"</string>
-    <string name="activity_donation_action_contribute_title">"Συνεισφέρετε"</string>
-    <string name="activity_donation_action_contribute_content">"Ο κώδικας είναι δημόσιος και όλοι μπορούν να συνεισφέρουν"</string>
-    <string name="activity_donation_final_content">"Κάθε συνεισφορά, χρηματική είτε μη-χρηματική, είναι το ίδιο σημαντική και ουσιώδης για εμένα και την εφαρμογή. Ελπίζω να την ευχαριστηθείτε και ευχαριστώ ξανά που επιλέγετε να χρησιμοποιείτε αυτή την εφαρμογή!"</string>
 
 </resources>

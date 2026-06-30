@@ -36,7 +36,6 @@
     <string name="menu_search_atm"> "Arama atm" </string>
     <string name="menu_search_bank"> "Arama banka" </string>
     <string name="menu_setting"> "Ayarlar" </string>
-    <string name="menu_support_developer"> "Geliştiriciye destek ol" </string>
     <string name="menu_about"> "Hakkında" </string>
 
     <!-- Transactions -->
@@ -199,7 +198,6 @@
     <string name="title_activity_backend_explorer"> "Arka ucu keşfedin" </string>
     <string name="title_activity_backend_file_picker"> "Bir dosya seç" </string>
     <string name="title_activity_backend_folder_picker"> "Bir klasör seçin" </string>
-    <string name="title_activity_support_developer"> "Geliştiriciye destek ol" </string>
     <string name="title_activity_import_data"> "Verileri içe aktar" </string>
     <string name="title_activity_export_data"> "Verileri dışa aktar" "</string>
 
@@ -526,7 +524,6 @@
 
     <string name="about_hint_version"> "Sürüm oluştur" </string>
     <string name="about_hint_changelog"> "Değişiklikler" </string>
-    <string name="about_hint_support"> "Gelişimi destekleyin" </string>
     <string name="about_hint_rate_app"> "Bu uygulamaya puan verin" </string>
     <string name="about_hint_open_source_libraries"> "Açık kaynak kütüphaneleri" </string>
     <string name="about_hint_report_bug"> "Hata bildir" </string>
@@ -544,19 +541,14 @@
 
     <string name="activity_launcher_legacy_edition_upgrade_title"> "Yükseltme…" </string>
     <string name="activity_launcher_first_start_title"> "Tallybook'e Hoş Geldiniz" </string>
-    <string name="activity_launcher_first_start_content"> "Bu uygulamayı ilk kez kullanıyor musunuz veya önceki bir yedeği geri yüklemek mi istiyorsunuz?" </string>
     <string name="activity_launcher_first_start_button_first_time"> "İlk kez" </string>
     <string name="activity_launcher_first_start_button_restore_backup"> "Yedeklemeyi geri yükle" </string>
 
     <string name="activity_intro_title_slide_1"> "Artık kötü sürpriz yok" </string>
     <string name="activity_intro_title_slide_2"> "Keşfedin ve planlayın" </string>
     <string name="activity_intro_title_slide_3"> "Kaynağı aç" </string>
-    <string name="activity_intro_title_slide_4"> "Bulut yedekleri" </string>
     <string name="activity_intro_title_slide_5"> "Aferin" </string>
-    <string name="activity_intro_description_slide_1"> "Tüm harcamalarınızı takip etmenize yardımcı olacak" </string>
     <string name="activity_intro_description_slide_2"> "Nerede çok para harcadığınızı analiz edebilir ve bir miktar bütçe ayarlayabilirsiniz" </string>
-    <string name="activity_intro_description_slide_3"> "Proje artık açık kaynak ve herkes katkıda bulunabilir" </string>
-    <string name="activity_intro_description_slide_4"> "Verilerinizi asla kaybetmemenize yardımcı olmak için en çok kullanılan bulut hizmetlerini destekliyor" </string>
     <string name="activity_intro_description_slide_5"> "Artık ilk cüzdanınızı oluşturmak için yönlendirileceksiniz" </string>
 
     <string name="help_create_new_pin_code"> "Yeni bir pin kodu oluşturun" </string>
@@ -664,22 +656,5 @@
     <string name="notification_channel_name_exchange_rate"> "Döviz kurları" </string>
     <string name="notification_channel_name_error"> "Hata" </string>
 
-    <string name="activity_donation_first_title"> "Teşekkürler!" </string>
-    <string name="activity_donation_first_content"> "Bu uygulamayı beğendiyseniz ve faydalı bulursanız, bana bir bira almayı düşünün. Bu projeyi destekleyecek ve geliştirmeye devam etmemi teşvik edecek." </string>
-    <string name="activity_donation_second_title"> "Neden yapayım?" </string>
-    <string name="activity_donation_second_content"> "Birisi,“ Hayattaki en güzel şeyler ücretsizdir ”diyebilir ve ben de aynı fikirdeyim. Arkadaşlık, sevgi veya güzel gün doğumu hatıralarını satın alamazsınız. Bu yüzden paylaşmaya karar verdim. Bu uygulamanın kaynak kodu ücretsizdir.Ama ne yazık ki, hayat özgür değil.Kırma zamanının her günü sadece 24 saatiniz var ve kendinizi desteklemek için nasıl harcayacağınıza karar vermek zorundasınız. Bu projeyi seviyorsanız ve görmek istiyorsanız Gelecekte evrimleşiyor, üzerinde daha fazla zaman ayırmama izin vermek için çalışmamı desteklemeyi düşünüyorum. Herhangi bir katkı büyük bir fark yaratıyor. "</string>
-    <string name="activity_donation_third_title"> "Parasal katkı sağlayamıyor musunuz? Sorun değil, yine de çok yardımcı olabilirsiniz!" </string>
-    <string name="activity_donation_crypto_address_copied"> "Adres kopyalandı" </string>
-    <string name="activity_donation_action_share_title"> "Paylaş" </string>
-    <string name="activity_donation_action_share_content"> "Sözcüğü arkadaşların arasında yay" "</string>
-    <string name="activity_donation_action_share_message"> "Merhaba,% s bölümüne bir göz atın" </string>
-    <string name="activity_donation_action_share_using"> "" ile paylaşın </string>
-    <string name="activity_donation_action_rate_title"> "Rate" </string>
-    <string name="activity_donation_action_rate_content"> "Bize ne düşündüğünüzü söyleyen 5 başlangıçlı bir inceleme yazın" </string>
-    <string name="activity_donation_action_translate_title"> "Çevir" </string>
-    <string name="activity_donation_action_translate_content"> "Dizeleri kendi dilinizde yerelleştirin" </string>
-    <string name="activity_donation_action_contribute_title"> "Contribute" </string>
-    <string name="activity_donation_action_contribute_content"> "Kaynak kodu herkese açık ve herkes işbirliği yapabilir" </string>
-    <string name="activity_donation_final_content"> "Parasal veya parasal olmayan her katkı benim için eşit ve önemli bir fark yaratıyor. Umarım beğenirsiniz ve bu uygulamayı kullanmayı seçtiğiniz için tekrar teşekkürler." </string>
 
 </resources>

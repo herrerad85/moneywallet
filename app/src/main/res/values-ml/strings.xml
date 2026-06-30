@@ -20,7 +20,6 @@
     <string name="menu_search_atm">"എടിഎമ്മിൽ തിരയുക"</string>
     <string name="menu_search_bank">"തിരയൽ ബാങ്ക്"</string>
     <string name="menu_setting">"ക്രമീകരണങ്ങൾ"</string>
-    <string name="menu_support_developer">"പിന്തുണാ ഡവലപ്പർ"</string>
     <string name="menu_about">"കുറിച്ച്"</string>
 
     
@@ -192,7 +191,6 @@
     <string name="title_activity_backend_explorer">"ബാക്കെൻഡ് പര്യവേക്ഷണം ചെയ്യുക"</string>
     <string name="title_activity_backend_file_picker">"ഒരു ഫയൽ തിരഞ്ഞെടുക്കുക"</string>
     <string name="title_activity_backend_folder_picker">"ഒരു ഫോൾഡർ തിരഞ്ഞെടുക്കുക"</string>
-    <string name="title_activity_support_developer">"പിന്തുണാ ഡവലപ്പർ"</string>
     <string name="title_activity_import_data">"ഡാറ്റ ഇമ്പോർട്ടുചെയ്യുക"</string>
     <string name="title_activity_export_data">"ഡാറ്റ എക്സ്പോർട്ടുചെയ്യുക"</string>
 
@@ -528,7 +526,6 @@
 
     <string name="about_hint_version">"ബിൽഡ് പതിപ്പ്"</string>
     <string name="about_hint_changelog">"ചേഞ്ച്ലോഗ്"</string>
-    <string name="about_hint_support">"വികസനത്തെ പിന്തുണയ്ക്കുക"</string>
     <string name="about_hint_rate_app">"ഈ അപ്ലിക്കേഷൻ റേറ്റുചെയ്യുക"</string>
     <string name="about_hint_open_source_libraries">"ഓപ്പൺ സോഴ്സ് ലൈബ്രറികൾ"</string>
     <string name="about_hint_report_bug">"ഒരു ബഗ് റിപ്പോർട്ടുചെയ്യുക"</string>
@@ -546,19 +543,14 @@
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"നവീകരിക്കുന്നു…"</string>
     <string name="activity_launcher_first_start_title">"Tallybookിലേക്ക് സ്വാഗതം"</string>
-    <string name="activity_launcher_first_start_content">"നിങ്ങൾ ആദ്യമായാണ് ഈ അപ്ലിക്കേഷൻ ഉപയോഗിക്കുന്നത് അല്ലെങ്കിൽ മുമ്പത്തെ ബാക്കപ്പ് പുന restore സ്ഥാപിക്കാൻ നിങ്ങൾ ആഗ്രഹിക്കുന്നുണ്ടോ?"</string>
     <string name="activity_launcher_first_start_button_first_time">"ആദ്യതവണ"</string>
     <string name="activity_launcher_first_start_button_restore_backup">"ബാക്കപ്പ് പുന ore സ്ഥാപിക്കുക"</string>
 
     <string name="activity_intro_title_slide_1">"കൂടുതൽ മോശം ആശ്ചര്യങ്ങളൊന്നുമില്ല"</string>
     <string name="activity_intro_title_slide_2">"കണ്ടെത്തി ആസൂത്രണം ചെയ്യുക"</string>
     <string name="activity_intro_title_slide_3">"ഓപ്പൺ സോഴ്സ്"</string>
-    <string name="activity_intro_title_slide_4">"ക്ലൗഡ് ബാക്കപ്പുകൾ"</string>
     <string name="activity_intro_title_slide_5">"നന്നായി"</string>
-    <string name="activity_intro_description_slide_1">"ഇത് നിങ്ങളുടെ എല്ലാ ചെലവുകളും ട്രാക്കുചെയ്യാൻ സഹായിക്കും"</string>
     <string name="activity_intro_description_slide_2">"നിങ്ങൾ എവിടെയാണ് ധാരാളം ചെലവഴിക്കുന്നതെന്ന് വിശകലനം ചെയ്യാനും കുറച്ച് ബജറ്റ് സജ്ജീകരിക്കാനും കഴിയും"</string>
-    <string name="activity_intro_description_slide_3">"പ്രോജക്റ്റ് ഇപ്പോൾ ഓപ്പൺ സോഴ്സ് ആണ്, എല്ലാവർക്കും സംഭാവന ചെയ്യാൻ കഴിയും"</string>
-    <string name="activity_intro_description_slide_4">"നിങ്ങളുടെ ഡാറ്റ ഒരിക്കലും നഷ്ടപ്പെടുത്താൻ സഹായിക്കുന്നതിന് ഇത് ഏറ്റവും കൂടുതൽ ഉപയോഗിച്ച ക്ലൗഡ് സേവനങ്ങളെ പിന്തുണയ്ക്കുന്നു"</string>
     <string name="activity_intro_description_slide_5">"നിങ്ങളുടെ ആദ്യ വാലറ്റ് സൃഷ്ടിക്കുന്നതിന് നിങ്ങളെ ഇപ്പോൾ റീഡയറക്ട് ചെയ്യും"</string>
 
     <string name="help_create_new_pin_code">"ഒരു പുതിയ പിൻ കോഡ് സൃഷ്ടിക്കുക"</string>
@@ -666,22 +658,5 @@
     <string name="notification_channel_name_exchange_rate">"വിനിമയ നിരക്ക്"</string>
     <string name="notification_channel_name_error">"പിശക്"</string>
 
-    <string name="activity_donation_first_title">"നന്ദി!"</string>
-    <string name="activity_donation_first_content">"നിങ്ങൾ ഈ ആപ്ലിക്കേഷൻ ഇഷ്ടപ്പെടുകയും അത് ഉപയോഗപ്രദമാണെന്ന് തോന്നുകയും ചെയ്യുന്നുവെങ്കിൽ, എനിക്ക് ഒരു ബിയർ വാങ്ങുന്നത് പരിഗണിക്കുക. ഇത് ഈ പ്രോജക്റ്റിനെ പിന്തുണയ്ക്കുകയും വികസനത്തിൽ തുടരാൻ എന്നെ പ്രോത്സാഹിപ്പിക്കുകയും ചെയ്യും."</string>
-    <string name="activity_donation_second_title">"എന്തുകൊണ്ട് ഞാന്?"</string>
-    <string name="activity_donation_second_content">"ജീവിതത്തിലെ മികച്ച കാര്യങ്ങൾ സ are ജന്യമാണ്" എന്ന് ആരെങ്കിലും പറഞ്ഞേക്കാം, ഞാൻ അതിനോട് യോജിക്കുന്നു. നിങ്ങൾക്ക് സൗഹൃദമോ സ്നേഹമോ മനോഹരമായ സൂര്യോദയത്തിന്റെ ഓർമ്മയോ വാങ്ങാൻ കഴിയില്ല. അതിനാലാണ് ഈ ആപ്ലിക്കേഷന്റെ സോഴ്സ് കോഡ് സ share ജന്യമായി പങ്കിടാൻ ഞാൻ തീരുമാനിച്ചത്. നിർഭാഗ്യവശാൽ, ജീവിതം സ is ജന്യമല്ല. നിങ്ങൾക്ക് എല്ലാ ദിവസവും 24 മണിക്കൂർ മാത്രമേയുള്ളൂ, സ്വയം പിന്തുണയ്ക്കാൻ അവ എങ്ങനെ ചെലവഴിക്കണമെന്ന് നിങ്ങൾ തീരുമാനമെടുക്കണം.നിങ്ങൾ ഈ പ്രോജക്റ്റ് ഇഷ്ടപ്പെടുകയും ഭാവിയിൽ ഇത് വികസിക്കുന്നത് കാണാൻ ആഗ്രഹിക്കുകയും ചെയ്യുന്നുവെങ്കിൽ, പിന്തുണയ്ക്കുന്നതിനെക്കുറിച്ച് ചിന്തിക്കുക അതിൽ കൂടുതൽ സമയം അനുവദിക്കാൻ എന്നെ അനുവദിക്കുന്ന എന്റെ ജോലി. ഏത് സംഭാവനയും വളരെയധികം വ്യത്യാസങ്ങൾ സൃഷ്ടിക്കുന്നു. "</string>
-    <string name="activity_donation_third_title">"ധനസമ്പാദനം നടത്താൻ കഴിയുന്നില്ലേ? കുഴപ്പമില്ല, നിങ്ങൾക്ക് ഇപ്പോഴും വളരെയധികം സഹായിക്കാനാകും!"</string>
-    <string name="activity_donation_crypto_address_copied">"വിലാസം പകർത്തി"</string>
-    <string name="activity_donation_action_share_title">"പങ്കിടുക"</string>
-    <string name="activity_donation_action_share_content">"നിങ്ങളുടെ സുഹൃത്തുക്കൾക്കിടയിൽ ഇത് പ്രചരിപ്പിക്കുക"</string>
-    <string name="activity_donation_action_share_message">"ഹായ്, %s നോക്കൂ"</string>
-    <string name="activity_donation_action_share_using">"ഉപയോഗിച്ച് പങ്കിടുക"</string>
-    <string name="activity_donation_action_rate_title">"നിരക്ക്"</string>
-    <string name="activity_donation_action_rate_content">"ഇതിനെക്കുറിച്ച് നിങ്ങളുടെ അഭിപ്രായം ഞങ്ങളോട് പറയുന്ന 5 ആരംഭ അവലോകനം എഴുതുക"</string>
-    <string name="activity_donation_action_translate_title">"വിവർത്തനം"</string>
-    <string name="activity_donation_action_translate_content">"നിങ്ങളുടെ ഭാഷയിലെ സ്ട്രിംഗുകൾ പ്രാദേശികവൽക്കരിക്കുക"</string>
-    <string name="activity_donation_action_contribute_title">"സംഭാവന ചെയ്യുക"</string>
-    <string name="activity_donation_action_contribute_content">"ഉറവിട കോഡ് എല്ലാവർക്കുമുള്ളതിനാൽ എല്ലാവർക്കും സഹകരിക്കാൻ കഴിയും"</string>
-    <string name="activity_donation_final_content">"പണമോ പണേതരമോ ആയ എല്ലാ സംഭാവനകളും തുല്യമാണ്, എന്നെ സംബന്ധിച്ചിടത്തോളം കാര്യമായ വ്യത്യാസമുണ്ടാക്കുന്നു. നിങ്ങൾ ഇത് ആസ്വദിക്കുമെന്ന് പ്രതീക്ഷിക്കുന്നു, ഈ ആപ്ലിക്കേഷൻ ഉപയോഗിക്കാൻ തിരഞ്ഞെടുത്തതിന് വീണ്ടും നന്ദി."</string>
 
 </resources>

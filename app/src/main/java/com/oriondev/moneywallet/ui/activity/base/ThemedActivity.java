@@ -27,10 +27,14 @@ import android.os.Bundle;
 import androidx.annotation.CallSuper;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import android.graphics.Insets;
 import androidx.core.view.LayoutInflaterCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.ui.view.theme.ITheme;
@@ -63,6 +67,49 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         onThemeSetup(ThemeEngine.getTheme());
+    }
+
+    // From Android 15 (API 35) edge to edge is enforced for apps targeting SDK 35: the system bars
+    // no longer reserve space, so without this the toolbar would sit under the status bar and the
+    // bottom controls (first run buttons, keypad, FABs) under the navigation bar. We opt the content
+    // back into the safe area by padding it with the system bar and display cutout insets. The bars
+    // themselves show through to the themed window background, and onThemeStatusBarIcons keeps the
+    // bar icons legible against it. Centralised here so every activity that goes through this base
+    // class inherits the fix.
+
+    @Override
+    public void setContentView(int layoutResID) {
+        super.setContentView(layoutResID);
+        applySystemBarInsets();
+    }
+
+    @Override
+    public void setContentView(View view) {
+        super.setContentView(view);
+        applySystemBarInsets();
+    }
+
+    @Override
+    public void setContentView(View view, ViewGroup.LayoutParams params) {
+        super.setContentView(view, params);
+        applySystemBarInsets();
+    }
+
+    private void applySystemBarInsets() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            return;
+        }
+        final View content = findViewById(android.R.id.content);
+        if (content == null) {
+            return;
+        }
+        content.setOnApplyWindowInsetsListener((view, insets) -> {
+            Insets bars = insets.getInsets(WindowInsets.Type.systemBars()
+                    | WindowInsets.Type.displayCutout());
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            return WindowInsets.CONSUMED;
+        });
+        content.requestApplyInsets();
     }
 
     /**
@@ -126,7 +173,17 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
     }
 
     protected void onThemeStatusBarIcons(ITheme theme) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            // Under enforced edge to edge the system bars sit over the window background rather than
+            // the status bar color, so the icon contrast must follow that background instead.
+            WindowInsetsController controller = getWindow().getInsetsController();
+            if (controller != null) {
+                int mask = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                        | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                boolean lightBackground = Utils.isColorLight(theme.getColorWindowBackground());
+                controller.setSystemBarsAppearance(lightBackground ? mask : 0, mask);
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             View decorView = getWindow().getDecorView();
             int systemUiVisibility = decorView.getSystemUiVisibility();
             int statusBarColor = theme.getColorPrimaryDark();

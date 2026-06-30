@@ -96,7 +96,6 @@
         <activity android:name=".ui.activity.TransactionListActivity" />
         <activity android:name=".ui.activity.LockActivity" />
         <activity android:name=".ui.activity.BackendExplorerActivity" />
-        <activity android:name=".ui.activity.DonationActivity" />
         <activity android:name=".ui.activity.ImportExportActivity" />
 
         <provider

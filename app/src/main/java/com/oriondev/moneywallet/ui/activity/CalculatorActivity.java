@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.oriondev.moneywallet.R;
@@ -64,6 +65,7 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
     private static final String OP_EXECUTE = "E";
 
     private TextView mDisplayTextView;
+    private Button mActionButton;
     private EquationSolver mSolver;
 
     private boolean mKeypadMode;
@@ -72,6 +74,7 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
     protected void onCreatePanelView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_panel_calculator, parent, true);
         mDisplayTextView = view.findViewById(R.id.display_text_view);
+        mActionButton = view.findViewById(R.id.keyboard_action_button);
         registerListener(view.findViewById(R.id.keyboard_000_button), OP_000);
         registerListener(view.findViewById(R.id.keyboard_0_button), OP_0);
         registerListener(view.findViewById(R.id.keyboard_1_button), OP_1);
@@ -103,6 +106,7 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
             long money = intent.getLongExtra(MONEY, 0L);
             mSolver.setValue(currency, money);
         }
+        updateActionButton();
     }
 
     private void registerListener(View button, String operation) {
@@ -176,5 +180,26 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
     @Override
     public void onUpdateDisplay(String text) {
         mDisplayTextView.setText(text);
+        updateActionButton();
+    }
+
+    /**
+     * The action key doubles as the equals key of the calculator and as the submit key of the
+     * amount keypad. Showing "=" for the common case of just typing an amount is unclear, so in
+     * keypad mode with no pending equation we show a confirm affordance instead, while still
+     * keeping "=" whenever there is a pending operation to compute.
+     */
+    private void updateActionButton() {
+        if (mActionButton == null || mSolver == null) {
+            return;
+        }
+        boolean confirm = mKeypadMode && !mSolver.isPendingOperation();
+        if (confirm) {
+            mActionButton.setText(R.string.keyboard_confirm);
+            mActionButton.setContentDescription(getString(R.string.description_calculator_confirm));
+        } else {
+            mActionButton.setText(R.string.keyboard_equal);
+            mActionButton.setContentDescription(getString(R.string.description_calculator_equals));
+        }
     }
 }

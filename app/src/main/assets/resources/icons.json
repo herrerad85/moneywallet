@@ -8,6 +8,15 @@
         },
         {
           "resource": "ic_icon_shoewear"
+        },
+        {
+          "resource": "ic_icon_pants"
+        },
+        {
+          "resource": "ic_icon_shirt"
+        },
+        {
+          "resource": "ic_icon_dress"
         }
       ]
     },
@@ -134,6 +143,9 @@
       "name": "icon_category_sport_and_free_time",
       "icons": [
         {
+          "resource": "ic_icon_dumbbell"
+        },
+        {
           "resource": "ic_icon_baseball"
         },
         {
@@ -179,6 +191,9 @@
     {
       "name": "icon_category_technology",
       "icons": [
+        {
+          "resource": "ic_icon_internet"
+        },
         {
           "resource": "ic_icon_android_phone_white"
         },

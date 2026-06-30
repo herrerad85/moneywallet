@@ -24,8 +24,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Insets;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowInsets;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.StringRes;
 import androidx.fragment.app.Fragment;
@@ -62,6 +66,28 @@ public class TutorialActivity extends AppIntro2 {
         addSlide(R.drawable.ic_intro_slide_5, R.string.activity_intro_title_slide_5, R.string.activity_intro_description_slide_5, Color.parseColor("#4CAF50"));
         showStatusBar(false);
         setColorTransitionsEnabled(true);
+        applySystemBarInsets();
+    }
+
+    // This intro screen does not go through ThemedActivity (it extends the AppIntro base class), so it
+    // needs its own edge to edge handling on Android 15 (API 35), otherwise the bottom navigation with
+    // the Next and Done actions sits under the navigation bar. Pad the content with the system bar and
+    // display cutout insets so those controls stay reachable.
+    private void applySystemBarInsets() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            return;
+        }
+        final View content = findViewById(android.R.id.content);
+        if (content == null) {
+            return;
+        }
+        content.setOnApplyWindowInsetsListener((view, insets) -> {
+            Insets bars = insets.getInsets(WindowInsets.Type.systemBars()
+                    | WindowInsets.Type.displayCutout());
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            return WindowInsets.CONSUMED;
+        });
+        content.requestApplyInsets();
     }
 
     private void addSlide(@DrawableRes int drawable, @StringRes int title, @StringRes int description, int backgroundColor) {

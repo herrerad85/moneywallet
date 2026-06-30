@@ -36,7 +36,6 @@
     <string name="menu_search_atm">"Rechercher DAB"</string>
     <string name="menu_search_bank">"Rechercher banque"</string>
     <string name="menu_setting">"Paramètres"</string>
-    <string name="menu_support_developer">"Soutenir le développeur"</string>
     <string name="menu_about">"À propos"</string>
 
     <!-- Transactions -->
@@ -205,7 +204,6 @@
     <string name="title_activity_backend_explorer">"Explorer les services"</string>
     <string name="title_activity_backend_file_picker">"Choisissez un fichier"</string>
     <string name="title_activity_backend_folder_picker">"Choisissez un dossier"</string>
-    <string name="title_activity_support_developer">Aider le développeur</string>
     <string name="title_activity_import_data">"Importer des données"</string>
     <string name="title_activity_export_data">"Exporter des données"</string>
 
@@ -540,7 +538,6 @@
 
     <string name="about_hint_version">"Version"</string>
     <string name="about_hint_changelog">"Changelog"</string>
-    <string name="about_hint_support">Supporter le développement</string>
     <string name="about_hint_rate_app">Noter cette appli</string>
     <string name="about_hint_open_source_libraries">Bibliothèques open source</string>
     <string name="about_hint_report_bug">Signaler un bug</string>
@@ -558,19 +555,14 @@
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"Mise à jour…"</string>
     <string name="activity_launcher_first_start_title">Bienvenue sur Tallybook</string>
-    <string name="activity_launcher_first_start_content">C\'est la première fois que vous utilisez cette application ou voulez-vous restaurer une sauvegarde?</string>
     <string name="activity_launcher_first_start_button_first_time">Première fois</string>
     <string name="activity_launcher_first_start_button_restore_backup">Restaurer une sauvegarde</string>
 
     <string name="activity_intro_title_slide_1">Plus de mauvaise surprises</string>
     <string name="activity_intro_title_slide_2">"Analyse et Planifie"</string>
     <string name="activity_intro_title_slide_3">Open source</string>
-    <string name="activity_intro_title_slide_4">Sauvegarde dans le cloud</string>
     <string name="activity_intro_title_slide_5">"C\'est parti"</string>
-    <string name="activity_intro_description_slide_1">Cette appli va vous aider à suivre toutes vos dépenses</string>
     <string name="activity_intro_description_slide_2">Vous pouvez analyser où vous dépenser beaucoup et mettre en place un budget</string>
-    <string name="activity_intro_description_slide_3">Le projet est open source et tout le monde peut y contribuer</string>
-    <string name="activity_intro_description_slide_4">Il supporte la plupart des services cloud afin de vous aider à ne jamais perdre vos données</string>
     <string name="activity_intro_description_slide_5">Vous allez être amené à créer votre premier portefeuille</string>
 
     <string name="help_create_new_pin_code">"Créer un nouveau code PIN"</string>
@@ -678,22 +670,5 @@
     <string name="notification_channel_name_exchange_rate">"Taux de change"</string>
     <string name="notification_channel_name_error">"Erreur"</string>
 
-    <string name="activity_donation_first_title">Merci!</string>
-    <string name="activity_donation_first_content">"Si vous aimez cette application et que vous la trouvez utile, envisagez de m'acheter une bière. Cela soutiendra ce projet et m'encouragera à maintenir le développement."</string>
-    <string name="activity_donation_second_title">Pourquoi le devrais-je?</string>
-    <string name="activity_donation_second_content">"Quelqu'un pourrait dire: «Les meilleures choses dans la vie sont gratuites» et je suis d'accord avec cela. Vous ne pouvez pas acheter d'amitié, d'amour ou un souvenir d'un beau lever de soleil. C'est pourquoi j'ai décidé de partager gratuitement le code source de cette application. Mais malheureusement, la vie n'est pas gratuite. Vous ne disposez que de 24 heures par jour et vous devez décider comment les dépenser pour subvenir à vos besoins. Si vous aimez ce projet et que vous souhaitez le voir évoluer à l'avenir, pensez à soutenir mon travail pour me permettre de consacrer plus de temps à celui-ci. Toute contribution fait une immense différence."</string>
-    <string name="activity_donation_third_title">"Vous ne pouvez pas contribuer de façon monétaire? Pas de problème, vous pouvez nous aidez de beaucoup d'autre manière!"</string>
-    <string name="activity_donation_crypto_address_copied">Adresse copiée</string>
-    <string name="activity_donation_action_share_title">Partager</string>
-    <string name="activity_donation_action_share_content">Passez le mot à vos amis</string>
-    <string name="activity_donation_action_share_message">Salut, jette un oeil à %s</string>
-    <string name="activity_donation_action_share_using">"Partager en utilisant"</string>
-    <string name="activity_donation_action_rate_title">Noter</string>
-    <string name="activity_donation_action_rate_content">"Mettez 5 étoiles si vous appréciez l'application."</string>
-    <string name="activity_donation_action_translate_title">Traduire</string>
-    <string name="activity_donation_action_translate_content">"Traduisez les chaîne de caractères dans votre langue"</string>
-    <string name="activity_donation_action_contribute_title">Contribuer</string>
-    <string name="activity_donation_action_contribute_content">Le code source est public et tout le monde peut venir y contribuer</string>
-    <string name="activity_donation_final_content">"Chaque contribution, monétaire ou non monétaire est égale et fait une différence substantielle pour moi. J'espère que vous l'apprécierez et merci encore d'avoir choisi d'utiliser cette application."</string>
 
 </resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Original Tallybook category icon, released under the project's GPLv3 license. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:viewportWidth="136.914"
+    android:viewportHeight="136.914"
+    android:width="136.914dp"
+    android:height="136.914dp">
+    <path
+        android:pathData="M5.124,68.457 a63.333,63.333 0 1,0 126.666,0 a63.333,63.333 0 1,0 -126.666,0 Z"
+        android:fillColor="#3A7BD5" />
+    <path
+        android:pathData="M38.457,68.457 a30,30 0 1,0 60,0 a30,30 0 1,0 -60,0"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4" />
+    <path
+        android:pathData="M38.457,68.457 L98.457,68.457"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4" />
+    <path
+        android:pathData="M68.457,38.457 a15,30 0 1,0 0,60 a15,30 0 1,0 0,-60"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4" />
+    <path
+        android:pathData="M44.457,53.457 a40,18 0 0,0 48,0 M44.457,83.457 a40,18 0 0,1 48,0"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4" />
+</vector>

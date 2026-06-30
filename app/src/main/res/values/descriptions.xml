@@ -37,6 +37,8 @@
     <string name="description_file_icon">"File icon"</string>
     <string name="description_attachment_icon">"Attachment icon"</string>
     <string name="description_backspace_icon">"Backspace icon"</string>
+    <string name="description_calculator_confirm">"Confirm amount"</string>
+    <string name="description_calculator_equals">"Calculate"</string>
     <string name="description_place_picker_icon">"Place picker icon"</string>
     <string name="description_setting_category_icon">"Setting category icon"</string>
 </resources>

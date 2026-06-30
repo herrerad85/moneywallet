@@ -36,7 +36,6 @@
     <string name="menu_search_atm">"جستجوی خودپرداز"</string>
     <string name="menu_search_bank">"جستجوی بانک"</string>
     <string name="menu_setting">"تنظیمات"</string>
-    <string name="menu_support_developer">"پشتیبانی توسعه‌دهنده"</string>
     <string name="menu_about">"درباره"</string>
 
     <!-- Transactions -->
@@ -190,7 +189,6 @@
     <string name="title_activity_backend_explorer">"کاوش در backend"</string>
     <string name="title_activity_backend_file_picker">"یک فایل انتخاب کنید"</string>
     <string name="title_activity_backend_folder_picker">"یک پوشه را انتخاب کنید"</string>
-    <string name="title_activity_support_developer">"پشتیبانی از توسعه دهنده"</string>
 
     <string name="title_fragment_item_wallet">"کیف پول"</string>
     <string name="title_fragment_item_transaction">"تراکنش"</string>
@@ -493,7 +491,6 @@
 
     <string name="about_hint_version">"نسخه ساخت"</string>
     <string name="about_hint_changelog">"تغییرات"</string>
-    <string name="about_hint_support">"پشتیبانی از توسعه"</string>
     <string name="about_hint_rate_app">"امتیاز دهی به این برنامه"</string>
     <string name="about_hint_open_source_libraries">"کتابخانه های منبع باز"</string>
     <string name="about_hint_report_bug">"گزارش یک اشکال"</string>
@@ -511,19 +508,14 @@
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"ارتقاء …"</string>
     <string name="activity_launcher_first_start_title">"به Tallybook خوش آمدید"</string>
-    <string name="activity_launcher_first_start_content">"آیا اولین بار است که شما از این برنامه استفاده می کنید یا میخواهید پشتیبان قبلی را بازگردانید؟"</string>
     <string name="activity_launcher_first_start_button_first_time">"بار اول"</string>
     <string name="activity_launcher_first_start_button_restore_backup">"بازگرداندن پشتیبان"</string>
 
     <string name="activity_intro_title_slide_1">"دیگر غافلگیری کافیست"</string>
     <string name="activity_intro_title_slide_2">"کشف و برنامه ریزی کنید"</string>
     <string name="activity_intro_title_slide_3">"متن باز"</string>
-    <string name="activity_intro_title_slide_4">"پشتیبان گیری ابر"</string>
     <string name="activity_intro_title_slide_5">"آفرین"</string>
-    <string name="activity_intro_description_slide_1">"این کمک خواهد کرد که تمام هزینه های خود را ردیابی کنید"</string>
     <string name="activity_intro_description_slide_2">"شما می توانید تجزیه و تحلیل کنید بجای اینکه شما زمان زیادی صرف و تنظیم بودجه کنید"</string>
-    <string name="activity_intro_description_slide_3">"این پروژه در حال حاضر منبع باز است و هر کس می تواند کمک کند"</string>
-    <string name="activity_intro_description_slide_4">"  از بیشتر سرویس‌های معمول ابری پشتیبانی می کند تا به شما کمک کند هرگز اطلاعات خود را از دست ندهید"</string>
     <string name="activity_intro_description_slide_5">"شما اکنون برای ایجاد اولین کیف پول خود هدایت می شوید"</string>
 
     <string name="help_create_new_pin_code">"یک کد پین جدید ایجاد کنید"</string>
@@ -631,22 +623,5 @@
     <string name="notification_channel_name_exchange_rate">"نرخ تبدیل"</string>
     <string name="notification_channel_name_error">"خطا"</string>
 
-    <string name="activity_donation_first_title">"متشکرم!"</string>
-    <string name="activity_donation_first_content">"اگر شما این نرم افزار را دوست دارید و آن را مفید می دانید، یک آبجو خریداری کنید. این پروژه را پشتیبانی می کند و من را تشویق می کند تا آن را در حال توسعه نگه دارد."</string>
-    <string name="activity_donation_second_title">"چرا من؟"</string>
-    <string name="activity_donation_second_content">"کسی ممکن است بگوید بهترین چیزها در زندگی آزاد هستند و من با آن موافق هستم. شما نمی توانید دوستی، عشق و یا خاطره ای از یک طلوع خورشید زیبا را خریداری کنید. به همین دلیل تصمیم گرفتم که کد منبع این برنامه را به صورت رایگان به اشتراک بگذارم. اما متأسفانه زندگی رایگان نیست. شما فقط 24 ساعت در هر روز از زمان کمیاب دارید و باید تصمیمی بگیرید که چگونه آنها را صرف حمایت از خود کنید. اگر این پروژه را دوست دارید و می خواهید آن را در آینده در حال پیشرفت ببینید، فکر می کنم در حمایت از کار من به من اجازه می دهد زمان بیشتری را به آن اختصاص دهم. هر مشارکت یک تفاوت بزرگ ایجاد می کند."</string>
-    <string name="activity_donation_third_title">"نمیتوانید نقدی کمک کنید? هیچ مشکلی وجود ندارد، شما هنوز هم می توانید کمک زیادی کنید!"</string>
-    <string name="activity_donation_crypto_address_copied">"آدرس کپی شده است"</string>
-    <string name="activity_donation_action_share_title">"اشتراک گذاری"</string>
-    <string name="activity_donation_action_share_content">"کلمه را در میان دوستانتان پخش کنید"</string>
-    <string name="activity_donation_action_share_message">"سلام این رو ببین: %s"</string>
-    <string name="activity_donation_action_share_using">"اشتراک به وسیله"</string>
-    <string name="activity_donation_action_rate_title">"رتبه دهی"</string>
-    <string name="activity_donation_action_rate_content">" یک ۵ ستاره در بررسی آغازین بنویسید و به ما بگویید که چه چیزی در مورد آن فکر می کنید"</string>
-    <string name="activity_donation_action_translate_title">"ترجمه"</string>
-    <string name="activity_donation_action_translate_content">"رشته ها را به زبان خود ترجمه کنید"</string>
-    <string name="activity_donation_action_contribute_title">"مشارکت"</string>
-    <string name="activity_donation_action_contribute_content">"کد منبع عمومی است و همه می توانند همکاری کنند"</string>
-    <string name="activity_donation_final_content">"هر مشارکت ، پولی یا غیر پولی، برابر است و برای من بسیار با ارزش است.امیدوارم از آن لذت ببرید و دوباره با تشکر از انتخاب این نرم افزار"</string>
 
 </resources>
