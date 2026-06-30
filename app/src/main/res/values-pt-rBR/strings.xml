@@ -340,7 +340,6 @@
     <string name="message_no_file_found">"Nenhum arquivo encontrado"</string>
     <string name="message_error_backend_recoverable">"Problema de conexão. Tente novamente."</string>
 
-    <string name="cover_message_backup_storage_access_framework_title">"O aplicativo consegue criar e restaurar backups de qualquer provedor de arquivo (ex: Nextcloud, Dropbox ou seu sistema de arquivos)"</string>
     <string name="cover_message_backup_external_memory_title">"O aplicativo consegue criar e restaurar backups diretamente de fontes de armazenamento externo do dispositivo"</string>
     <string name="cover_message_backup_dropbox_title">"O aplicativo consegue criar e restaurar backups diretamente da sua conta pessoal do Dropbox"</string>
     <string name="cover_message_backup_google_drive_title">"O aplicativo consegue criar e restaurar backups diretamente da sua conta pessoal do Google Drive"</string>
@@ -388,7 +387,6 @@
     <string name="message_backup_creation_failed">"Falha durante a criação do arquivo de backup. Mensagem: %s"</string>
     <string name="message_backup_restoring_failed">"Falha durante a restauração do arquivo de backup. Mensagem: %s"</string>
     <string name="message_backup_service_dropbox_disconnect">"Tem certeza que deseja desconectar da sua conta do Dropbox?"</string>
-    <string name="message_backup_service_storage_access_framework_disconnect">"Tem certeza que deseja liberar o provedor de conteúdo atual? Nenhum arquivo será removido."</string>
     <string name="message_backup_service_google_drive_disconnect">"Tem certeza que deseja desconectar da sua conta do Google Drive?"</string>
     <string name="message_action_archive_wallet">"Tem certeza que deseja arquivar essa carteira? Ela não ficara mais visível no menu."</string>
     <string name="message_action_unarchive_wallet">"Tem certeza que deseja desarquivar essa carteira? Ela ficara visível no menu novamente."</string>
@@ -455,7 +453,6 @@
     <string name="service_backup_drop_box">"DropBox"</string>
     <string name="service_backup_google_drive">"Google Drive"</string>
     <string name="service_backup_external_memory">"Armazenamento Externo"</string>
-    <string name="service_backup_storage_access_framework" translatable="false">"Framework de Acesso ao Armazenamento"</string>
 
     <string name="setting_title_user_interface">"Interface de usuário"</string>
     <string name="setting_title_utility">"Utilidades"</string>
