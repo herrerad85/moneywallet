@@ -476,6 +476,11 @@ public class BackupHandlerFragment extends Fragment implements BackupFileAdapter
                 } else if (operation == BackupHandlerIntentService.ACTION_BACKUP) {
                     IFile backup = intent.getParcelableExtra(BackupHandlerIntentService.BACKUP_FILE);
                     mBackupAdapter.addFileToList(backup);
+                    // reveal the list in case the folder was empty before this backup,
+                    // otherwise the empty state keeps hiding the newly created file
+                    if (mBackupAdapter.getItemCount() > 0) {
+                        mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.READY);
+                    }
                 }
             } else if (TextUtils.equals(action, LocalAction.ACTION_BACKUP_SERVICE_FAILED)) {
                 int operation = intent.getIntExtra(BackupHandlerIntentService.ACTION, 0);
