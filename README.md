@@ -15,7 +15,7 @@ This fork is independent and is not endorsed by or affiliated with the original 
 ## Status
 The Android 14/15 compatibility work has landed: a modernized FOSS/OpenStreetMap build, the Android 12+ manifest and PendingIntent updates, and a fix for the startup crash caused by a legacy auto-backup path (reported upstream as [#177](https://github.com/AndreAle94/moneywallet/issues/177) and [#286](https://github.com/AndreAle94/moneywallet/issues/286)). It has been verified on an Android 15 emulator (launch, wallet creation, income and expense entry, totals, and relaunch persistence).
 
-No public release has been published yet. Export/import under scoped storage and self-hosted sync are still to come, and an F-Droid submission is planned. Progress is tracked in this repository's [issues](https://github.com/herrerad85/moneywallet/issues) and milestones.
+The rebrand to Tallybook is complete: a new name and application id, a verified backup and restore migration path (see [MIGRATION.md](MIGRATION.md)), export and import fixed under scoped storage, and a local-folder backup option that works with file sync tools. No public release has been published yet. Self-hosted WebDAV/Nextcloud sync and an F-Droid submission are still planned. Progress is tracked in this repository's [issues](https://github.com/herrerad85/moneywallet/issues) and milestones.
 
 ## Build from source
 The fully open-source variant uses OpenStreetMap and no proprietary services. Build the `floss` + `osm` flavors:
@@ -30,8 +30,10 @@ Note on icons: the original precompiled app bundled an icon pack that is not red
 
 ## Roadmap
 - Android 14/15 compatibility: modernize the build, fix the startup crash, verify core flows. (Done.)
-- Rebranded release: new name and application id, build and migration docs, F-Droid metadata and submission.
-- Backup, export, and sync: fix export and import under scoped storage, add WebDAV/Nextcloud sync (upstream [#67](https://github.com/AndreAle94/moneywallet/issues/67)), and a local-file, Syncthing-friendly option.
+- Rebrand: new name and application id, build and migration docs. (Done.)
+- Backup and export: fix export and import under scoped storage, and a local-file, Syncthing-friendly backup option. (Done.)
+- Self-hosted sync: WebDAV/Nextcloud (upstream [#67](https://github.com/AndreAle94/moneywallet/issues/67)). (Planned.)
+- F-Droid: metadata and submission. (Planned.)
 
 See the pinned [roadmap](https://github.com/herrerad85/moneywallet/issues/15) for current details.
 

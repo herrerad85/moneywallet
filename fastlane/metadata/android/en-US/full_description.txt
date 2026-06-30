@@ -1,0 +1,29 @@
+Tallybook is a private, offline-first expense and budget manager for Android. Track your spending across multiple wallets, set budgets, plan recurring transactions, and see where your money goes, all on your device, with no account and no sign-up.
+
+Tallybook is a maintained, community fork of MoneyWallet by AndreAle94, a GPL-licensed expense manager whose last release was in 2021. This fork modernizes the open-source build for current Android, fixes the startup crash that stopped the original launching for many users, and continues maintenance under a new name.
+
+Tallybook is a separate app from MoneyWallet. It uses its own application id, so it installs side by side with the original and does not replace it or read its data automatically. You can move your data across manually with the built-in backup and restore. See the migration guide in the project for the verified steps.
+
+Features:
+
+* Multiple wallets, each with its own balance
+* Income and expense transactions with categories and notes
+* Budgets to keep categories on track
+* Recurring transactions for bills and regular income
+* Multi-currency with exchange rates
+* Debts and credits
+* Saving goals
+* Overview charts and reports
+* Calendar view of your activity
+* Transaction templates and scheduled events
+* Local backup and restore, with a local-folder option you can sync using your own tools
+* Export to CSV, Excel, and PDF, plus CSV import
+* Optional place attachments using OpenStreetMap, with no proprietary services
+
+Privacy and offline first:
+
+* No account, no sign-up, and no ads
+* Your data stays on your device unless you choose to back it up or export it
+* The open-source build uses OpenStreetMap and no Google services
+
+Tallybook is free software under the GNU General Public License v3.0.
