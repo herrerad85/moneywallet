@@ -5,10 +5,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.MenuRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.text.TextUtils;
@@ -24,12 +31,10 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.DataFormat;
-import com.oriondev.moneywallet.model.LocalFile;
 import com.oriondev.moneywallet.model.Wallet;
 import com.oriondev.moneywallet.picker.DateTimePicker;
 import com.oriondev.moneywallet.picker.ExportColumnsPicker;
 import com.oriondev.moneywallet.picker.ImportExportFormatPicker;
-import com.oriondev.moneywallet.picker.LocalFilePicker;
 import com.oriondev.moneywallet.picker.WalletPicker;
 import com.oriondev.moneywallet.service.ImportExportIntentService;
 import com.oriondev.moneywallet.ui.activity.base.SinglePanelActivity;
@@ -39,13 +44,18 @@ import com.oriondev.moneywallet.ui.view.text.Validator;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 import com.oriondev.moneywallet.utils.DateFormatter;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Date;
 import java.util.Locale;
 
 /**
  * Created by andrea on 19/12/18.
  */
-public class ImportExportActivity extends SinglePanelActivity implements ImportExportFormatPicker.Controller, DateTimePicker.Controller, WalletPicker.MultiWalletController, LocalFilePicker.Controller, ExportColumnsPicker.Controller {
+public class ImportExportActivity extends SinglePanelActivity implements ImportExportFormatPicker.Controller, DateTimePicker.Controller, WalletPicker.MultiWalletController, ExportColumnsPicker.Controller {
 
     public static final String MODE = "ImportExportActivity::Argument::Mode";
 
@@ -56,9 +66,11 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
     private static final String TAG_START_DATE_TIME_PICKER = "ImportExportActivity::Tag::StartDateTimePicker";
     private static final String TAG_END_DATE_TIME_PICKER = "ImportExportActivity::Tag::EndDateTimePicker";
     private static final String TAG_WALLET_PICKER = "ImportExportActivity::Tag::WalletPicker";
-    private static final String TAG_LOCAL_FILE_PICKER = "ImportExportActivity::Tag::LocalFilePicker";
     private static final String TAG_COLUMNS_PICKER = "ImportExportActivity::Tag::ColumnsPicker";
     private static final String TAG_PROGRESS_DIALOG = "ImportExportActivity::tag::GenericProgressDialog";
+
+    private static final String SS_IMPORT_FILE = "ImportExportActivity::SavedState::ImportFile";
+    private static final String SS_EXPORT_FOLDER_URI = "ImportExportActivity::SavedState::ExportFolderUri";
 
     private MaterialEditText mImportFormatEditText;
     private MaterialEditText mExportFormatEditText;
@@ -74,8 +86,16 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
     private DateTimePicker mStartDateTimePicker;
     private DateTimePicker mEndDateTimePicker;
     private WalletPicker mWalletPicker;
-    private LocalFilePicker mLocalFilePicker;
     private ExportColumnsPicker mExportColumnsPicker;
+
+    // Scoped-storage file access: the user picks files and folders through the Storage
+    // Access Framework instead of a raw filesystem browser. Imports are staged into app
+    // storage so the File-based importer can read them; exports are written into app
+    // storage and then copied into the picked folder through a content uri.
+    private ActivityResultLauncher<String[]> mImportFileLauncher;
+    private ActivityResultLauncher<Uri> mExportFolderLauncher;
+    private File mImportFile;
+    private Uri mExportFolderUri;
 
     private int mMode;
 
@@ -85,6 +105,41 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mImportFileLauncher = registerForActivityResult(new ActivityResultContracts.OpenDocument(),
+                new ActivityResultCallback<Uri>() {
+
+                    @Override
+                    public void onActivityResult(Uri uri) {
+                        if (uri != null) {
+                            onImportFileSelected(uri);
+                        }
+                    }
+
+                });
+        mExportFolderLauncher = registerForActivityResult(new ActivityResultContracts.OpenDocumentTree(),
+                new ActivityResultCallback<Uri>() {
+
+                    @Override
+                    public void onActivityResult(Uri uri) {
+                        if (uri != null) {
+                            onExportFolderSelected(uri);
+                        }
+                    }
+
+                });
+        if (savedInstanceState != null) {
+            String importPath = savedInstanceState.getString(SS_IMPORT_FILE);
+            if (importPath != null) {
+                mImportFile = new File(importPath);
+                mImportFileEditText.setText(mImportFile.getName());
+            }
+            String exportFolderUri = savedInstanceState.getString(SS_EXPORT_FOLDER_URI);
+            if (exportFolderUri != null) {
+                mExportFolderUri = Uri.parse(exportFolderUri);
+                DocumentFile folder = DocumentFile.fromTreeUri(this, mExportFolderUri);
+                mExportFolderEditText.setText(folder != null ? folder.getName() : null);
+            }
+        }
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(LocalAction.ACTION_IMPORT_SERVICE_STARTED);
         intentFilter.addAction(LocalAction.ACTION_IMPORT_SERVICE_FINISHED);
@@ -101,6 +156,17 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
         super.onDestroy();
         if (mLocalBroadcastManager != null) {
             mLocalBroadcastManager.unregisterReceiver(mLocalBroadcastReceiver);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mImportFile != null) {
+            outState.putString(SS_IMPORT_FILE, mImportFile.getAbsolutePath());
+        }
+        if (mExportFolderUri != null) {
+            outState.putString(SS_EXPORT_FOLDER_URI, mExportFolderUri.toString());
         }
     }
 
@@ -198,7 +264,8 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
 
             @Override
             public void onClick(View v) {
-                mLocalFilePicker.showPicker();
+                // accept any mime type: csv files are reported inconsistently by providers
+                mImportFileLauncher.launch(new String[]{"*/*"});
             }
 
         });
@@ -206,7 +273,7 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
 
             @Override
             public void onClick(View v) {
-                mLocalFilePicker.showPicker();
+                mExportFolderLauncher.launch(null);
             }
 
         });
@@ -287,7 +354,7 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
 
             @Override
             public boolean isValid(@NonNull CharSequence charSequence) {
-                return mLocalFilePicker.isSelected();
+                return mImportFile != null;
             }
 
             @Override
@@ -306,7 +373,7 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
 
             @Override
             public boolean isValid(@NonNull CharSequence charSequence) {
-                return mLocalFilePicker.isSelected();
+                return mExportFolderUri != null;
             }
 
             @Override
@@ -331,14 +398,6 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
         mWalletPicker = WalletPicker.createPicker(fragmentManager, TAG_WALLET_PICKER, (Wallet[]) null);
         mExportColumnsPicker = ExportColumnsPicker.createPicker(fragmentManager, TAG_COLUMNS_PICKER);
         mProgressDialog = (GenericProgressDialog) fragmentManager.findFragmentByTag(TAG_PROGRESS_DIALOG);
-        switch (mMode) {
-            case MODE_IMPORT:
-                mLocalFilePicker = LocalFilePicker.createPicker(fragmentManager, TAG_LOCAL_FILE_PICKER, LocalFilePicker.MODE_FILE_PICKER);
-                break;
-            case MODE_EXPORT:
-                mLocalFilePicker = LocalFilePicker.createPicker(fragmentManager, TAG_LOCAL_FILE_PICKER, LocalFilePicker.MODE_FOLDER_PICKER);
-                break;
-        }
     }
 
     private int getActivityMode() {
@@ -412,7 +471,7 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
         Intent intent = new Intent(this, ImportExportIntentService.class);
         intent.putExtra(ImportExportIntentService.MODE, ImportExportIntentService.MODE_IMPORT);
         intent.putExtra(ImportExportIntentService.FORMAT, mDataFormatPicker.getCurrentFormat());
-        intent.putExtra(ImportExportIntentService.FILE, mLocalFilePicker.getCurrentFile().getFile());
+        intent.putExtra(ImportExportIntentService.FILE, mImportFile);
         startService(intent);
     }
 
@@ -423,10 +482,114 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
         intent.putExtra(ImportExportIntentService.START_DATE, mStartDateTimePicker.getCurrentDateTime());
         intent.putExtra(ImportExportIntentService.END_DATE, mEndDateTimePicker.getCurrentDateTime());
         intent.putExtra(ImportExportIntentService.WALLETS, mWalletPicker.getCurrentWallets());
-        intent.putExtra(ImportExportIntentService.FOLDER, mLocalFilePicker.getCurrentFile().getFile());
+        // the exporter writes into app storage; the result is copied to the picked
+        // folder once the service reports the export finished
+        intent.putExtra(ImportExportIntentService.FOLDER, getExportCacheDir());
         intent.putExtra(ImportExportIntentService.UNIQUE_WALLET, mUniqueWalletCheckbox.isChecked());
         intent.putExtra(ImportExportIntentService.OPTIONAL_COLUMNS, mExportColumnsPicker.getCurrentServiceColumns());
         startService(intent);
+    }
+
+    private void onImportFileSelected(Uri uri) {
+        try {
+            String displayName = queryDisplayName(uri);
+            if (TextUtils.isEmpty(displayName)) {
+                displayName = "import";
+            }
+            // stage the selected content into app storage so the File-based importer can read it
+            File staged = new File(getCacheDir(), "import_" + displayName.replace('/', '_'));
+            try (InputStream input = getContentResolver().openInputStream(uri);
+                 OutputStream output = new FileOutputStream(staged)) {
+                if (input == null) {
+                    throw new IOException("unable to open the selected file");
+                }
+                copyStream(input, output);
+            }
+            mImportFile = staged;
+            mImportFileEditText.setText(displayName);
+            // try to detect the file type starting from the file extension
+            if (!mDataFormatPicker.isSelected()) {
+                int dot = displayName.lastIndexOf('.');
+                if (dot >= 0) {
+                    String extension = displayName.substring(dot).toLowerCase(Locale.ENGLISH);
+                    if (extension.equals(".csv")) {
+                        mDataFormatPicker.setCurrentFormat(DataFormat.CSV);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            mImportFile = null;
+            mImportFileEditText.setText(null);
+            ThemedDialog.buildMaterialDialog(this)
+                    .title(R.string.title_failed)
+                    .content(R.string.message_data_import_failed, e.getMessage())
+                    .positiveText(android.R.string.ok)
+                    .show();
+        }
+    }
+
+    private void onExportFolderSelected(Uri uri) {
+        // the tree grant is valid for this process, which covers the export that follows
+        mExportFolderUri = uri;
+        DocumentFile folder = DocumentFile.fromTreeUri(this, uri);
+        mExportFolderEditText.setText(folder != null ? folder.getName() : null);
+    }
+
+    private File getExportCacheDir() {
+        File directory = new File(getCacheDir(), "export");
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        return directory;
+    }
+
+    private void saveExportToSelectedFolder(Uri sourceUri, String type) throws IOException {
+        if (mExportFolderUri == null || sourceUri == null) {
+            throw new IOException("missing export destination");
+        }
+        DocumentFile folder = DocumentFile.fromTreeUri(this, mExportFolderUri);
+        if (folder == null) {
+            throw new IOException("unable to open the destination folder");
+        }
+        String name = queryDisplayName(sourceUri);
+        if (TextUtils.isEmpty(name)) {
+            name = sourceUri.getLastPathSegment();
+        }
+        // the display name already carries the right extension, so use a neutral mime
+        // type to keep the provider from rewriting the file name
+        DocumentFile target = folder.createFile("application/octet-stream", name);
+        if (target == null) {
+            throw new IOException("unable to create the file in the destination folder");
+        }
+        try (InputStream input = getContentResolver().openInputStream(sourceUri);
+             OutputStream output = getContentResolver().openOutputStream(target.getUri())) {
+            if (input == null || output == null) {
+                throw new IOException("unable to copy the export to the destination");
+            }
+            copyStream(input, output);
+        }
+    }
+
+    private String queryDisplayName(Uri uri) {
+        try (Cursor cursor = getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (index >= 0) {
+                    return cursor.getString(index);
+                }
+            }
+        }
+        return null;
+    }
+
+    // data files are small, so the copy runs synchronously on the calling thread
+    private static void copyStream(InputStream input, OutputStream output) throws IOException {
+        byte[] buffer = new byte[8192];
+        int read;
+        while ((read = input.read(buffer)) != -1) {
+            output.write(buffer, 0, read);
+        }
+        output.flush();
     }
 
     @Override
@@ -504,30 +667,6 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
             mWalletsEditText.setText(null);
         }
         onFormatOrWalletChanged();
-    }
-
-    @Override
-    public void onLocalFileChanged(String tag, int mode, LocalFile localFile) {
-        switch (mode) {
-            case LocalFilePicker.MODE_FILE_PICKER:
-                mImportFileEditText.setText(localFile != null ? localFile.getLocalPath() : null);
-                if (localFile != null && !mDataFormatPicker.isSelected()) {
-                    // try to detect the file type starting from the file extension
-                    String name = localFile.getName();
-                    String extension = name.substring(name.lastIndexOf("."));
-                    if (!TextUtils.isEmpty(extension)) {
-                        switch (extension.toLowerCase(Locale.ENGLISH)) {
-                            case ".csv":
-                                mDataFormatPicker.setCurrentFormat(DataFormat.CSV);
-                                break;
-                        }
-                    }
-                }
-                break;
-            case LocalFilePicker.MODE_FOLDER_PICKER:
-                mExportFolderEditText.setText(localFile != null ? localFile.getLocalPath() : null);
-                break;
-        }
     }
 
     private void onFormatOrWalletChanged() {
@@ -617,6 +756,18 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
                             mProgressDialog.dismissAllowingStateLoss();
                             mProgressDialog = null;
                         }
+                        final Uri resultUri = intent.getParcelableExtra(ImportExportIntentService.RESULT_FILE_URI);
+                        final String resultType = intent.getStringExtra(ImportExportIntentService.RESULT_FILE_TYPE);
+                        try {
+                            saveExportToSelectedFolder(resultUri, resultType);
+                        } catch (IOException e) {
+                            ThemedDialog.buildMaterialDialog(ImportExportActivity.this)
+                                    .title(R.string.title_failed)
+                                    .content(R.string.message_data_export_failed, e.getMessage())
+                                    .positiveText(android.R.string.ok)
+                                    .show();
+                            break;
+                        }
                         ThemedDialog.buildMaterialDialog(ImportExportActivity.this)
                                 .title(R.string.title_success)
                                 .content(R.string.message_data_export_success)
@@ -626,16 +777,14 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
 
                                     @Override
                                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                        Uri uri = intent.getParcelableExtra(ImportExportIntentService.RESULT_FILE_URI);
-                                        String type = intent.getStringExtra(ImportExportIntentService.RESULT_FILE_TYPE);
-                                        if (uri != null) {
+                                        if (resultUri != null) {
                                             Intent target = new Intent(Intent.ACTION_VIEW);
-                                            target.setDataAndType(uri, type);
+                                            target.setDataAndType(resultUri, resultType);
                                             target.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                                             target.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                            Intent intent = Intent.createChooser(target, getString(R.string.action_open));
+                                            Intent chooser = Intent.createChooser(target, getString(R.string.action_open));
                                             try {
-                                                startActivity(intent);
+                                                startActivity(chooser);
                                             } catch (ActivityNotFoundException ignore) {
                                                 // no activity to handle this type of file
                                             }

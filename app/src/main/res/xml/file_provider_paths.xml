@@ -21,4 +21,5 @@
 <paths>
     <external-files-path name="Attachments" path="attachments/"/>
     <external-path name="external_files" path="."/>
+    <cache-path name="exports" path="export/"/>
 </paths>
