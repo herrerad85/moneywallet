@@ -19,18 +19,6 @@
         }
       ]
     },{
-      "name_resource": "about_hint_logo_designer",
-      "items": [
-        {
-          "icon": "ic_perm_identity_black_24dp",
-          "title": "Adam Lapinski"
-        },{
-          "icon": "ic_public_black_24dp",
-          "title_resource": "about_hint_website",
-          "link": "http://www.yeti-designs.com"
-        }
-      ]
-    },{
       "name_resource": "about_hint_icon_licenses",
       "items": [
         {

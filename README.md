@@ -40,4 +40,4 @@ See the pinned [roadmap](https://github.com/herrerad85/moneywallet/issues/15) fo
 ## Upstream and license
 Tallybook is a fork of [AndreAle94/moneywallet](https://github.com/AndreAle94/moneywallet). MoneyWallet is free software licensed under the GNU General Public License v3.0, and Tallybook remains under the same license. See [LICENSE.md](LICENSE.md).
 
-Original work and credits: MoneyWallet was created by its upstream author and contributors. Logo by Adam Lapinski; first-start images from Freepik; internal icon set from RoundIcons.
+Original work and credits: MoneyWallet was created by its upstream author and contributors. The Tallybook app icon is original artwork for this fork, released under the same GPLv3 license. In-app tutorial images are from Freepik and the internal icon set is from RoundIcons.

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Tallybook launcher icon foreground.
+  ~ Original artwork for the Tallybook fork, released under the project's GPLv3 license.
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M38,36 L38,72 M49,36 L49,72 M60,36 L60,72 M71,36 L71,72 M31,75 L78,33" />
+</vector>

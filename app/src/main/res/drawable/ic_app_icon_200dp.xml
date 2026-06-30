@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Tallybook in-app logo shown on the first-start and upgrade screens.
+  ~ Original artwork for the Tallybook fork, released under the project's GPLv3 license.
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <path
+        android:fillColor="#3F51B5"
+        android:pathData="M50,10 L150,10 Q190,10 190,50 L190,150 Q190,190 150,190 L50,190 Q10,190 10,150 L10,50 Q10,10 50,10 Z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="13"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M66,66 L66,134 M89,66 L89,134 M112,66 L112,134 M135,66 L135,134 M57,140 L144,60" />
+</vector>
