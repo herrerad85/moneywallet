@@ -26,7 +26,7 @@ The fully open-source variant uses OpenStreetMap and no proprietary services. Bu
 
 Requirements: a recent Android SDK and JDK 17. The `proprietary` flavor (Google Drive, Dropbox) and the `gmap` flavor (Google Maps) require API keys in `gradle.properties` and are not the focus of this fork.
 
-Note on icons: the original precompiled app bundled an icon pack that is not redistributable; only the small free subset is in the source tree. Providing a distributable icon set is part of the ongoing release work.
+Note on icons: the launcher, the intro illustrations, and the category picker icons are original artwork for this fork, released under the GPLv3. The interface also uses Material Design Icons, licensed under Apache-2.0.
 
 ## Roadmap
 - Android 14/15 compatibility: modernize the build, fix the startup crash, verify core flows. (Done.)
@@ -41,4 +41,4 @@ See the pinned [roadmap](https://github.com/herrerad85/moneywallet/issues/15) fo
 ## Upstream and license
 Tallybook is a fork of [AndreAle94/moneywallet](https://github.com/AndreAle94/moneywallet). MoneyWallet is free software licensed under the GNU General Public License v3.0, and Tallybook remains under the same license. See [LICENSE.md](LICENSE.md).
 
-Original work and credits: MoneyWallet was created by its upstream author and contributors. The Tallybook app icon is original artwork for this fork, released under the same GPLv3 license. In-app tutorial images are from Freepik and the internal icon set is from RoundIcons.
+Original work and credits: MoneyWallet was created by its upstream author and contributors. The Tallybook app icon, the intro illustrations, and the category icons are original artwork for this fork, released under the same GPLv3 license. The interface also uses Material Design Icons, licensed under Apache-2.0.

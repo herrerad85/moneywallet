@@ -21,20 +21,10 @@
       "name_resource": "about_hint_icon_licenses",
       "items": [
         {
-          "icon": "ic_freepik_logo_24dp",
-          "title": "Freepik",
-          "subtitle_resource": "about_hint_icon_image_intro",
-          "link": "https://www.freepik.com"
-        },{
           "icon": "ic_material_design_icons_logo_24dp",
           "title": "Materialdesignicons.com",
           "subtitle_resource": "about_hint_md_icons",
           "link": "https://materialdesignicons.com"
-        },{
-          "icon": "ic_round_icons_logo_24dp",
-          "title": "Round icons",
-          "subtitle_resource": "about_hint_icon_pack",
-          "link": "https://roundicons.com"
         }
       ]
     },{
