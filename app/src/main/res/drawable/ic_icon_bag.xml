@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Original Tallybook category icon, released under the project's GPLv3 license. -->
+<!-- Original Tallybook category disc (GPLv3). Glyph from Lucide (lucide.dev), ISC License. Glyph recolored white and composed onto the disc. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:viewportWidth="136.914"
     android:viewportHeight="136.914"
@@ -8,12 +8,40 @@
     <path
         android:pathData="M5.124,68.457 a63.333,63.333 0 1,0 126.666,0 a63.333,63.333 0 1,0 -126.666,0 Z"
         android:fillColor="#5B6B8C" />
-    <path
-        android:pathData="M57,61 C57,50 67,50 67,61 L64,61 C64,54 60,54 60,61 Z
-        M70,61 C70,50 80,50 80,61 L77,61 C77,54 73,54 73,61 Z
-        M55.5,61 H81.5 A11.5,11.5 0 0 1 81.5,84 H55.5 A11.5,11.5 0 0 1 55.5,61 Z"
-        android:fillColor="#FFFFFF" />
-    <path
-        android:pathData="M47,72 H90 V74.5 H47 Z"
-        android:fillColor="#B3FFFFFF" />
+    <group
+        android:scaleX="2.75"
+        android:scaleY="2.75"
+        android:translateX="35.457"
+        android:translateY="35.457">
+        <path
+            android:pathData="M6 20a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M8 18V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v14"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M10 20h4"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M14,20 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M6,20 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
 </vector>

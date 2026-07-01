@@ -25,6 +25,22 @@
           "title": "Materialdesignicons.com",
           "subtitle_resource": "about_hint_md_icons",
           "link": "https://materialdesignicons.com"
+        },{
+          "title": "Phosphor Icons",
+          "subtitle": "Category glyphs, MIT License",
+          "link": "https://phosphoricons.com"
+        },{
+          "title": "Tabler Icons",
+          "subtitle": "Category glyphs, MIT License",
+          "link": "https://tabler.io/icons"
+        },{
+          "title": "Lucide",
+          "subtitle": "Category glyphs, ISC License",
+          "link": "https://lucide.dev"
+        },{
+          "title": "Bootstrap Icons",
+          "subtitle": "Category glyphs, MIT License",
+          "link": "https://icons.getbootstrap.com"
         }
       ]
     },{

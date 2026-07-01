@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Original Tallybook category icon, released under the project's GPLv3 license. -->
+<!-- Original Tallybook category disc (GPLv3). Glyph from Tabler Icons (tabler.io/icons), MIT License. Glyph recolored white and composed onto the disc. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:viewportWidth="136.914"
     android:viewportHeight="136.914"
@@ -8,18 +8,58 @@
     <path
         android:pathData="M5.124,68.457 a63.333,63.333 0 1,0 126.666,0 a63.333,63.333 0 1,0 -126.666,0 Z"
         android:fillColor="#8E44AD" />
-    <path
-        android:fillType="evenOdd"
-        android:pathData="M58,44 H79 A6,6 0 0,1 85,50 V87 A6,6 0 0,1 79,93 H58 A6,6 0 0,1 52,87 V50 A6,6 0 0,1 58,44 Z
-            M57,51 H80 V64 H57 Z
-            M58.5,71 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z
-            M66,71 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z
-            M73.5,71 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z
-            M58.5,79 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z
-            M66,79 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z
-            M73.5,79 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z
-            M58.5,87 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z
-            M66,87 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z
-            M73.5,87 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z"
-        android:fillColor="#FFFFFF" />
+    <group
+        android:scaleX="2.75"
+        android:scaleY="2.75"
+        android:translateX="35.457"
+        android:translateY="35.457">
+        <path
+            android:pathData="M21 15h-2.5c-.398 0 -.779 .158 -1.061 .439c-.281 .281 -.439 .663 -.439 1.061c0 .398 .158 .779 .439 1.061c.281 .281 .663 .439 1.061 .439h1c.398 0 .779 .158 1.061 .439c.281 .281 .439 .663 .439 1.061c0 .398 -.158 .779 -.439 1.061c-.281 .281 -.663 .439 -1.061 .439h-2.5"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M19 21v1m0 -8v1"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M13 21h-7c-.53 0 -1.039 -.211 -1.414 -.586c-.375 -.375 -.586 -.884 -.586 -1.414v-10c0 -.53 .211 -1.039 .586 -1.414c.375 -.375 .884 -.586 1.414 -.586h2m12 3.12v-1.12c0 -.53 -.211 -1.039 -.586 -1.414c-.375 -.375 -.884 -.586 -1.414 -.586h-2"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M16 10v-6c0 -.53 -.211 -1.039 -.586 -1.414c-.375 -.375 -.884 -.586 -1.414 -.586h-4c-.53 0 -1.039 .211 -1.414 .586c-.375 .375 -.586 .884 -.586 1.414v6m8 0h-8m8 0h1m-9 0h-1"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M8 14v.01"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M8 17v.01"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M12 13.99v.01"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M12 17v.01"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
 </vector>

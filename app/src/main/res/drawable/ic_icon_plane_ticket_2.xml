@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Original Tallybook category icon, released under the project's GPLv3 license. -->
+<!-- Original Tallybook category disc (GPLv3). Glyph from Bootstrap Icons (icons.getbootstrap.com), MIT License. Glyph recolored white and composed onto the disc. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:viewportWidth="136.914"
     android:viewportHeight="136.914"
@@ -8,13 +8,16 @@
     <path
         android:pathData="M5.124,68.457 a63.333,63.333 0 1,0 126.666,0 a63.333,63.333 0 1,0 -126.666,0 Z"
         android:fillColor="#16A085" />
-    <path
-        android:fillType="evenOdd"
-        android:pathData="M50,55 H87 A5,5 0 0 1 92,60 V77 A5,5 0 0 1 87,82 H50 A5,5 0 0 1 45,77 V60 A5,5 0 0 1 50,55 Z
-        M77.5,59 h2 v3 h-2 Z
-        M77.5,65 h2 v3 h-2 Z
-        M77.5,71 h2 v3 h-2 Z
-        M77.5,77 h2 v3 h-2 Z
-        M51,68 a4,4 0 1 0 8,0 a4,4 0 1 0 -8,0 Z"
-        android:fillColor="#FFFFFF" />
+    <group
+        android:scaleX="4.125"
+        android:scaleY="4.125"
+        android:translateX="35.457"
+        android:translateY="35.457">
+        <path
+            android:pathData="M4 4.85v.9h1v-.9zm7 0v.9h1v-.9zm-7 1.8v.9h1v-.9zm7 0v.9h1v-.9zm-7 1.8v.9h1v-.9zm7 0v.9h1v-.9zm-7 1.8v.9h1v-.9zm7 0v.9h1v-.9z"
+            android:fillColor="#FFFFFF" />
+        <path
+            android:pathData="M1.5 3A1.5 1.5 0 0 0 0 4.5V6a.5.5 0 0 0 .5.5 1.5 1.5 0 1 1 0 3 .5.5 0 0 0-.5.5v1.5A1.5 1.5 0 0 0 1.5 13h13a1.5 1.5 0 0 0 1.5-1.5V10a.5.5 0 0 0-.5-.5 1.5 1.5 0 0 1 0-3A.5.5 0 0 0 16 6V4.5A1.5 1.5 0 0 0 14.5 3zM1 4.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v1.05a2.5 2.5 0 0 0 0 4.9v1.05a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-1.05a2.5 2.5 0 0 0 0-4.9z"
+            android:fillColor="#FFFFFF" />
+    </group>
 </vector>

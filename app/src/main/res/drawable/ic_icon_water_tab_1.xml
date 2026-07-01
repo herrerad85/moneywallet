@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Original Tallybook category icon, released under the project's GPLv3 license. -->
+<!-- Original Tallybook category disc (GPLv3). Glyph from Tabler Icons (tabler.io/icons), MIT License. Glyph recolored white and composed onto the disc. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:viewportWidth="136.914"
     android:viewportHeight="136.914"
@@ -8,10 +8,16 @@
     <path
         android:pathData="M5.124,68.457 a63.333,63.333 0 1,0 126.666,0 a63.333,63.333 0 1,0 -126.666,0 Z"
         android:fillColor="#3A7BD5" />
-    <path
-        android:pathData="M44,52 L80,52 L80,70 L72,70 L72,60 L44,60 Z M60,47 L64,47 L64,52 L60,52 Z M57.5,46 a4.5,4.5 0 1 0 9,0 a4.5,4.5 0 1 0 -9,0 Z"
-        android:fillColor="#FFFFFF" />
-    <path
-        android:pathData="M76,74 C72,80 71,83 71,86 A5,5 0 1 0 81,86 C81,83 80,80 76,74 Z"
-        android:fillColor="#FFFFFF" />
+    <group
+        android:scaleX="2.75"
+        android:scaleY="2.75"
+        android:translateX="35.457"
+        android:translateY="35.457">
+        <path
+            android:pathData="M7.502 19.423c2.602 2.105 6.395 2.105 8.996 0c2.602 -2.105 3.262 -5.708 1.566 -8.546l-4.89 -7.26c-.42 -.625 -1.287 -.803 -1.936 -.397a1.376 1.376 0 0 0 -.41 .397l-4.893 7.26c-1.695 2.838 -1.035 6.441 1.567 8.546"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
 </vector>

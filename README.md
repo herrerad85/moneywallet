@@ -26,7 +26,7 @@ The fully open-source variant uses OpenStreetMap and no proprietary services. Bu
 
 Requirements: a recent Android SDK and JDK 17. The `proprietary` flavor (Google Drive, Dropbox) and the `gmap` flavor (Google Maps) require API keys in `gradle.properties` and are not the focus of this fork.
 
-Note on icons: the launcher, the intro illustrations, and the category picker icons are original artwork for this fork, released under the GPLv3. The interface also uses Material Design Icons, licensed under Apache-2.0.
+Note on icons: the launcher and the intro illustrations are original artwork for this fork, released under the GPLv3. The category picker icons place glyphs from Phosphor Icons (MIT), Tabler Icons (MIT), Lucide (ISC), and Bootstrap Icons (MIT) on original GPLv3 disc backgrounds; a few remain original artwork. The interface also uses Material Design Icons, licensed under Apache-2.0.
 
 ## Roadmap
 - Android 14/15 compatibility: modernize the build, fix the startup crash, verify core flows. (Done.)
@@ -41,4 +41,4 @@ See the pinned [roadmap](https://github.com/herrerad85/moneywallet/issues/15) fo
 ## Upstream and license
 Tallybook is a fork of [AndreAle94/moneywallet](https://github.com/AndreAle94/moneywallet). MoneyWallet is free software licensed under the GNU General Public License v3.0, and Tallybook remains under the same license. See [LICENSE.md](LICENSE.md).
 
-Original work and credits: MoneyWallet was created by its upstream author and contributors. The Tallybook app icon, the intro illustrations, and the category icons are original artwork for this fork, released under the same GPLv3 license. The interface also uses Material Design Icons, licensed under Apache-2.0.
+Original work and credits: MoneyWallet was created by its upstream author and contributors. The Tallybook app icon and the intro illustrations are original artwork for this fork, released under the same GPLv3 license. The category icons combine original GPLv3 disc backgrounds with glyphs from Phosphor Icons (MIT), Tabler Icons (MIT), Lucide (ISC), and Bootstrap Icons (MIT); a few category icons remain original artwork. Full copyright and license texts for these icon libraries are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The interface also uses Material Design Icons, licensed under Apache-2.0.

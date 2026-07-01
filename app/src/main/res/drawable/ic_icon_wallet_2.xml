@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Original Tallybook category icon, released under the project's GPLv3 license. -->
+<!-- Original Tallybook category disc (GPLv3). Glyph from Phosphor Icons (phosphoricons.com), MIT License. Glyph recolored white and composed onto the disc. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:viewportWidth="136.914"
     android:viewportHeight="136.914"
@@ -8,12 +8,13 @@
     <path
         android:pathData="M5.124,68.457 a63.333,63.333 0 1,0 126.666,0 a63.333,63.333 0 1,0 -126.666,0 Z"
         android:fillColor="#5B6B8C" />
-    <path
-        android:fillType="evenOdd"
-        android:pathData="M50,52 H87 A6,6 0 0,1 93,58 V79 A6,6 0 0,1 87,85 H50 A6,6 0 0,1 44,79 V58 A6,6 0 0,1 50,52 Z
-            M81.5,68.457 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0 Z"
-        android:fillColor="#FFFFFF" />
-    <path
-        android:pathData="M50,62 H80 V64.5 H50 Z"
-        android:fillColor="#B3FFFFFF" />
+    <group
+        android:scaleX="0.258"
+        android:scaleY="0.258"
+        android:translateX="35.457"
+        android:translateY="35.457">
+        <path
+            android:pathData="M216,64H56a8,8,0,0,1,0-16H192a8,8,0,0,0,0-16H56A24,24,0,0,0,32,56V184a24,24,0,0,0,24,24H216a16,16,0,0,0,16-16V80A16,16,0,0,0,216,64Zm0,128H56a8,8,0,0,1-8-8V78.63A23.84,23.84,0,0,0,56,80H216Zm-48-60a12,12,0,1,1,12,12A12,12,0,0,1,168,132Z"
+            android:fillColor="#FFFFFF" />
+    </group>
 </vector>

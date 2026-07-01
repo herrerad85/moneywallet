@@ -70,6 +70,8 @@ public class License {
                 return "Apache License";
             case MIT:
                 return "MIT License";
+            case ISC:
+                return "ISC License";
             case GPL3:
                 return "GNU GPLv3";
             case GPL2:
@@ -88,6 +90,8 @@ public class License {
             switch (type) {
                 case "MIT":
                     return Type.MIT;
+                case "ISC":
+                    return Type.ISC;
                 case "APACHE":
                     return Type.APACHE;
                 case "GPL2":
@@ -110,6 +114,7 @@ public class License {
         GPL2,
         GPL3,
         AGPL,
-        MIT
+        MIT,
+        ISC
     }
 }

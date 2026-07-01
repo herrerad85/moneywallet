@@ -160,5 +160,29 @@
     "version":"2.2.0",
     "copyright":"Copyright (c) 2018 weishu",
     "license":"MIT"
+  },{
+    "name":"Phosphor Icons",
+    "author":"phosphor-icons",
+    "website":"https://github.com/phosphor-icons/core",
+    "copyright":"Copyright (c) 2023 Phosphor Icons",
+    "license":"MIT"
+  },{
+    "name":"Tabler Icons",
+    "author":"Paweł Kuna",
+    "website":"https://github.com/tabler/tabler-icons",
+    "copyright":"Copyright (c) 2020-2026 Paweł Kuna",
+    "license":"MIT"
+  },{
+    "name":"Lucide",
+    "author":"Lucide Contributors",
+    "website":"https://github.com/lucide-icons/lucide",
+    "copyright":"Copyright (c) 2026 Lucide Icons and Contributors",
+    "license":"ISC"
+  },{
+    "name":"Bootstrap Icons",
+    "author":"The Bootstrap Authors",
+    "website":"https://github.com/twbs/icons",
+    "copyright":"Copyright (c) 2019-2024 The Bootstrap Authors",
+    "license":"MIT"
   }
 ]
