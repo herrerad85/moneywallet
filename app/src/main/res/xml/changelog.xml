@@ -20,7 +20,7 @@
 
 <changelog>
 
-    <version versionName="1.0.0" versionDate="Jun 30, 2026">
+    <version versionName="1.0.0" versionDate="Jul 01, 2026">
         <change>[b]New![/b] First Tallybook release, a maintained fork of MoneyWallet.</change>
         <change>Tallybook is a separate app with its own application id and installs side by side with MoneyWallet.</change>
         <change>Move your data across manually with backup and restore. See MIGRATION.md in the project for the verified steps.</change>
