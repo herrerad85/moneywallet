@@ -1,10 +1,3 @@
-First Tallybook release.
+First Tallybook release, a maintained fork of MoneyWallet shipped as a separate app with its own application id, so it installs side by side. Move your data across with a manual backup and restore (see MIGRATION.md).
 
-Tallybook is a maintained community fork of MoneyWallet, shipped as a separate app. It has its own application id, so it installs side by side with MoneyWallet and does not read the original's data automatically. To move your data across, create a backup in MoneyWallet and restore it in Tallybook. See MIGRATION.md in the project for the verified steps.
-
-Highlights:
-* Android 14 and 15 compatibility, including a fix for the startup crash that stopped the original launching on recent Android.
-* Import and export fixed under scoped storage.
-* Local folder backup option that works with file sync tools such as Syncthing.
-* Android 15 edge-to-edge UI polish so toolbars and controls are not drawn under the system bars.
-* Original Tallybook launcher and welcome artwork.
+Also in this release: Android 14 and 15 compatibility with a startup crash fix, scoped-storage import and export fixes, a local folder backup option for file sync tools, Android 15 edge-to-edge UI polish, and original Tallybook artwork.
