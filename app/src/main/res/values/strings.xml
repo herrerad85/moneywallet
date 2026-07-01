@@ -556,9 +556,7 @@
     <string name="about_hint_google_plus">"Google Plus"</string>
     <string name="about_hint_website">"Website"</string>
     <string name="about_hint_icon_licenses">"Images and icons"</string>
-    <string name="about_hint_icon_image_intro">"Intro images"</string>
     <string name="about_hint_md_icons">"Material design icons"</string>
-    <string name="about_hint_icon_pack">"Icon pack"</string>
     <string name="about_hint_translators">"Translators"</string>
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"Upgrading…"</string>

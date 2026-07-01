@@ -501,9 +501,7 @@
     <string name="about_hint_google_plus">"Google Plus"</string>
     <string name="about_hint_website">"وبسایت"</string>
     <string name="about_hint_icon_licenses">"تصاویر و آیکون ها"</string>
-    <string name="about_hint_icon_image_intro">"تصاویر معرفی"</string>
     <string name="about_hint_md_icons">"Material design icons"</string>
-    <string name="about_hint_icon_pack">"آیکون پک"</string>
     <string name="about_hint_translators">"مترجمان"</string>
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"ارتقاء …"</string>

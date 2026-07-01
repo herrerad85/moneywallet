@@ -536,9 +536,7 @@
     <string name="about_hint_google_plus">"Google പ്ലസ്"</string>
     <string name="about_hint_website">"വെബ്സൈറ്റ്"</string>
     <string name="about_hint_icon_licenses">"ചിത്രങ്ങളും ഐക്കണുകളും"</string>
-    <string name="about_hint_icon_image_intro">"ആമുഖ ചിത്രങ്ങൾ"</string>
     <string name="about_hint_md_icons">"മെറ്റീരിയൽ ഡിസൈൻ ഐക്കണുകൾ"</string>
-    <string name="about_hint_icon_pack">"ഐക്കൺ പായ്ക്ക്"</string>
     <string name="about_hint_translators">"വിവർത്തകർ"</string>
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"നവീകരിക്കുന്നു…"</string>

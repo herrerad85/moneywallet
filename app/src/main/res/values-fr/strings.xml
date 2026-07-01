@@ -548,9 +548,7 @@
     <string name="about_hint_google_plus">Google Plus</string>
     <string name="about_hint_website">Site web</string>
     <string name="about_hint_icon_licenses">Images et icônes</string>
-    <string name="about_hint_icon_image_intro">"Images de présentation"</string>
     <string name="about_hint_md_icons">"icônes material design"</string>
-    <string name="about_hint_icon_pack">Pack d\'îcones</string>
     <string name="about_hint_translators">Traducteurs</string>
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"Mise à jour…"</string>

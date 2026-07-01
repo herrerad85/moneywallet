@@ -549,9 +549,7 @@
     <string name="about_hint_google_plus">"Google Plus"</string>
     <string name="about_hint_website">"Ιστοσελίδα"</string>
     <string name="about_hint_icon_licenses">"Εικόνες και εικονίδια"</string>
-    <string name="about_hint_icon_image_intro">"Εικόνες Intro"</string>
     <string name="about_hint_md_icons">"Material design εικονίδια"</string>
-    <string name="about_hint_icon_pack">"Πακέτο εικονιδίων"</string>
     <string name="about_hint_translators">"Μεταφραστές"</string>
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"Γίνεται ενημέρωση.."</string>

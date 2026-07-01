@@ -6,9 +6,7 @@
     <string name="about_hint_changelog">Változások listája</string>
     <string name="about_hint_fork">Fork on GitHub</string>
     <string name="about_hint_google_plus">Google Plus</string>
-    <string name="about_hint_icon_image_intro">Intro képek</string>
     <string name="about_hint_icon_licenses">Képek és Ikonok</string>
-    <string name="about_hint_icon_pack">Icon pack</string>
     <string name="about_hint_logo_designer">Logo designer</string>
     <string name="about_hint_md_icons">Material design icons</string>
     <string name="about_hint_open_source_libraries">Nyílt forráskódú könyvtárak</string>

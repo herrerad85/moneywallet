@@ -1,53 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~ Copyright (c) 2018.
-  ~
-  ~ This file is part of MoneyWallet.
-  ~
-  ~ MoneyWallet is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
-  ~
-  ~ MoneyWallet is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ~ GNU General Public License for more details.
-  ~
-  ~ You should have received a copy of the GNU General Public License
-  ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
-  -->
-
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:viewportWidth="136.914"
-    android:viewportHeight="136.914"
-    android:width="136.914dp"
-    android:height="136.914dp">
-    <path
-        android:pathData="M131.79 68.458A63.333 63.333 0 0 1 68.457001 131.791 63.333 63.333 0 0 1 5.1240005 68.458 63.333 63.333 0 0 1 68.457001 5.125 63.333 63.333 0 0 1 131.79 68.458Z"
-        android:fillColor="#eb9682" />
-    <path
-        android:pathData="M47.872 108.966c0 2.12 -1.719 3.84 -3.838 3.84l-3.512 0c-2.119 0 -3.838 -1.72 -3.838 -3.84l0 -81.018c0 -2.121 1.719 -3.84 3.838 -3.84l3.512 0c2.119 0 3.838 1.719 3.838 3.84l0 81.018z"
-        android:fillColor="#b03738" />
-    <path
-        android:pathData="M50.612001 40.845001a8.4820004 8.4820004 0 0 1 -8.482 8.482001 8.4820004 8.4820004 0 0 1 -8.482 -8.482001 8.4820004 8.4820004 0 0 1 8.482 -8.482 8.4820004 8.4820004 0 0 1 8.482 8.482z"
-        android:strokeWidth="3"
-        android:fillColor="#e84849"
-        android:strokeColor="#ffffff" />
-    <path
-        android:pathData="M74.198 108.966c0 2.12 -1.719 3.84 -3.838 3.84l-3.512 0c-2.119 0 -3.838 -1.72 -3.838 -3.84l0 -81.018c0 -2.121 1.719 -3.84 3.838 -3.84l3.512 0c2.119 0 3.838 1.719 3.838 3.84l0 81.018z"
-        android:fillColor="#b03738" />
-    <path
-        android:pathData="M76.940001 93.498001A8.4820004 8.4820004 0 0 1 68.458 101.98a8.4820004 8.4820004 0 0 1 -8.482 -8.481999 8.4820004 8.4820004 0 0 1 8.482 -8.482 8.4820004 8.4820004 0 0 1 8.482001 8.482z"
-        android:strokeWidth="3"
-        android:fillColor="#e84849"
-        android:strokeColor="#ffffff" />
-    <path
-        android:pathData="M100.524 108.966c0 2.12 -1.719 3.84 -3.838 3.84l-3.512 0c-2.119 0 -3.838 -1.72 -3.838 -3.84l0 -81.018c0 -2.121 1.719 -3.84 3.838 -3.84l3.512 0c2.119 0 3.838 1.719 3.838 3.84l0 81.018z"
-        android:fillColor="#b03738" />
-    <path
-        android:pathData="M103.266 58.396a8.4820004 8.4820004 0 0 1 -8.482003 8.482 8.4820004 8.4820004 0 0 1 -8.482001 -8.482 8.4820004 8.4820004 0 0 1 8.482001 -8.482 8.4820004 8.4820004 0 0 1 8.482003 8.482z"
-        android:strokeWidth="3"
-        android:fillColor="#e84849"
-        android:strokeColor="#ffffff" />
+<!-- Original Tallybook vector asset, released under GPL-3.0-or-later with the project. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="64dp" android:height="64dp" android:viewportWidth="64" android:viewportHeight="64">
+    <path android:pathData="M62.00,32.00 C62.00,48.57 48.57,62.00 32.00,62.00 C15.43,62.00 2.00,48.57 2.00,32.00 C2.00,15.43 15.43,2.00 32.00,2.00 C48.57,2.00 62.00,15.43 62.00,32.00 Z" android:fillColor="#5F6CDA" />
+    <path android:pathData="M56.00,32.00 C56.00,45.25 45.25,56.00 32.00,56.00 C18.75,56.00 8.00,45.25 8.00,32.00 C8.00,18.75 18.75,8.00 32.00,8.00 C45.25,8.00 56.00,18.75 56.00,32.00 Z" android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF" android:strokeWidth="1.6" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M 16.16 18.8 L 47.84 18.8 L 47.84 42.56 L 16.16 42.56 Z" android:fillColor="#FFFFFF" />
+    <path android:pathData="M 24.96 48.72 L 39.04 48.72 M 32 42.56 L 32 48.72" android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M 23.2 26.72 L 26.72 26.72 L 26.72 33.76 L 23.2 33.76 Z" android:fillColor="#222A68" />
+    <path android:pathData="M 31.12 20.56 L 34.64 20.56 L 34.64 33.76 L 31.12 33.76 Z" android:fillColor="#222A68" />
+    <path android:pathData="M 39.04 24.08 L 42.56 24.08 L 42.56 33.76 L 39.04 33.76 Z" android:fillColor="#222A68" />
 </vector>

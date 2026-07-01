@@ -534,9 +534,7 @@
     <string name="about_hint_google_plus"> "Google Plus" </string>
     <string name="about_hint_website"> "Web sitesi" </string>
     <string name="about_hint_icon_licenses"> "Resimler ve simgeler" </string>
-    <string name="about_hint_icon_image_intro"> "Intro images" </string>
     <string name="about_hint_md_icons"> "Malzeme tasarım ikonları" </string>
-    <string name="about_hint_icon_pack"> "Simge paketi" </string>
     <string name="about_hint_translators"> "Çevirmenler" </string>
 
     <string name="activity_launcher_legacy_edition_upgrade_title"> "Yükseltme…" </string>

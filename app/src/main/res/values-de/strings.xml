@@ -216,9 +216,7 @@
     <string name="about_hint_developer">Entwickler</string>
     <string name="about_hint_fork">Fork auf Github</string>
     <string name="about_hint_google_plus">Google Plus</string>
-    <string name="about_hint_icon_image_intro">Bilder im Intro</string>
     <string name="about_hint_icon_licenses">Bilder und Symbole</string>
-    <string name="about_hint_icon_pack">Symbolpaket</string>
     <string name="about_hint_logo_designer">Logo-Designer</string>
     <string name="about_hint_md_icons">Material-Design-Symbole</string>
     <string name="about_hint_open_source_libraries">Open-Source-Bibliotheken</string>

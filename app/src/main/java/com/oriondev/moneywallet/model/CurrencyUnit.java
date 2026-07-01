@@ -110,24 +110,24 @@ public class CurrencyUnit implements Parcelable {
 
     @DrawableRes
     public static int getCurrencyFlag(Context context, String iso) {
-        String resourceName = "ic_flag_" + iso.toLowerCase(Locale.ENGLISH);
-        return getIconResourceId(context, resourceName);
+        return 0;
     }
 
     public static Drawable getCurrencyDrawable(String iso) {
-        String text = TextUtils.isEmpty(iso) ? "?" : iso.substring(0, 1);
-        int color = Utils.getRandomMDColor(iso.hashCode());
+        String text = TextUtils.isEmpty(iso) ? "?" : iso.toUpperCase(Locale.ENGLISH);
+        if (text.length() > 3) {
+            text = text.substring(0, 3);
+        }
+        int color = Utils.getRandomMDColor(text.hashCode());
         return TextDrawable.builder()
                 .beginConfig()
                     .width(60)
                     .height(60)
+                    .fontSize(18)
+                    .bold()
                     .textColor(Utils.getBestColor(color))
                 .endConfig()
-                .buildRect(text, color);
+                .buildRoundRect(text, color, 8);
     }
 
-    private static int getIconResourceId(Context context, String resource) {
-        String packageName = context.getPackageName();
-        return context.getResources().getIdentifier(resource, "drawable", packageName);
-    }
 }

@@ -1,27 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Original Tallybook category icon, released under the project's GPLv3 license. -->
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:viewportWidth="136.914"
-    android:viewportHeight="136.914"
-    android:width="136.914dp"
-    android:height="136.914dp">
-    <path
-        android:pathData="M5.124,68.457 a63.333,63.333 0 1,0 126.666,0 a63.333,63.333 0 1,0 -126.666,0 Z"
-        android:fillColor="#3A7BD5" />
-    <path
-        android:pathData="M38.457,68.457 a30,30 0 1,0 60,0 a30,30 0 1,0 -60,0"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="4" />
-    <path
-        android:pathData="M38.457,68.457 L98.457,68.457"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="4" />
-    <path
-        android:pathData="M68.457,38.457 a15,30 0 1,0 0,60 a15,30 0 1,0 0,-60"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="4" />
-    <path
-        android:pathData="M44.457,53.457 a40,18 0 0,0 48,0 M44.457,83.457 a40,18 0 0,1 48,0"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="4" />
+<!-- Original Tallybook vector asset, released under GPL-3.0-or-later with the project. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="64dp" android:height="64dp" android:viewportWidth="64" android:viewportHeight="64">
+    <path android:pathData="M62.00,32.00 C62.00,48.57 48.57,62.00 32.00,62.00 C15.43,62.00 2.00,48.57 2.00,32.00 C2.00,15.43 15.43,2.00 32.00,2.00 C48.57,2.00 62.00,15.43 62.00,32.00 Z" android:fillColor="#5F6CDA" />
+    <path android:pathData="M56.00,32.00 C56.00,45.25 45.25,56.00 32.00,56.00 C18.75,56.00 8.00,45.25 8.00,32.00 C8.00,18.75 18.75,8.00 32.00,8.00 C45.25,8.00 56.00,18.75 56.00,32.00 Z" android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF" android:strokeWidth="1.6" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M 47.84 32 C 47.84 40.75 40.75 47.84 32 47.84 C 23.25 47.84 16.16 40.75 16.16 32 C 16.16 23.25 23.25 16.16 32 16.16 C 40.75 16.16 47.84 23.25 47.84 32 Z" android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M 16.16 32 L 47.84 32 M 32 16.16 C 24.96 24.96 24.96 39.04 32 47.84 M 32 16.16 C 39.04 24.96 39.04 39.04 32 47.84" android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF" android:strokeWidth="2.5" android:strokeLineCap="round" android:strokeLineJoin="round" />
 </vector>
