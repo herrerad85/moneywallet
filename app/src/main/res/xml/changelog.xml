@@ -20,6 +20,10 @@
 
 <changelog>
 
+    <version versionName="1.0.1" versionDate="Jul 01, 2026">
+        <change>Build-system update to support F-Droid reproducible builds. No user-facing feature changes.</change>
+    </version>
+
     <version versionName="1.0.0" versionDate="Jul 01, 2026">
         <change>[b]New![/b] First Tallybook release, a maintained fork of MoneyWallet.</change>
         <change>Tallybook is a separate app with its own application id and installs side by side with MoneyWallet.</change>
