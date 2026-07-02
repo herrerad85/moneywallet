@@ -20,6 +20,10 @@
 
 <changelog>
 
+    <version versionName="1.0.2" versionDate="Jul 01, 2026">
+        <change>Build-system update for F-Droid binary transparency checks. No user-facing feature changes.</change>
+    </version>
+
     <version versionName="1.0.1" versionDate="Jul 01, 2026">
         <change>Build-system update to support F-Droid reproducible builds. No user-facing feature changes.</change>
     </version>

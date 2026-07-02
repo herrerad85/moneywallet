@@ -1,0 +1,1 @@
+Build-system update for F-Droid binary transparency checks. No user-facing feature changes.
