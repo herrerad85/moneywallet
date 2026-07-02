@@ -1,0 +1,1 @@
+Build-system update to support F-Droid reproducible builds. No user-facing feature changes.
