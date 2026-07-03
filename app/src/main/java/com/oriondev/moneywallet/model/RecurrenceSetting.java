@@ -280,6 +280,97 @@ public class RecurrenceSetting implements Parcelable {
         return nextOccurrenceDateTime != null ? DateUtils.getFixedDate(nextOccurrenceDateTime) : null;
     }
 
+    /**
+     * Immutable result of {@link #computeOccurrences(String, Date, Date)}: the occurrence dates
+     * that have come due inside the window, plus the values the LAST_OCCURRENCE and
+     * NEXT_OCCURRENCE columns must be updated to afterwards. Every date is already normalised
+     * through {@link DateUtils#getFixedDate(DateTime)}, so callers only format and store it.
+     */
+    public static class OccurrenceUpdate {
+
+        private final List<Date> mOccurrenceDates;
+        private final Date mLastOccurrence;
+        private final Date mNextOccurrence;
+
+        private OccurrenceUpdate(List<Date> occurrenceDates, Date lastOccurrence, Date nextOccurrence) {
+            mOccurrenceDates = occurrenceDates;
+            mLastOccurrence = lastOccurrence;
+            mNextOccurrence = nextOccurrence;
+        }
+
+        /**
+         * The occurrence dates, in chronological order, for which a ledger row must be inserted.
+         */
+        public List<Date> getOccurrenceDates() {
+            return mOccurrenceDates;
+        }
+
+        /**
+         * The value the LAST_OCCURRENCE column must be set to: the last due occurrence, or the
+         * seed itself when nothing came due.
+         */
+        public Date getLastOccurrence() {
+            return mLastOccurrence;
+        }
+
+        /**
+         * The value the NEXT_OCCURRENCE column must be set to: the first instance after the
+         * window, or null when the rule is exhausted (or failed to parse).
+         */
+        public Date getNextOccurrence() {
+            return mNextOccurrence;
+        }
+    }
+
+    /**
+     * Pure, Android-free computation of the recurrence occurrences that have come due, extracted
+     * verbatim from the loop that {@code RecurrenceHandlerIntentService} used to run inline.
+     *
+     * The rfc5545 iterator is seeded from {@code seedDate} (the stored next occurrence), which per
+     * RFC 5545 is itself the first instance produced. Every instance that is not strictly after
+     * {@code now} (that is, {@code !instance.after(now)}) is collected as due and becomes the new
+     * last occurrence; the first instance strictly after {@code now} becomes the next occurrence
+     * and stops the walk. When the rule exhausts (UNTIL / COUNT) or fails to parse, the next
+     * occurrence is null and the last occurrence stays at the seed, exactly as the service behaved.
+     *
+     * The rule is parsed here from its raw string rather than through a {@link RecurrenceSetting}
+     * instance, so an invalid rule yields no occurrences instead of silently falling back to a
+     * daily rule the way the {@code (Date, String)} constructor does.
+     *
+     * @param rule     the RFC 5545 recurrence rule string stored on the row
+     * @param seedDate the stored next occurrence used to seed the iterator (inclusive first instance)
+     * @param now      the moment the window closes at, compared at day granularity
+     * @return the due occurrence dates and the updated last / next occurrence values
+     */
+    public static OccurrenceUpdate computeOccurrences(String rule, Date seedDate, Date now) {
+        List<Date> occurrenceDates = new ArrayList<>();
+        DateTime currentDateTime = DateUtils.getFixedDateTime(now);
+        DateTime startDateTime = DateUtils.getFixedDateTime(seedDate);
+        DateTime lastOccurrence = DateUtils.getFixedDateTime(seedDate);
+        DateTime nextOccurrence = null;
+        try {
+            RecurrenceRule recurrenceRule = new RecurrenceRule(rule);
+            RecurrenceRuleIterator iterator = recurrenceRule.iterator(startDateTime);
+            while (iterator.hasNext()) {
+                DateTime nextInstance = iterator.nextDateTime();
+                if (!nextInstance.after(currentDateTime)) {
+                    occurrenceDates.add(DateUtils.getFixedDate(nextInstance));
+                    lastOccurrence = nextInstance;
+                } else {
+                    nextOccurrence = nextInstance;
+                    break;
+                }
+            }
+        } catch (InvalidRecurrenceRuleException ignore) {
+            // leave nextOccurrence null so the row is not processed again, matching the old service
+        }
+        return new OccurrenceUpdate(
+                occurrenceDates,
+                DateUtils.getFixedDate(lastOccurrence),
+                nextOccurrence != null ? DateUtils.getFixedDate(nextOccurrence) : null
+        );
+    }
+
     public static class Builder {
 
         private Date mStartDate;

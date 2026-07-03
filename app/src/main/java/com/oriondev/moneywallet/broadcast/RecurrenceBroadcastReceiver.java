@@ -45,8 +45,10 @@ public class RecurrenceBroadcastReceiver extends BroadcastReceiver {
     public static void scheduleRecurrenceTask(Context context) {
         cancelPendingIntent(context);
         ContentResolver contentResolver = context.getContentResolver();
-        Date nextOccurrence1 = getMinNextRecurrentTransactionOccurrence(contentResolver);
-        Date nextOccurrence2 = getMinNextRecurrentTransferOccurrence(contentResolver);
+        Date nextOccurrence1 = getMinNextOccurrence(contentResolver,
+                DataContentProvider.CONTENT_RECURRENT_TRANSACTIONS, Contract.RecurrentTransaction.NEXT_OCCURRENCE);
+        Date nextOccurrence2 = getMinNextOccurrence(contentResolver,
+                DataContentProvider.CONTENT_RECURRENT_TRANSFERS, Contract.RecurrentTransfer.NEXT_OCCURRENCE);
         Date nextOccurrence = getMinDate(nextOccurrence1, nextOccurrence2);
         if (nextOccurrence != null) {
             System.out.println("[ALARM] Next occurrence is at: " + nextOccurrence.toString());
@@ -58,31 +60,11 @@ public class RecurrenceBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    private static Date getMinNextRecurrentTransactionOccurrence(ContentResolver contentResolver) {
-        Uri uri = DataContentProvider.CONTENT_RECURRENT_TRANSACTIONS;
+    private static Date getMinNextOccurrence(ContentResolver contentResolver, Uri uri, String nextOccurrenceColumn) {
         String[] projection = new String[] {
-                "MIN(" + Contract.RecurrentTransaction.NEXT_OCCURRENCE + ")"
+                "MIN(" + nextOccurrenceColumn + ")"
         };
-        String selection = Contract.RecurrentTransaction.NEXT_OCCURRENCE  + " IS NOT NULL";
-        Cursor cursor = contentResolver.query(uri, projection, selection, null, null);
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                String nextOccurrenceString = cursor.getString(0);
-                if (!TextUtils.isEmpty(nextOccurrenceString)) {
-                    return DateUtils.getDateFromSQLDateString(nextOccurrenceString);
-                }
-            }
-            cursor.close();
-        }
-        return null;
-    }
-
-    private static Date getMinNextRecurrentTransferOccurrence(ContentResolver contentResolver) {
-        Uri uri = DataContentProvider.CONTENT_RECURRENT_TRANSFERS;
-        String[] projection = new String[] {
-                "MIN(" + Contract.RecurrentTransfer.NEXT_OCCURRENCE + ")"
-        };
-        String selection = Contract.RecurrentTransfer.NEXT_OCCURRENCE  + " IS NOT NULL";
+        String selection = nextOccurrenceColumn + " IS NOT NULL";
         Cursor cursor = contentResolver.query(uri, projection, selection, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {

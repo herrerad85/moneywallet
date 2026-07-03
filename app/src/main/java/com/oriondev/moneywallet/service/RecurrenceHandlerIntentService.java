@@ -29,16 +29,12 @@ import androidx.annotation.NonNull;
 import androidx.core.app.JobIntentService;
 
 import com.oriondev.moneywallet.broadcast.RecurrenceBroadcastReceiver;
+import com.oriondev.moneywallet.model.RecurrenceSetting;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.database.TransactionContentValuesBuilder;
 import com.oriondev.moneywallet.storage.database.TransferContentValuesBuilder;
 import com.oriondev.moneywallet.utils.DateUtils;
-
-import org.dmfs.rfc5545.DateTime;
-import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
-import org.dmfs.rfc5545.recur.RecurrenceRule;
-import org.dmfs.rfc5545.recur.RecurrenceRuleIterator;
 
 import java.util.Date;
 
@@ -70,51 +66,33 @@ public class RecurrenceHandlerIntentService extends JobIntentService {
                 long transactionId = cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransaction.ID));
                 String firstOccurrenceDateString = cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransaction.NEXT_OCCURRENCE));
                 Date firstOccurrenceDate = DateUtils.getDateFromSQLDateString(firstOccurrenceDateString);
-                DateTime currentDateTime = DateUtils.getFixedDateTime(new Date());
-                DateTime startDateTime = DateUtils.getFixedDateTime(firstOccurrenceDate);
-                DateTime lastOccurrence = DateUtils.getFixedDateTime(firstOccurrenceDate);
-                DateTime nextOccurrence = null;
-                RecurrenceRule recurrenceRule;
-                try {
-                    recurrenceRule = new RecurrenceRule(cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransaction.RULE)));
-                    RecurrenceRuleIterator iterator = recurrenceRule.iterator(startDateTime);
-                    while (iterator.hasNext()) {
-                        DateTime nextInstance = iterator.nextDateTime();
-                        if (!nextInstance.after(currentDateTime)) {
-                            Date transactionDate = DateUtils.getFixedDate(nextInstance);
-                            TransactionContentValuesBuilder builder = new TransactionContentValuesBuilder()
-                                    .money(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransaction.MONEY)))
-                                    .date(DateUtils.getSQLDateTimeString(transactionDate))
-                                    .description(cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransaction.DESCRIPTION)))
-                                    .categoryId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransaction.CATEGORY_ID)))
-                                    .direction(cursor.getInt(cursor.getColumnIndex(Contract.RecurrentTransaction.DIRECTION)))
-                                    .type(Contract.TransactionType.STANDARD)
-                                    .walletId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransaction.WALLET_ID)))
-                                    .note(cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransaction.NOTE)));
-                            if (!cursor.isNull(cursor.getColumnIndex(Contract.RecurrentTransaction.PLACE_ID))) {
-                                builder.placeId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransaction.PLACE_ID)));
-                            }
-                            if (!cursor.isNull(cursor.getColumnIndex(Contract.RecurrentTransaction.EVENT_ID))) {
-                                builder.eventId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransaction.EVENT_ID)));
-                            }
-                            builder.recurrenceId(transactionId)
-                                    .confirmed(cursor.getInt(cursor.getColumnIndex(Contract.RecurrentTransaction.CONFIRMED)) == 1)
-                                    .countInTotal(cursor.getInt(cursor.getColumnIndex(Contract.RecurrentTransaction.COUNT_IN_TOTAL)) == 1);
-                            ContentValues contentValues = builder.build();
-                            getContentResolver().insert(DataContentProvider.CONTENT_TRANSACTIONS, contentValues);
-                            lastOccurrence = nextInstance;
-                        } else {
-                            nextOccurrence = nextInstance;
-                            break;
-                        }
+                String rule = cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransaction.RULE));
+                RecurrenceSetting.OccurrenceUpdate update = RecurrenceSetting.computeOccurrences(rule, firstOccurrenceDate, new Date());
+                for (Date occurrenceDate : update.getOccurrenceDates()) {
+                    TransactionContentValuesBuilder builder = new TransactionContentValuesBuilder()
+                            .money(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransaction.MONEY)))
+                            .date(DateUtils.getSQLDateTimeString(occurrenceDate))
+                            .description(cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransaction.DESCRIPTION)))
+                            .categoryId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransaction.CATEGORY_ID)))
+                            .direction(cursor.getInt(cursor.getColumnIndex(Contract.RecurrentTransaction.DIRECTION)))
+                            .type(Contract.TransactionType.STANDARD)
+                            .walletId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransaction.WALLET_ID)))
+                            .note(cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransaction.NOTE)));
+                    if (!cursor.isNull(cursor.getColumnIndex(Contract.RecurrentTransaction.PLACE_ID))) {
+                        builder.placeId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransaction.PLACE_ID)));
                     }
-                } catch (InvalidRecurrenceRuleException ignore) {
-                    // do nothing, next occurrence is still null so this recurrence will
-                    // not be processed again in future
+                    if (!cursor.isNull(cursor.getColumnIndex(Contract.RecurrentTransaction.EVENT_ID))) {
+                        builder.eventId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransaction.EVENT_ID)));
+                    }
+                    builder.recurrenceId(transactionId)
+                            .confirmed(cursor.getInt(cursor.getColumnIndex(Contract.RecurrentTransaction.CONFIRMED)) == 1)
+                            .countInTotal(cursor.getInt(cursor.getColumnIndex(Contract.RecurrentTransaction.COUNT_IN_TOTAL)) == 1);
+                    ContentValues contentValues = builder.build();
+                    getContentResolver().insert(DataContentProvider.CONTENT_TRANSACTIONS, contentValues);
                 }
                 ContentValues contentValues = new ContentValues();
-                contentValues.put(Contract.RecurrentTransaction.LAST_OCCURRENCE, DateUtils.getSQLDateString(DateUtils.getFixedDate(lastOccurrence)));
-                contentValues.put(Contract.RecurrentTransaction.NEXT_OCCURRENCE, nextOccurrence != null ? DateUtils.getSQLDateString(DateUtils.getFixedDate(nextOccurrence)) : null);
+                contentValues.put(Contract.RecurrentTransaction.LAST_OCCURRENCE, DateUtils.getSQLDateString(update.getLastOccurrence()));
+                contentValues.put(Contract.RecurrentTransaction.NEXT_OCCURRENCE, update.getNextOccurrence() != null ? DateUtils.getSQLDateString(update.getNextOccurrence()) : null);
                 Uri contentUri = ContentUris.withAppendedId(DataContentProvider.CONTENT_RECURRENT_TRANSACTIONS, transactionId);
                 getContentResolver().update(contentUri, contentValues, null, null);
             }
@@ -132,52 +110,34 @@ public class RecurrenceHandlerIntentService extends JobIntentService {
                 long recurrenceId = cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.ID));
                 String firstOccurrenceDateString = cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransfer.NEXT_OCCURRENCE));
                 Date firstOccurrenceDate = DateUtils.getDateFromSQLDateString(firstOccurrenceDateString);
-                DateTime currentDateTime = DateUtils.getFixedDateTime(new Date());
-                DateTime startDateTime = DateUtils.getFixedDateTime(firstOccurrenceDate);
-                DateTime lastOccurrence = DateUtils.getFixedDateTime(firstOccurrenceDate);
-                DateTime nextOccurrence = null;
-                RecurrenceRule recurrenceRule;
-                try {
-                    recurrenceRule = new RecurrenceRule(cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransfer.RULE)));
-                    RecurrenceRuleIterator iterator = recurrenceRule.iterator(startDateTime);
-                    while (iterator.hasNext()) {
-                        DateTime nextInstance = iterator.nextDateTime();
-                        if (!nextInstance.after(currentDateTime)) {
-                            Date transferDate = DateUtils.getFixedDate(nextInstance);
-                            TransferContentValuesBuilder builder = new TransferContentValuesBuilder()
-                                    .description(cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransfer.DESCRIPTION)))
-                                    .date(DateUtils.getSQLDateTimeString(transferDate))
-                                    .fromWalletId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.WALLET_FROM_ID)))
-                                    .toWalletId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.WALLET_TO_ID)))
-                                    .taxWalletId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.WALLET_FROM_ID)))
-                                    .fromMoney(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.MONEY_FROM)))
-                                    .toMoney(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.MONEY_TO)))
-                                    .taxMoney(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.MONEY_TAX)))
-                                    .note(cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransfer.NOTE)));
-                            if (!cursor.isNull(cursor.getColumnIndex(Contract.RecurrentTransfer.PLACE_ID))) {
-                                builder.placeId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.PLACE_ID)));
-                            }
-                            if (!cursor.isNull(cursor.getColumnIndex(Contract.RecurrentTransfer.EVENT_ID))) {
-                                builder.eventId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.EVENT_ID)));
-                            }
-                            builder.recurrenceId(recurrenceId)
-                                    .confirmed(cursor.getInt(cursor.getColumnIndex(Contract.RecurrentTransfer.CONFIRMED)) == 1)
-                                    .countInTotal(cursor.getInt(cursor.getColumnIndex(Contract.RecurrentTransfer.COUNT_IN_TOTAL)) == 1);
-                            ContentValues contentValues = builder.build();
-                            getContentResolver().insert(DataContentProvider.CONTENT_TRANSFERS, contentValues);
-                            lastOccurrence = nextInstance;
-                        } else {
-                            nextOccurrence = nextInstance;
-                            break;
-                        }
+                String rule = cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransfer.RULE));
+                RecurrenceSetting.OccurrenceUpdate update = RecurrenceSetting.computeOccurrences(rule, firstOccurrenceDate, new Date());
+                for (Date occurrenceDate : update.getOccurrenceDates()) {
+                    TransferContentValuesBuilder builder = new TransferContentValuesBuilder()
+                            .description(cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransfer.DESCRIPTION)))
+                            .date(DateUtils.getSQLDateTimeString(occurrenceDate))
+                            .fromWalletId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.WALLET_FROM_ID)))
+                            .toWalletId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.WALLET_TO_ID)))
+                            .taxWalletId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.WALLET_FROM_ID)))
+                            .fromMoney(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.MONEY_FROM)))
+                            .toMoney(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.MONEY_TO)))
+                            .taxMoney(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.MONEY_TAX)))
+                            .note(cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransfer.NOTE)));
+                    if (!cursor.isNull(cursor.getColumnIndex(Contract.RecurrentTransfer.PLACE_ID))) {
+                        builder.placeId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.PLACE_ID)));
                     }
-                } catch (InvalidRecurrenceRuleException ignore) {
-                    // do nothing, next occurrence is still null so this recurrence will
-                    // not be processed again in future
+                    if (!cursor.isNull(cursor.getColumnIndex(Contract.RecurrentTransfer.EVENT_ID))) {
+                        builder.eventId(cursor.getLong(cursor.getColumnIndex(Contract.RecurrentTransfer.EVENT_ID)));
+                    }
+                    builder.recurrenceId(recurrenceId)
+                            .confirmed(cursor.getInt(cursor.getColumnIndex(Contract.RecurrentTransfer.CONFIRMED)) == 1)
+                            .countInTotal(cursor.getInt(cursor.getColumnIndex(Contract.RecurrentTransfer.COUNT_IN_TOTAL)) == 1);
+                    ContentValues contentValues = builder.build();
+                    getContentResolver().insert(DataContentProvider.CONTENT_TRANSFERS, contentValues);
                 }
                 ContentValues contentValues = new ContentValues();
-                contentValues.put(Contract.RecurrentTransfer.LAST_OCCURRENCE, DateUtils.getSQLDateString(DateUtils.getFixedDate(lastOccurrence)));
-                contentValues.put(Contract.RecurrentTransfer.NEXT_OCCURRENCE, nextOccurrence != null ? DateUtils.getSQLDateString(DateUtils.getFixedDate(nextOccurrence)) : null);
+                contentValues.put(Contract.RecurrentTransfer.LAST_OCCURRENCE, DateUtils.getSQLDateString(update.getLastOccurrence()));
+                contentValues.put(Contract.RecurrentTransfer.NEXT_OCCURRENCE, update.getNextOccurrence() != null ? DateUtils.getSQLDateString(update.getNextOccurrence()) : null);
                 Uri contentUri = ContentUris.withAppendedId(DataContentProvider.CONTENT_RECURRENT_TRANSFERS, recurrenceId);
                 getContentResolver().update(contentUri, contentValues, null, null);
             }
