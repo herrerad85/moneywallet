@@ -76,6 +76,13 @@ public class DiskBackendService extends AbstractBackendServiceDelegate {
     }
 
     @Override
+    public boolean isDisconnectable() {
+        // The local external-memory backend cannot be disconnected: there is no remote session
+        // or persisted grant to revoke, only a runtime storage permission.
+        return false;
+    }
+
+    @Override
     public void setup(final ComponentActivity activity) throws BackendException {
         final ActivityResultLauncher<String> launcher = activity.registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),

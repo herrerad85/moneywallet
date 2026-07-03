@@ -62,6 +62,14 @@ public abstract class AbstractBackendServiceDelegate {
         return false;
     }
 
+    /**
+     * Whether the user can disconnect (forget/revoke) this backend. Most backends can be
+     * disconnected; the local external-memory backend cannot, since it holds no session to drop.
+     */
+    public boolean isDisconnectable() {
+        return true;
+    }
+
     protected void setBackendServiceEnabled(boolean enabled) {
         if (mListener != null) {
             mListener.onBackendStatusChange(enabled);

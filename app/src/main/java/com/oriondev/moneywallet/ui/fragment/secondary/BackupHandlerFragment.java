@@ -267,7 +267,7 @@ public class BackupHandlerFragment extends Fragment implements BackupFileAdapter
     protected void hideCoverView() {
         if (mCoverLayout != null) {
             // setup menu item visibility
-            setMenuItemVisibility(R.id.action_disconnect, !BackendServiceFactory.SERVICE_ID_EXTERNAL_MEMORY.equals(mBackendService.getId()));
+            setMenuItemVisibility(R.id.action_disconnect, mBackendService.isDisconnectable());
             // setup layout visibility
             mCoverLayout.setVisibility(View.GONE);
             mPrimaryLayout.setVisibility(View.VISIBLE);
