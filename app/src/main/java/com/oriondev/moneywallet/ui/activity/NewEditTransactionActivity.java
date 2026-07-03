@@ -55,6 +55,7 @@ import com.oriondev.moneywallet.picker.PlacePicker;
 import com.oriondev.moneywallet.picker.WalletPicker;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.storage.database.TransactionContentValuesBuilder;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.view.AttachmentView;
 import com.oriondev.moneywallet.ui.view.text.MaterialEditText;
@@ -903,23 +904,24 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     @Override
     protected void onSaveChanges(Mode mode) {
         if (validate()) {
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(Contract.Transaction.MONEY, mMoneyPicker.getCurrentMoney());
-            contentValues.put(Contract.Transaction.DATE, DateUtils.getSQLDateTimeString(mDateTimePicker.getCurrentDateTime()));
-            contentValues.put(Contract.Transaction.DESCRIPTION, mDescriptionEditText.getTextAsString());
-            contentValues.put(Contract.Transaction.CATEGORY_ID, mCategoryPicker.getCurrentCategory().getId());
-            contentValues.put(Contract.Transaction.DIRECTION, mCategoryPicker.getCurrentCategory().getDirection());
-            contentValues.put(Contract.Transaction.TYPE, mType);
-            contentValues.put(Contract.Transaction.WALLET_ID, mWalletPicker.getCurrentWallet().getId());
-            contentValues.put(Contract.Transaction.PLACE_ID, mPlacePicker.isSelected() ? mPlacePicker.getCurrentPlace().getId() : null);
-            contentValues.put(Contract.Transaction.NOTE, mNoteEditText.getTextAsString());
-            contentValues.put(Contract.Transaction.EVENT_ID, mEventPicker.isSelected() ? mEventPicker.getCurrentEvent().getId() : null);
-            contentValues.put(Contract.Transaction.SAVING_ID, mSavingId);
-            contentValues.put(Contract.Transaction.DEBT_ID, mDebtId);
-            contentValues.put(Contract.Transaction.CONFIRMED, mConfirmedCheckBox.isChecked());
-            contentValues.put(Contract.Transaction.COUNT_IN_TOTAL, mCountInTotalCheckBox.isChecked());
-            contentValues.put(Contract.Transaction.PEOPLE_IDS, Contract.getObjectIds(mPersonPicker.getCurrentPeople()));
-            contentValues.put(Contract.Transaction.ATTACHMENT_IDS, Contract.getObjectIds(mAttachmentPicker.getCurrentAttachments()));
+            ContentValues contentValues = new TransactionContentValuesBuilder()
+                    .money(mMoneyPicker.getCurrentMoney())
+                    .date(DateUtils.getSQLDateTimeString(mDateTimePicker.getCurrentDateTime()))
+                    .description(mDescriptionEditText.getTextAsString())
+                    .categoryId(mCategoryPicker.getCurrentCategory().getId())
+                    .direction(mCategoryPicker.getCurrentCategory().getDirection())
+                    .type(mType)
+                    .walletId(mWalletPicker.getCurrentWallet().getId())
+                    .placeId(mPlacePicker.isSelected() ? mPlacePicker.getCurrentPlace().getId() : null)
+                    .note(mNoteEditText.getTextAsString())
+                    .eventId(mEventPicker.isSelected() ? mEventPicker.getCurrentEvent().getId() : null)
+                    .savingId(mSavingId)
+                    .debtId(mDebtId)
+                    .confirmed(mConfirmedCheckBox.isChecked())
+                    .countInTotal(mCountInTotalCheckBox.isChecked())
+                    .peopleIds(Contract.getObjectIds(mPersonPicker.getCurrentPeople()))
+                    .attachmentIds(Contract.getObjectIds(mAttachmentPicker.getCurrentAttachments()))
+                    .build();
             ContentResolver contentResolver = getContentResolver();
             switch (mode) {
                 case NEW_ITEM:
@@ -965,19 +967,20 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
         if (cursor != null) {
             Uri resultUri = null;
             if (cursor.moveToFirst()) {
-                ContentValues contentValues = new ContentValues();
-                contentValues.put(Contract.Transaction.MONEY, cursor.getLong(cursor.getColumnIndex(Contract.TransactionModel.MONEY)));
-                contentValues.put(Contract.Transaction.DATE, DateUtils.getSQLDateTimeString(new Date()));
-                contentValues.put(Contract.Transaction.DESCRIPTION, cursor.getString(cursor.getColumnIndex(Contract.TransactionModel.DESCRIPTION)));
-                contentValues.put(Contract.Transaction.CATEGORY_ID, cursor.getLong(cursor.getColumnIndex(Contract.TransactionModel.CATEGORY_ID)));
-                contentValues.put(Contract.Transaction.DIRECTION, cursor.getInt(cursor.getColumnIndex(Contract.TransactionModel.DIRECTION)));
-                contentValues.put(Contract.Transaction.TYPE, Contract.TransactionType.STANDARD);
-                contentValues.put(Contract.Transaction.WALLET_ID, cursor.getLong(cursor.getColumnIndex(Contract.TransactionModel.WALLET_ID)));
-                contentValues.put(Contract.Transaction.PLACE_ID, cursor.isNull(cursor.getColumnIndex(Contract.TransactionModel.PLACE_ID)) ? null : cursor.getLong(cursor.getColumnIndex(Contract.TransactionModel.PLACE_ID)));
-                contentValues.put(Contract.Transaction.NOTE, cursor.getString(cursor.getColumnIndex(Contract.TransactionModel.NOTE)));
-                contentValues.put(Contract.Transaction.EVENT_ID, cursor.isNull(cursor.getColumnIndex(Contract.TransactionModel.EVENT_ID)) ? null : cursor.getLong(cursor.getColumnIndex(Contract.TransactionModel.EVENT_ID)));
-                contentValues.put(Contract.Transaction.CONFIRMED, cursor.getInt(cursor.getColumnIndex(Contract.TransactionModel.CONFIRMED)));
-                contentValues.put(Contract.Transaction.COUNT_IN_TOTAL, cursor.getInt(cursor.getColumnIndex(Contract.TransactionModel.COUNT_IN_TOTAL)));
+                ContentValues contentValues = new TransactionContentValuesBuilder()
+                        .money(cursor.getLong(cursor.getColumnIndex(Contract.TransactionModel.MONEY)))
+                        .date(DateUtils.getSQLDateTimeString(new Date()))
+                        .description(cursor.getString(cursor.getColumnIndex(Contract.TransactionModel.DESCRIPTION)))
+                        .categoryId(cursor.getLong(cursor.getColumnIndex(Contract.TransactionModel.CATEGORY_ID)))
+                        .direction(cursor.getInt(cursor.getColumnIndex(Contract.TransactionModel.DIRECTION)))
+                        .type(Contract.TransactionType.STANDARD)
+                        .walletId(cursor.getLong(cursor.getColumnIndex(Contract.TransactionModel.WALLET_ID)))
+                        .placeId(cursor.isNull(cursor.getColumnIndex(Contract.TransactionModel.PLACE_ID)) ? null : cursor.getLong(cursor.getColumnIndex(Contract.TransactionModel.PLACE_ID)))
+                        .note(cursor.getString(cursor.getColumnIndex(Contract.TransactionModel.NOTE)))
+                        .eventId(cursor.isNull(cursor.getColumnIndex(Contract.TransactionModel.EVENT_ID)) ? null : cursor.getLong(cursor.getColumnIndex(Contract.TransactionModel.EVENT_ID)))
+                        .confirmed(cursor.getInt(cursor.getColumnIndex(Contract.TransactionModel.CONFIRMED)))
+                        .countInTotal(cursor.getInt(cursor.getColumnIndex(Contract.TransactionModel.COUNT_IN_TOTAL)))
+                        .build();
                 resultUri = contentResolver.insert(DataContentProvider.CONTENT_TRANSACTIONS, contentValues);
             }
             cursor.close();

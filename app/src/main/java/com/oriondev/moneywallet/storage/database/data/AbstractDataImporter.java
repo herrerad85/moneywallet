@@ -14,6 +14,7 @@ import com.oriondev.moneywallet.model.Icon;
 import com.oriondev.moneywallet.picker.IconPicker;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.storage.database.TransactionContentValuesBuilder;
 import com.oriondev.moneywallet.utils.DateUtils;
 import com.oriondev.moneywallet.utils.Utils;
 
@@ -45,33 +46,34 @@ public abstract class AbstractDataImporter {
                                      Date datetime, Long money, int direction, String description,
                                      String event, String place, String people, String note) {
         ContentResolver contentResolver = getContext().getContentResolver();
-        ContentValues contentValues = new ContentValues();
-        // the first step consists in checking if a wallet with the same name and currency already
-        // exists in the database, if not, create it and keep the id as reference
-        contentValues.put(Contract.Transaction.WALLET_ID, getOrCreateWallet(contentResolver, wallet, currencyUnit));
-        // the second step consists in checking if a category with the same name and direction
-        // already exists in the database, if not, create it and keep the id as reference
-        contentValues.put(Contract.Transaction.CATEGORY_ID, getOrCreateCategory(contentResolver, category, direction));
-        // the third step consists in adding the datetime, the money and the direction, the
-        // description and the note related to this transaction
-        contentValues.put(Contract.Transaction.DATE, DateUtils.getSQLDateTimeString(datetime));
-        contentValues.put(Contract.Transaction.DIRECTION, direction);
-        contentValues.put(Contract.Transaction.MONEY, money);
-        contentValues.put(Contract.Transaction.DESCRIPTION, description);
-        contentValues.put(Contract.Transaction.NOTE, note);
-        // the fourth step consists in checking if the event has been provided,
-        // if not, simply ignore it because we cannot know the date range
-        contentValues.put(Contract.Transaction.EVENT_ID, getEvent(contentResolver, event));
-        // the fifth step consists in checking if a place with the same name already
-        // exists in the database, if not, create it and keep the id as reference
-        contentValues.put(Contract.Transaction.PLACE_ID, getOrCreatePlace(contentResolver, place));
-        // the sixth step consists in checking if a set of people with the same name already
-        // exists in the database, if not, create them and keep the ids as reference
-        contentValues.put(Contract.Transaction.PEOPLE_IDS, getOrCreatePeople(contentResolver, people));
-        // the last step consists in inserting the entity inside the database
-        contentValues.put(Contract.Transaction.TYPE, Contract.TransactionType.STANDARD);
-        contentValues.put(Contract.Transaction.CONFIRMED, true);
-        contentValues.put(Contract.Transaction.COUNT_IN_TOTAL, true);
+        ContentValues contentValues = new TransactionContentValuesBuilder()
+                // the first step consists in checking if a wallet with the same name and currency already
+                // exists in the database, if not, create it and keep the id as reference
+                .walletId(getOrCreateWallet(contentResolver, wallet, currencyUnit))
+                // the second step consists in checking if a category with the same name and direction
+                // already exists in the database, if not, create it and keep the id as reference
+                .categoryId(getOrCreateCategory(contentResolver, category, direction))
+                // the third step consists in adding the datetime, the money and the direction, the
+                // description and the note related to this transaction
+                .date(DateUtils.getSQLDateTimeString(datetime))
+                .direction(direction)
+                .money(money)
+                .description(description)
+                .note(note)
+                // the fourth step consists in checking if the event has been provided,
+                // if not, simply ignore it because we cannot know the date range
+                .eventId(getEvent(contentResolver, event))
+                // the fifth step consists in checking if a place with the same name already
+                // exists in the database, if not, create it and keep the id as reference
+                .placeId(getOrCreatePlace(contentResolver, place))
+                // the sixth step consists in checking if a set of people with the same name already
+                // exists in the database, if not, create them and keep the ids as reference
+                .peopleIds(getOrCreatePeople(contentResolver, people))
+                // the last step consists in inserting the entity inside the database
+                .type(Contract.TransactionType.STANDARD)
+                .confirmed(true)
+                .countInTotal(true)
+                .build();
         contentResolver.insert(DataContentProvider.CONTENT_TRANSACTIONS, contentValues);
     }
 

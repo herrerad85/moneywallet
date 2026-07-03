@@ -55,6 +55,7 @@ import com.oriondev.moneywallet.picker.PlacePicker;
 import com.oriondev.moneywallet.picker.WalletPicker;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.storage.database.TransferContentValuesBuilder;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.view.AttachmentView;
 import com.oriondev.moneywallet.ui.view.text.MaterialEditText;
@@ -638,22 +639,23 @@ public class NewEditTransferActivity extends NewEditItemActivity  implements Cur
     @Override
     protected void onSaveChanges(Mode mode) {
         if (validate()) {
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(Contract.Transfer.DESCRIPTION, mDescriptionEditText.getTextAsString());
-            contentValues.put(Contract.Transfer.DATE, DateUtils.getSQLDateTimeString(mDateTimePicker.getCurrentDateTime()));
-            contentValues.put(Contract.Transfer.TRANSACTION_FROM_WALLET_ID, mWalletFromPicker.getCurrentWallet().getId());
-            contentValues.put(Contract.Transfer.TRANSACTION_TO_WALLET_ID, mWalletToPicker.getCurrentWallet().getId());
-            contentValues.put(Contract.Transfer.TRANSACTION_TAX_WALLET_ID, mWalletFromPicker.getCurrentWallet().getId());
-            contentValues.put(Contract.Transfer.TRANSACTION_FROM_MONEY, mMoneyPicker.getCurrentMoney());
-            contentValues.put(Contract.Transfer.TRANSACTION_TO_MONEY, mConverterPicker.convert(mMoneyPicker.getCurrentMoney()));
-            contentValues.put(Contract.Transfer.TRANSACTION_TAX_MONEY, mTaxPicker.getCurrentMoney());
-            contentValues.put(Contract.Transfer.NOTE, mNoteEditText.getTextAsString());
-            contentValues.put(Contract.Transfer.PLACE_ID, mPlacePicker.isSelected() ? mPlacePicker.getCurrentPlace().getId() : null);
-            contentValues.put(Contract.Transfer.EVENT_ID, mEventPicker.isSelected() ? mEventPicker.getCurrentEvent().getId() : null);
-            contentValues.put(Contract.Transfer.CONFIRMED, mConfirmedCheckBox.isChecked());
-            contentValues.put(Contract.Transfer.COUNT_IN_TOTAL, mCountInTotalCheckBox.isChecked());
-            contentValues.put(Contract.Transfer.PEOPLE_IDS, Contract.getObjectIds(mPersonPicker.getCurrentPeople()));
-            contentValues.put(Contract.Transfer.ATTACHMENT_IDS, Contract.getObjectIds(mAttachmentPicker.getCurrentAttachments()));
+            ContentValues contentValues = new TransferContentValuesBuilder()
+                    .description(mDescriptionEditText.getTextAsString())
+                    .date(DateUtils.getSQLDateTimeString(mDateTimePicker.getCurrentDateTime()))
+                    .fromWalletId(mWalletFromPicker.getCurrentWallet().getId())
+                    .toWalletId(mWalletToPicker.getCurrentWallet().getId())
+                    .taxWalletId(mWalletFromPicker.getCurrentWallet().getId())
+                    .fromMoney(mMoneyPicker.getCurrentMoney())
+                    .toMoney(mConverterPicker.convert(mMoneyPicker.getCurrentMoney()))
+                    .taxMoney(mTaxPicker.getCurrentMoney())
+                    .note(mNoteEditText.getTextAsString())
+                    .placeId(mPlacePicker.isSelected() ? mPlacePicker.getCurrentPlace().getId() : null)
+                    .eventId(mEventPicker.isSelected() ? mEventPicker.getCurrentEvent().getId() : null)
+                    .confirmed(mConfirmedCheckBox.isChecked())
+                    .countInTotal(mCountInTotalCheckBox.isChecked())
+                    .peopleIds(Contract.getObjectIds(mPersonPicker.getCurrentPeople()))
+                    .attachmentIds(Contract.getObjectIds(mAttachmentPicker.getCurrentAttachments()))
+                    .build();
             ContentResolver contentResolver = getContentResolver();
             switch (mode) {
                 case NEW_ITEM:
@@ -690,20 +692,21 @@ public class NewEditTransferActivity extends NewEditItemActivity  implements Cur
         if (cursor != null) {
             Uri resultUri = null;
             if (cursor.moveToFirst()) {
-                ContentValues contentValues = new ContentValues();
-                contentValues.put(Contract.Transfer.DESCRIPTION, cursor.getString(cursor.getColumnIndex(Contract.TransferModel.DESCRIPTION)));
-                contentValues.put(Contract.Transfer.DATE, DateUtils.getSQLDateTimeString(new Date()));
-                contentValues.put(Contract.Transfer.TRANSACTION_FROM_WALLET_ID, cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.WALLET_FROM_ID)));
-                contentValues.put(Contract.Transfer.TRANSACTION_TO_WALLET_ID, cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.WALLET_TO_ID)));
-                contentValues.put(Contract.Transfer.TRANSACTION_TAX_WALLET_ID, cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.WALLET_FROM_ID)));
-                contentValues.put(Contract.Transfer.TRANSACTION_FROM_MONEY, cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.MONEY_FROM)));
-                contentValues.put(Contract.Transfer.TRANSACTION_TO_MONEY, cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.MONEY_TO)));
-                contentValues.put(Contract.Transfer.TRANSACTION_TAX_MONEY, cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.MONEY_TAX)));
-                contentValues.put(Contract.Transfer.NOTE, cursor.getString(cursor.getColumnIndex(Contract.TransferModel.NOTE)));
-                contentValues.put(Contract.Transfer.PLACE_ID, cursor.isNull(cursor.getColumnIndex(Contract.TransferModel.PLACE_ID)) ? null : cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.PLACE_ID)));
-                contentValues.put(Contract.Transfer.EVENT_ID, cursor.isNull(cursor.getColumnIndex(Contract.TransferModel.EVENT_ID)) ? null : cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.EVENT_ID)));
-                contentValues.put(Contract.Transfer.CONFIRMED, cursor.getInt(cursor.getColumnIndex(Contract.TransferModel.CONFIRMED)));
-                contentValues.put(Contract.Transfer.COUNT_IN_TOTAL, cursor.getInt(cursor.getColumnIndex(Contract.TransferModel.COUNT_IN_TOTAL)));
+                ContentValues contentValues = new TransferContentValuesBuilder()
+                        .description(cursor.getString(cursor.getColumnIndex(Contract.TransferModel.DESCRIPTION)))
+                        .date(DateUtils.getSQLDateTimeString(new Date()))
+                        .fromWalletId(cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.WALLET_FROM_ID)))
+                        .toWalletId(cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.WALLET_TO_ID)))
+                        .taxWalletId(cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.WALLET_FROM_ID)))
+                        .fromMoney(cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.MONEY_FROM)))
+                        .toMoney(cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.MONEY_TO)))
+                        .taxMoney(cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.MONEY_TAX)))
+                        .note(cursor.getString(cursor.getColumnIndex(Contract.TransferModel.NOTE)))
+                        .placeId(cursor.isNull(cursor.getColumnIndex(Contract.TransferModel.PLACE_ID)) ? null : cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.PLACE_ID)))
+                        .eventId(cursor.isNull(cursor.getColumnIndex(Contract.TransferModel.EVENT_ID)) ? null : cursor.getLong(cursor.getColumnIndex(Contract.TransferModel.EVENT_ID)))
+                        .confirmed(cursor.getInt(cursor.getColumnIndex(Contract.TransferModel.CONFIRMED)))
+                        .countInTotal(cursor.getInt(cursor.getColumnIndex(Contract.TransferModel.COUNT_IN_TOTAL)))
+                        .build();
                 resultUri = contentResolver.insert(DataContentProvider.CONTENT_TRANSFERS, contentValues);
             }
             cursor.close();
