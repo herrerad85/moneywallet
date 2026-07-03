@@ -67,13 +67,16 @@ public class RecurrenceBroadcastReceiver extends BroadcastReceiver {
         String selection = nextOccurrenceColumn + " IS NOT NULL";
         Cursor cursor = contentResolver.query(uri, projection, selection, null, null);
         if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                String nextOccurrenceString = cursor.getString(0);
-                if (!TextUtils.isEmpty(nextOccurrenceString)) {
-                    return DateUtils.getDateFromSQLDateString(nextOccurrenceString);
+            try {
+                if (cursor.moveToFirst()) {
+                    String nextOccurrenceString = cursor.getString(0);
+                    if (!TextUtils.isEmpty(nextOccurrenceString)) {
+                        return DateUtils.getDateFromSQLDateString(nextOccurrenceString);
+                    }
                 }
+            } finally {
+                cursor.close();
             }
-            cursor.close();
         }
         return null;
     }
