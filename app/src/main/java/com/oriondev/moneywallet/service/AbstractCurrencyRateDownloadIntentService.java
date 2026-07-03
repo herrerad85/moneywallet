@@ -24,8 +24,6 @@ import android.app.IntentService;
 import android.content.Intent;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.service.openexchangerates.OpenExchangeRatesCurrencyRateDownloadIntentService;
@@ -35,7 +33,6 @@ import com.oriondev.moneywallet.storage.cache.ExchangeRateCache;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.notification.NotificationContract;
 import com.oriondev.moneywallet.utils.CurrencyManager;
-import com.oriondev.moneywallet.utils.Utils;
 
 /**
  * Created by andre on 24/03/2018.
@@ -54,6 +51,7 @@ public abstract class AbstractCurrencyRateDownloadIntentService extends IntentSe
 
     private ExchangeRateCache mCache;
     private NotificationCompat.Builder mBuilder;
+    private TaskReporter mReporter;
 
     public AbstractCurrencyRateDownloadIntentService(String name) {
         super(name);
@@ -62,8 +60,8 @@ public abstract class AbstractCurrencyRateDownloadIntentService extends IntentSe
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        mBuilder = new NotificationCompat.Builder(getBaseContext(), NotificationContract.NOTIFICATION_CHANNEL_EXCHANGE_RATE)
-                .setSmallIcon(Utils.isAtLeastLollipop() ? R.drawable.ic_notification : R.mipmap.ic_launcher)
+        mReporter = new TaskReporter(this);
+        mBuilder = mReporter.newNotification(NotificationContract.NOTIFICATION_CHANNEL_EXCHANGE_RATE)
                 .setContentTitle(getString(R.string.notification_title_download_exchange_rates))
                 .setProgress(0, 0, true)
                 .setCategory(NotificationCompat.CATEGORY_PROGRESS);
@@ -86,8 +84,7 @@ public abstract class AbstractCurrencyRateDownloadIntentService extends IntentSe
 
     private void sendBroadcastMessage() {
         PreferenceManager.setLastExchangeRateUpdateTimestamp(System.currentTimeMillis());
-        Intent intent = new Intent(LocalAction.ACTION_EXCHANGE_RATES_UPDATED);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        mReporter.broadcast(LocalAction.ACTION_EXCHANGE_RATES_UPDATED);
     }
 
     protected void storeExchangeRate(CurrencyUnit currency, double rate, long timestamp) {
@@ -101,14 +98,12 @@ public abstract class AbstractCurrencyRateDownloadIntentService extends IntentSe
     }
 
     private void showError(String error) {
-        mBuilder = new NotificationCompat.Builder(getBaseContext(), NotificationContract.NOTIFICATION_CHANNEL_ERROR)
-                .setSmallIcon(Utils.isAtLeastLollipop() ? R.drawable.ic_notification : R.mipmap.ic_launcher)
+        mBuilder = mReporter.newNotification(NotificationContract.NOTIFICATION_CHANNEL_ERROR)
                 .setContentTitle(getString(R.string.notification_title_download_exchange_rates))
                 .setContentText(getString(R.string.notification_content_error_message, error))
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(getString(R.string.notification_content_error_message, error)))
                 .setCategory(NotificationCompat.CATEGORY_ERROR);
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        notificationManager.notify(NotificationContract.NOTIFICATION_ID_EXCHANGE_RATE_ERROR, mBuilder.build());
+        mReporter.showNotification(NotificationContract.NOTIFICATION_ID_EXCHANGE_RATE_ERROR, mBuilder);
     }
 
     public class MissingApiKey extends Exception {

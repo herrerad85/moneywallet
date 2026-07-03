@@ -5,11 +5,11 @@ import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Parcelable;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.DataFormat;
@@ -52,7 +52,7 @@ public class ImportExportIntentService extends IntentService {
     public static final int MODE_EXPORT = 0;
     public static final int MODE_IMPORT = 1;
 
-    private LocalBroadcastManager mBroadcastManager;
+    private TaskReporter mReporter;
 
     public ImportExportIntentService() {
         super("ImportExportIntentService");
@@ -61,7 +61,7 @@ public class ImportExportIntentService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         if (intent != null) {
-            mBroadcastManager = LocalBroadcastManager.getInstance(this);
+            mReporter = new TaskReporter(this);
             int mode = intent.getIntExtra(MODE, MODE_EXPORT);
             switch (mode) {
                 case MODE_EXPORT:
@@ -206,26 +206,24 @@ public class ImportExportIntentService extends IntentService {
     }
 
     private void notifyTaskStarted(String action) {
-        Intent intent = new Intent(action);
-        mBroadcastManager.sendBroadcast(intent);
+        mReporter.broadcast(action);
     }
 
     private void notifyTaskFinished(String action) {
-        Intent intent = new Intent(action);
-        mBroadcastManager.sendBroadcast(intent);
+        mReporter.broadcast(action);
     }
 
     private void notifyTaskFinished(String action, Uri resultUri, String resultType) {
-        Intent intent = new Intent(action);
-        intent.putExtra(RESULT_FILE_URI, resultUri);
-        intent.putExtra(RESULT_FILE_TYPE, resultType);
-        mBroadcastManager.sendBroadcast(intent);
+        Bundle extras = new Bundle();
+        extras.putParcelable(RESULT_FILE_URI, resultUri);
+        extras.putString(RESULT_FILE_TYPE, resultType);
+        mReporter.broadcast(action, extras);
     }
 
     private void notifyTaskFailed(String action, Exception exception) {
-        Intent intent = new Intent(action);
-        intent.putExtra(EXCEPTION, exception);
-        mBroadcastManager.sendBroadcast(intent);
+        Bundle extras = new Bundle();
+        extras.putSerializable(EXCEPTION, exception);
+        mReporter.broadcast(action, extras);
     }
 
     private AbstractDataImporter getDataImporter(DataFormat dataFormat, File file) throws IOException {

@@ -25,8 +25,8 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import androidx.annotation.Nullable;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.Attachment;
@@ -54,6 +54,8 @@ public class AttachmentHandlerIntentService extends IntentService {
     public static final int ACTION_CREATE = 1;
     public static final int ACTION_DELETE = 2;
 
+    private TaskReporter mReporter;
+
     public AttachmentHandlerIntentService() {
         super("AttachmentHandlerIntentService");
     }
@@ -61,6 +63,7 @@ public class AttachmentHandlerIntentService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         if (intent != null) {
+            mReporter = new TaskReporter(this);
             int action = intent.getIntExtra(ACTION, 0);
             Attachment attachment = intent.getParcelableExtra(ATTACHMENT);
             notifyOperationStarted(attachment, action);
@@ -125,24 +128,24 @@ public class AttachmentHandlerIntentService extends IntentService {
     }
 
     private void notifyOperationStarted(Attachment attachment, int action) {
-        Intent intent = new Intent(LocalAction.ACTION_ATTACHMENT_OP_STARTED);
-        intent.putExtra(ATTACHMENT, attachment);
-        intent.putExtra(ACTION, action);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        Bundle extras = new Bundle();
+        extras.putParcelable(ATTACHMENT, attachment);
+        extras.putInt(ACTION, action);
+        mReporter.broadcast(LocalAction.ACTION_ATTACHMENT_OP_STARTED, extras);
     }
 
     private void notifyOperationFinished(Attachment attachment, int action) {
-        Intent intent = new Intent(LocalAction.ACTION_ATTACHMENT_OP_FINISHED);
-        intent.putExtra(ATTACHMENT, attachment);
-        intent.putExtra(ACTION, action);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        Bundle extras = new Bundle();
+        extras.putParcelable(ATTACHMENT, attachment);
+        extras.putInt(ACTION, action);
+        mReporter.broadcast(LocalAction.ACTION_ATTACHMENT_OP_FINISHED, extras);
     }
 
     private void notifyOperationFailed(Attachment attachment, int action, String error) {
-        Intent intent = new Intent(LocalAction.ACTION_ATTACHMENT_OP_FAILED);
-        intent.putExtra(ATTACHMENT, attachment);
-        intent.putExtra(ACTION, action);
-        intent.putExtra(ERROR, error);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        Bundle extras = new Bundle();
+        extras.putParcelable(ATTACHMENT, attachment);
+        extras.putInt(ACTION, action);
+        extras.putString(ERROR, error);
+        mReporter.broadcast(LocalAction.ACTION_ATTACHMENT_OP_FAILED, extras);
     }
 }

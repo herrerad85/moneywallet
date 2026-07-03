@@ -21,9 +21,9 @@ package com.oriondev.moneywallet.service;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.oriondev.moneywallet.api.BackendException;
 import com.oriondev.moneywallet.api.BackendServiceFactory;
@@ -52,7 +52,7 @@ public class BackendHandlerIntentService extends IntentService {
 
     private String mBackendId;
 
-    private LocalBroadcastManager mBroadcastManager;
+    private TaskReporter mReporter;
 
     public BackendHandlerIntentService() {
         super("BackendHandlerIntentService");
@@ -61,7 +61,7 @@ public class BackendHandlerIntentService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         if (intent != null && intent.hasExtra(BACKEND_ID)) {
-            mBroadcastManager = LocalBroadcastManager.getInstance(this);
+            mReporter = new TaskReporter(this);
             mBackendId = intent.getStringExtra(BACKEND_ID);
             switch (intent.getIntExtra(ACTION, ACTION_LIST)) {
                 case ACTION_LIST:
@@ -100,29 +100,29 @@ public class BackendHandlerIntentService extends IntentService {
     }
 
     private void notifyTaskStarted(int action) {
-        Intent intent = new Intent(LocalAction.ACTION_BACKEND_SERVICE_STARTED);
-        intent.putExtra(ACTION, action);
-        mBroadcastManager.sendBroadcast(intent);
+        Bundle extras = new Bundle();
+        extras.putInt(ACTION, action);
+        mReporter.broadcast(LocalAction.ACTION_BACKEND_SERVICE_STARTED, extras);
     }
 
     private void notifyListTaskFinished(List<IFile> files) {
-        Intent intent = new Intent(LocalAction.ACTION_BACKEND_SERVICE_FINISHED);
-        intent.putExtra(ACTION, ACTION_LIST);
-        intent.putParcelableArrayListExtra(FOLDER_CONTENT, Utils.wrapAsArrayList(files));
-        mBroadcastManager.sendBroadcast(intent);
+        Bundle extras = new Bundle();
+        extras.putInt(ACTION, ACTION_LIST);
+        extras.putParcelableArrayList(FOLDER_CONTENT, Utils.wrapAsArrayList(files));
+        mReporter.broadcast(LocalAction.ACTION_BACKEND_SERVICE_FINISHED, extras);
     }
 
     private void notifyCreateFolderTaskFinished(IFile file) {
-        Intent intent = new Intent(LocalAction.ACTION_BACKEND_SERVICE_FINISHED);
-        intent.putExtra(ACTION, ACTION_CREATE_FOLDER);
-        intent.putExtra(CREATED_FILE, file);
-        mBroadcastManager.sendBroadcast(intent);
+        Bundle extras = new Bundle();
+        extras.putInt(ACTION, ACTION_CREATE_FOLDER);
+        extras.putParcelable(CREATED_FILE, file);
+        mReporter.broadcast(LocalAction.ACTION_BACKEND_SERVICE_FINISHED, extras);
     }
 
     private void notifyTaskFailure(int action, String message) {
-        Intent intent = new Intent(LocalAction.ACTION_BACKEND_SERVICE_FAILED);
-        intent.putExtra(ACTION, action);
-        intent.putExtra(ERROR_MESSAGE, message);
-        mBroadcastManager.sendBroadcast(intent);
+        Bundle extras = new Bundle();
+        extras.putInt(ACTION, action);
+        extras.putString(ERROR_MESSAGE, message);
+        mReporter.broadcast(LocalAction.ACTION_BACKEND_SERVICE_FAILED, extras);
     }
 }
