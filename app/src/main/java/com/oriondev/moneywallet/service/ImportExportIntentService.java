@@ -192,7 +192,6 @@ public class ImportExportIntentService extends IntentService {
             // send a successful intent to inform the receivers that the operation succeed
             notifyTaskFinished(LocalAction.ACTION_EXPORT_SERVICE_FINISHED, resultUri, resultType);
         } catch (Exception e) {
-            e.printStackTrace();
             notifyTaskFailed(LocalAction.ACTION_EXPORT_SERVICE_FAILED, e);
         }
     }

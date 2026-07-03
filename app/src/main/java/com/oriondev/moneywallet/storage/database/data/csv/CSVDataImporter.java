@@ -33,7 +33,6 @@ public class CSVDataImporter extends AbstractDataImporter {
     public void importData() throws IOException {
         Map<String, String> lineMap = mReader.readMap();
         while (lineMap != null) {
-            System.out.println("Importing line");
             // extract required information from the csv file
             String wallet = getTrimmedString(lineMap.get(Constants.COLUMN_WALLET));
             String currency = getTrimmedString(lineMap.get(Constants.COLUMN_CURRENCY));
