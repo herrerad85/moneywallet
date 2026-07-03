@@ -28,10 +28,9 @@ import androidx.fragment.app.FragmentManager;
 
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.ExchangeRate;
+import com.oriondev.moneywallet.model.MoneyScale;
 import com.oriondev.moneywallet.ui.fragment.dialog.CurrencyConverterDialog;
 import com.oriondev.moneywallet.utils.CurrencyManager;
-
-import java.math.BigDecimal;
 
 /**
  * Created by andrea on 15/03/18.
@@ -172,11 +171,7 @@ public class CurrencyConverterPicker extends Fragment implements CurrencyConvert
     }
 
     public long convert(long money) {
-        return new BigDecimal(money)
-                .movePointLeft(mCurrency1.getDecimals())
-                .multiply(new BigDecimal(mConversionRate))
-                .movePointRight(mCurrency2.getDecimals())
-                .longValue();
+        return MoneyScale.convert(money, mCurrency1.getDecimals(), mCurrency2.getDecimals(), mConversionRate);
     }
 
     public void notifyMoneyChanged() {

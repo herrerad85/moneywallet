@@ -26,6 +26,7 @@ import android.widget.TextView;
 
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.Money;
+import com.oriondev.moneywallet.model.MoneyScale;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.view.theme.ThemeEngine;
 
@@ -86,8 +87,7 @@ public class MoneyFormatter {
     }
 
     public static long normalize(long money, int decimalOffset) {
-        double exponential = Math.pow(10d, decimalOffset);
-        return (long) (money * exponential);
+        return MoneyScale.rescale(money, decimalOffset);
     }
 
     private MoneyFormatter() {

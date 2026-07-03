@@ -22,6 +22,7 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.CurrencyUnit;
+import com.oriondev.moneywallet.model.MoneyScale;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.database.SQLiteDataException;
@@ -273,12 +274,12 @@ public class NewEditCurrencyActivity extends SinglePanelScrollActivity {
                             if (currencyUnit.getDecimals() < decimalCount) {
                                 // in this case we have to multiply the current values
                                 int exponent = decimalCount - currencyUnit.getDecimals();
-                                int multiplier = (int) Math.pow(10, exponent);
+                                int multiplier = (int) MoneyScale.rescale(1L, exponent);
                                 builder.content(R.string.message_multiply_currency_decimals, multiplier);
                             } else {
                                 // in this case we have to divide the current values
                                 int exponent = currencyUnit.getDecimals() - decimalCount;
-                                int divider = (int) Math.pow(10, exponent);
+                                int divider = (int) MoneyScale.rescale(1L, exponent);
                                 builder.content(R.string.message_divide_currency_decimals, divider);
                             }
                             builder.show();

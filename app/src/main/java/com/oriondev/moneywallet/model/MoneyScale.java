@@ -1,0 +1,86 @@
+/*
+ * Copyright (c) 2018.
+ *
+ * This file is part of MoneyWallet.
+ *
+ * MoneyWallet is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MoneyWallet is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.oriondev.moneywallet.model;
+
+import java.math.BigDecimal;
+
+/**
+ * Canonical conversions between a human readable decimal amount and the bare
+ * {@code long} minor units value the app stores for money. The scale of a
+ * currency is 10^decimals, with decimals in the range 0..3.
+ *
+ * Every conversion shifts the decimal point with {@link BigDecimal} so the
+ * arithmetic is exact, and truncates toward zero when narrowing back to a
+ * {@code long} (the same rounding the individual call sites relied on before
+ * this was consolidated). The class is intentionally free of Android
+ * dependencies so it can be unit tested on the JVM.
+ */
+public final class MoneyScale {
+
+    private MoneyScale() {
+    }
+
+    /**
+     * Convert a human amount in major units (for example 64.99) into the stored
+     * minor units value (6499 for a two decimal currency). Any fraction beyond
+     * the currency scale is truncated toward zero. A null amount maps to zero.
+     */
+    public static long toMinorUnits(BigDecimal amount, int decimals) {
+        if (amount == null) {
+            return 0L;
+        }
+        return amount.movePointRight(decimals).longValue();
+    }
+
+    /**
+     * Convert a stored minor units value back into a human amount in major
+     * units. This is the exact inverse of {@link #toMinorUnits(BigDecimal, int)}
+     * for any value that fits the currency scale.
+     */
+    public static BigDecimal toHumanAmount(long minorUnits, int decimals) {
+        return BigDecimal.valueOf(minorUnits).movePointLeft(decimals);
+    }
+
+    /**
+     * Rescale a stored minor units value by shifting its decimal point right by
+     * {@code decimalOffset} places; a negative offset shifts left. Used when a
+     * currency changes its number of decimals. Truncates toward zero.
+     */
+    public static long rescale(long minorUnits, int decimalOffset) {
+        return BigDecimal.valueOf(minorUnits).movePointRight(decimalOffset).longValue();
+    }
+
+    /**
+     * Apply an exchange rate to a stored minor units amount and re-scale the
+     * result from the source currency scale to the target currency scale. The
+     * rate is applied exactly once and the result is truncated toward zero.
+     *
+     * The rate is taken through {@link BigDecimal#valueOf(double)} so it is read
+     * from its canonical decimal form rather than the raw binary expansion of
+     * the double, which is what {@code new BigDecimal(double)} would capture.
+     */
+    public static long convert(long minorUnits, int fromDecimals, int toDecimals, double rate) {
+        return BigDecimal.valueOf(minorUnits)
+                .movePointLeft(fromDecimals)
+                .multiply(BigDecimal.valueOf(rate))
+                .movePointRight(toDecimals)
+                .longValue();
+    }
+}

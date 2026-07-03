@@ -38,6 +38,7 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.IRadarDataSet;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.Money;
+import com.oriondev.moneywallet.model.MoneyScale;
 import com.oriondev.moneywallet.model.OverviewData;
 import com.oriondev.moneywallet.model.OverviewSetting;
 import com.oriondev.moneywallet.model.PeriodMoney;
@@ -159,11 +160,10 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
             List<RadarEntry> radarEntryList = new ArrayList<>();
             // iterate period money items
             CurrencyUnit currencyUnit = CurrencyManager.getCurrency(currency);
-            double divider = Math.pow(10, currencyUnit.getDecimals());
             for (int i = 0; i < periodMoneyList.size(); i++) {
                 PeriodMoney periodMoney = periodMoneyList.get(i);
                 long money = periodMoney.getNetIncomes().getMoney(currency);
-                float value = (float) ((double) money / divider);
+                float value = MoneyScale.toHumanAmount(money, currencyUnit.getDecimals()).floatValue();
                 barEntryList.add(new BarEntry(i, value));
                 lineEntryList.add(new Entry(i, value));
                 radarEntryList.add(new RadarEntry(value));

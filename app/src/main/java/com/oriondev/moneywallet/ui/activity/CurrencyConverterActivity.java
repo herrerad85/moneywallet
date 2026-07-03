@@ -41,6 +41,7 @@ import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.ExchangeRate;
+import com.oriondev.moneywallet.model.MoneyScale;
 import com.oriondev.moneywallet.picker.CurrencyPicker;
 import com.oriondev.moneywallet.service.AbstractCurrencyRateDownloadIntentService;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
@@ -241,10 +242,9 @@ public class CurrencyConverterActivity extends SinglePanelActivity implements Vi
         );
         if (exchangeRate != null) {
             CurrencyUnit currencyUnit = mCurrencyToPicker.getCurrentCurrency();
-            long money = new BigDecimal(text)
-                    .multiply(BigDecimal.valueOf(exchangeRate.getRate()))
-                    .movePointRight(currencyUnit.getDecimals())
-                    .longValue();
+            long money = MoneyScale.toMinorUnits(
+                    new BigDecimal(text).multiply(BigDecimal.valueOf(exchangeRate.getRate())),
+                    currencyUnit.getDecimals());
             mTextMoneyTo.setText(mMoneyFormatter.getNotTintedString(currencyUnit, money, MoneyFormatter.CurrencyMode.ALWAYS_HIDDEN));
         } else {
             mTextMoneyTo.setText(R.string.hint_unknown);

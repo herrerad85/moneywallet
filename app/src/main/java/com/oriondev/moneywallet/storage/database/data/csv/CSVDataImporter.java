@@ -5,6 +5,7 @@ import android.text.TextUtils;
 
 import com.opencsv.CSVReaderHeaderAware;
 import com.oriondev.moneywallet.model.CurrencyUnit;
+import com.oriondev.moneywallet.model.MoneyScale;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.data.AbstractDataImporter;
 import com.oriondev.moneywallet.utils.CurrencyManager;
@@ -61,9 +62,7 @@ public class CSVDataImporter extends AbstractDataImporter {
             } catch (NumberFormatException e) {
                 throw new RuntimeException("Invalid money amount (" + e.getMessage() + ")");
             }
-            BigDecimal decimalMultiply = new BigDecimal(Math.pow(10, currencyUnit.getDecimals()));
-            moneyDecimal = moneyDecimal.multiply(decimalMultiply);
-            long money = moneyDecimal.longValue();
+            long money = MoneyScale.toMinorUnits(moneyDecimal, currencyUnit.getDecimals());
             int direction = money < 0 ? Contract.Direction.EXPENSE : Contract.Direction.INCOME;
             Date datetime = DateUtils.getDateFromSQLDateTimeString(datetimeString);
             insertTransaction(wallet, currencyUnit, category, datetime, Math.abs(money), direction, description, event, place, people, note);

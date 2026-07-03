@@ -24,6 +24,7 @@ import android.os.Bundle;
 import androidx.annotation.VisibleForTesting;
 
 import com.oriondev.moneywallet.model.CurrencyUnit;
+import com.oriondev.moneywallet.model.MoneyScale;
 
 import java.math.BigDecimal;
 
@@ -64,7 +65,7 @@ public class EquationSolver {
 
     public void setValue(CurrencyUnit currency, long money) {
         if (currency != null && money != 0L && currency.hasDecimals()) {
-            mFirstNumber = String.valueOf(money / Math.pow(10, currency.getDecimals()));
+            mFirstNumber = MoneyScale.toHumanAmount(money, currency.getDecimals()).toPlainString();
         } else {
             mFirstNumber = String.valueOf(money);
         }
@@ -181,7 +182,7 @@ public class EquationSolver {
         }
         BigDecimal parsedNumber = parseNumber(mFirstNumber);
         if (mCurrency != null) {
-            return parsedNumber.movePointRight(mCurrency.getDecimals()).longValue();
+            return MoneyScale.toMinorUnits(parsedNumber, mCurrency.getDecimals());
         }
         return parsedNumber.longValue();
     }
