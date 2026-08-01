@@ -17,11 +17,13 @@ Features:
 * Calendar view of your activity
 * Transaction templates and scheduled events
 * Local backup and restore, with a local-folder option you can sync using your own tools
+* Backup to your own WebDAV server, such as Nextcloud, ownCloud or a NAS, with no third party account
 * Export to CSV, Excel, and PDF, plus CSV import
 * Optional place attachments using OpenStreetMap, with no proprietary services
 
 Privacy and offline first:
 
+* Optional app lock with a PIN, a pattern, or your fingerprint
 * No account, no sign-up, and no ads
 * Your data stays on your device unless you choose to back it up or export it
 * The open-source build uses OpenStreetMap and no Google services

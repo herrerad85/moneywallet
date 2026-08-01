@@ -1,0 +1,3 @@
+Backups can now go to your own WebDAV server, such as Nextcloud, ownCloud or a NAS, with no third party account and nothing sent to anyone else. Tested against four different server implementations.
+
+Also a large internal cleanup: money and recurrence calculations, backup destination handling and data export were each consolidated into one place, and unit test coverage nearly doubled.
