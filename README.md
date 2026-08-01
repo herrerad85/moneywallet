@@ -1,8 +1,15 @@
 # Tallybook
 
 [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
+[![F-Droid](https://img.shields.io/f-droid/v/io.github.herrerad85.tallybook.svg)](https://f-droid.org/packages/io.github.herrerad85.tallybook/)
 
-Tallybook is a private, offline-first expense and budget tracker for Android: multiple wallets, categories, budgets, recurring transactions, multi-currency, reports, and local backup, with no account required.
+Tallybook is a private, offline-first expense and budget tracker for Android: multiple wallets, categories, budgets, recurring transactions, multi-currency, reports, an optional PIN, pattern or fingerprint lock, and local backup, with no account required.
+
+## Install
+
+Tallybook is on F-Droid: [f-droid.org/packages/io.github.herrerad85.tallybook](https://f-droid.org/packages/io.github.herrerad85.tallybook/)
+
+Signed APKs are also attached to each [GitHub release](https://github.com/herrerad85/moneywallet/releases). The F-Droid build is reproducible and carries the developer signature, so the two are interchangeable.
 
 **Tallybook is a maintained fork of [MoneyWallet](https://github.com/AndreAle94/moneywallet)** by AndreAle94, a GPL-licensed Android expense manager whose last release was in 2021. This fork modernizes the open-source build, fixes the startup crash that stopped the app launching on recent Android, and continues maintenance under a new name and application id.
 
@@ -15,7 +22,9 @@ This fork is independent and is not endorsed by or affiliated with the original 
 ## Status
 The Android 14/15 compatibility work has landed: a modernized FOSS/OpenStreetMap build, the Android 12+ manifest and PendingIntent updates, and a fix for the startup crash caused by a legacy auto-backup path (reported upstream as [#177](https://github.com/AndreAle94/moneywallet/issues/177) and [#286](https://github.com/AndreAle94/moneywallet/issues/286)). It has been verified on an Android 15 emulator (launch, wallet creation, income and expense entry, totals, and relaunch persistence).
 
-The rebrand to Tallybook is complete: a new name and application id, a verified backup and restore migration path (see [MIGRATION.md](MIGRATION.md)), export and import fixed under scoped storage, a local-folder backup option that works with file sync tools, and Android 15 edge-to-edge UI polish. The F-Droid listing metadata and screenshots are prepared in the repository. No public release has been published yet. Self-hosted WebDAV/Nextcloud sync and the F-Droid submission are still planned. Progress is tracked in this repository's [issues](https://github.com/herrerad85/moneywallet/issues) and milestones.
+The rebrand to Tallybook is complete: a new name and application id, a verified backup and restore migration path (see [MIGRATION.md](MIGRATION.md)), export and import fixed under scoped storage, a local-folder backup option that works with file sync tools, and Android 15 edge-to-edge UI polish.
+
+Tallybook is published on F-Droid and is now maintained there. Builds are reproducible and carry the developer signature, so the F-Droid binary matches the one built from this repository. Self-hosted WebDAV/Nextcloud sync is the next feature. Progress is tracked in this repository's [issues](https://github.com/herrerad85/moneywallet/issues).
 
 ## Build from source
 The fully open-source variant uses OpenStreetMap and no proprietary services. Build the `floss` + `osm` flavors:
@@ -24,7 +33,7 @@ The fully open-source variant uses OpenStreetMap and no proprietary services. Bu
 ./gradlew assembleFlossOsmDebug
 ```
 
-Requirements: a recent Android SDK and JDK 17. The `proprietary` flavor (Google Drive, Dropbox) and the `gmap` flavor (Google Maps) require API keys in `gradle.properties` and are not the focus of this fork.
+Requirements: a recent Android SDK and JDK 17 or newer. Release builds use JDK 21, which is what the F-Droid build server uses, so a release built on an older JDK will not reproduce. The `proprietary` flavor (Google Drive, Dropbox) and the `gmap` flavor (Google Maps) require API keys in `gradle.properties` and are not the focus of this fork.
 
 Note on icons: the launcher and the intro illustrations are original artwork for this fork, released under the GPLv3. The category picker icons place glyphs from Phosphor Icons (MIT), Tabler Icons (MIT), Lucide (ISC), and Bootstrap Icons (MIT) on original GPLv3 disc backgrounds; a few remain original artwork. The interface also uses Material Design Icons, licensed under Apache-2.0.
 
@@ -32,9 +41,9 @@ Note on icons: the launcher and the intro illustrations are original artwork for
 - Android 14/15 compatibility: modernize the build, fix the startup crash, verify core flows. (Done.)
 - Rebrand: new name and application id, build and migration docs. (Done.)
 - Backup and export: fix export and import under scoped storage, and a local-file, Syncthing-friendly backup option. (Done.)
-- Self-hosted sync: WebDAV/Nextcloud (upstream [#67](https://github.com/AndreAle94/moneywallet/issues/67)). (Planned.)
 - F-Droid: listing metadata and screenshots. (Done.)
-- F-Droid: submission to the f-droiddata build-recipe repository. (Planned.)
+- F-Droid: submission, reproducible builds, and publication. (Done.)
+- Self-hosted sync: WebDAV/Nextcloud (upstream [#67](https://github.com/AndreAle94/moneywallet/issues/67)). (Next.)
 
 See the pinned [roadmap](https://github.com/herrerad85/moneywallet/issues/15) for current details.
 
