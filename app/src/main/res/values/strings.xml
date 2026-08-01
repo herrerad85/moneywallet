@@ -397,7 +397,7 @@
     <string name="message_backup_service_storage_access_framework_disconnect">"Are you sure you want to disconnect the current folder? No files will be deleted."</string>
     <string name="message_backup_service_webdav_disconnect">"Are you sure you want to disconnect this server? The saved address and password will be removed from this device. No files will be deleted from the server."</string>
     <string name="message_webdav_app_password">"If your server supports app passwords, such as Nextcloud, create one for Tallybook instead of using your account password."</string>
-    <string name="message_webdav_url_scheme">"The address must start with http:// or https://"</string>
+    <string name="message_webdav_url_scheme">"The address must start with https://. A plain http address is refused because it would send your password unencrypted, and Android blocks it."</string>
     <string name="message_backup_service_google_drive_disconnect">"Are you sure you want to disconnect your Google Drive account?"</string>
     <string name="message_action_archive_wallet">"Are you sure you want to archive this wallet? It will not be visible in the menu anymore."</string>
     <string name="message_action_unarchive_wallet">"Are you sure you want to unarchive this wallet? It will be visible in the menu again."</string>

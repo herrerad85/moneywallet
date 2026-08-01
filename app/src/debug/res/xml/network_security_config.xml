@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Debug builds only. Release builds keep the platform default, which blocks cleartext, and the
+  ~ WebDAV setup dialog refuses an http:// address outside a debug build for the same reason:
+  ~ the address carries a password.
+  ~
+  ~ This exists so the WebDAV backend can be exercised against a throwaway server on a development
+  ~ machine without standing up TLS for it.
+  -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

@@ -32,6 +32,7 @@ import androidx.annotation.StringRes;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.oriondev.moneywallet.BuildConfig;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.api.AbstractBackendServiceDelegate;
 import com.oriondev.moneywallet.api.BackendServiceFactory;
@@ -151,7 +152,7 @@ public class WebDAVBackendService extends AbstractBackendServiceDelegate {
                     urlField.setError(activity.getString(R.string.hint_webdav_url));
                     return;
                 }
-                if (!typedUrl.startsWith("http://") && !typedUrl.startsWith("https://")) {
+                if (!isAcceptableUrl(typedUrl)) {
                     urlField.setError(activity.getString(R.string.message_webdav_url_scheme));
                     return;
                 }
@@ -160,6 +161,22 @@ public class WebDAVBackendService extends AbstractBackendServiceDelegate {
         });
 
         dialog.show();
+    }
+
+    /**
+     * Rejects cleartext up front rather than letting the user save an address that the platform
+     * will then refuse to open. Since Android 9 cleartext is blocked by default, so an http://
+     * server would fail at connect time with an error that says nothing about the real cause, and
+     * the address carries a password either way.
+     *
+     * Debug builds allow it so the backend can be tested against a throwaway server without TLS;
+     * they ship a matching network security config.
+     */
+    static boolean isAcceptableUrl(String url) {
+        if (url.startsWith("https://")) {
+            return true;
+        }
+        return BuildConfig.DEBUG && url.startsWith("http://");
     }
 
     /**
