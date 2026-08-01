@@ -3,7 +3,7 @@
 [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 [![F-Droid](https://img.shields.io/f-droid/v/io.github.herrerad85.tallybook.svg)](https://f-droid.org/packages/io.github.herrerad85.tallybook/)
 
-Tallybook is a private, offline-first expense and budget tracker for Android: multiple wallets, categories, budgets, recurring transactions, multi-currency, reports, an optional PIN, pattern or fingerprint lock, and local backup, with no account required.
+Tallybook is a private, offline-first expense and budget tracker for Android: multiple wallets, categories, budgets, recurring transactions, multi-currency, reports, an optional PIN, pattern or fingerprint lock, and backup to a local folder or your own WebDAV server, with no account required.
 
 ## Install
 
@@ -24,7 +24,7 @@ The Android 14/15 compatibility work has landed: a modernized FOSS/OpenStreetMap
 
 The rebrand to Tallybook is complete: a new name and application id, a verified backup and restore migration path (see [MIGRATION.md](MIGRATION.md)), export and import fixed under scoped storage, a local-folder backup option that works with file sync tools, and Android 15 edge-to-edge UI polish.
 
-Tallybook is published on F-Droid and is now maintained there. Builds are reproducible and carry the developer signature, so the F-Droid binary matches the one built from this repository. Self-hosted WebDAV/Nextcloud sync is the next feature. Progress is tracked in this repository's [issues](https://github.com/herrerad85/moneywallet/issues).
+Tallybook is published on F-Droid and is now maintained there. Builds are reproducible and carry the developer signature, so the F-Droid binary matches the one built from this repository. Backups can also go to your own WebDAV server, such as Nextcloud, ownCloud or a NAS. Progress is tracked in this repository's [issues](https://github.com/herrerad85/moneywallet/issues).
 
 ## Build from source
 The fully open-source variant uses OpenStreetMap and no proprietary services. Build the `floss` + `osm` flavors:
@@ -43,7 +43,7 @@ Note on icons: the launcher and the intro illustrations are original artwork for
 - Backup and export: fix export and import under scoped storage, and a local-file, Syncthing-friendly backup option. (Done.)
 - F-Droid: listing metadata and screenshots. (Done.)
 - F-Droid: submission, reproducible builds, and publication. (Done.)
-- Self-hosted sync: WebDAV/Nextcloud (upstream [#67](https://github.com/AndreAle94/moneywallet/issues/67)). (Next.)
+- Self-hosted sync: WebDAV/Nextcloud (upstream [#67](https://github.com/AndreAle94/moneywallet/issues/67)). (Done.)
 
 See the pinned [roadmap](https://github.com/herrerad85/moneywallet/issues/15) for current details.
 
