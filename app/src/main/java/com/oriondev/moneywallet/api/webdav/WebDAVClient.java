@@ -19,8 +19,6 @@
 
 package com.oriondev.moneywallet.api.webdav;
 
-import android.util.Base64;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -32,46 +30,74 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import okhttp3.Credentials;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import okio.BufferedSink;
+
 /**
  * The whole WebDAV surface this app needs: list one folder, create one folder, upload a file,
- * download a file. That is four HTTP verbs, which is why there is no client library here.
+ * download a file. That is PROPFIND, MKCOL, PUT and GET.
+ *
+ * It runs on OkHttp rather than the platform's {@code HttpURLConnection} because the platform
+ * client validates the method against a fixed list and throws
+ * {@code ProtocolException: Expected one of [OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, PATCH]}
+ * for both PROPFIND and MKCOL. OkHttp has no such list, and its own source special cases WebDAV
+ * verbs, so it is the only realistic transport here.
  *
  * The methods that do not touch the network are static and package visible so they can be unit
- * tested on the JVM. The verbs themselves cannot be: PROPFIND and MKCOL are rejected by
- * {@link HttpURLConnection#setRequestMethod} on a desktop JVM and only work on Android, where the
- * implementation accepts arbitrary methods.
+ * tested on the JVM.
  */
 public class WebDAVClient {
 
     static final String DAV_NAMESPACE = "DAV:";
 
-    private static final int CONNECT_TIMEOUT_MS = 15000;
-    private static final int READ_TIMEOUT_MS = 20000;
+    private static final long CONNECT_TIMEOUT_S = 15;
+    private static final long READ_TIMEOUT_S = 20;
+    private static final long WRITE_TIMEOUT_S = 60;
+
+    private static final MediaType XML = MediaType.parse("application/xml; charset=utf-8");
+    private static final MediaType OCTET_STREAM = MediaType.parse("application/octet-stream");
+
+    private static final String PROPFIND_BODY =
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+                    + "<d:propfind xmlns:d=\"DAV:\"><d:prop>"
+                    + "<d:resourcetype/><d:getcontentlength/>"
+                    + "</d:prop></d:propfind>";
 
     private final String mBaseUrl;
     private final String mAuthorization;
+    private final OkHttpClient mHttp;
 
     public WebDAVClient(String baseUrl, String username, String password) {
         mBaseUrl = normalizeBaseUrl(baseUrl);
-        mAuthorization = basicAuthHeader(username, password);
+        mAuthorization = Credentials.basic(username == null ? "" : username,
+                password == null ? "" : password);
+        mHttp = new OkHttpClient.Builder()
+                .connectTimeout(CONNECT_TIMEOUT_S, TimeUnit.SECONDS)
+                .readTimeout(READ_TIMEOUT_S, TimeUnit.SECONDS)
+                .writeTimeout(WRITE_TIMEOUT_S, TimeUnit.SECONDS)
+                .build();
     }
 
     /**
@@ -85,12 +111,6 @@ public class WebDAVClient {
             trimmed = trimmed.substring(0, trimmed.length() - 1);
         }
         return trimmed + "/";
-    }
-
-    static String basicAuthHeader(String username, String password) {
-        String credentials = (username == null ? "" : username) + ":" + (password == null ? "" : password);
-        byte[] raw = credentials.getBytes(Charset.forName("UTF-8"));
-        return "Basic " + Base64.encodeToString(raw, Base64.NO_WRAP);
     }
 
     /**
@@ -157,13 +177,7 @@ public class WebDAVClient {
         if (!basePath.isEmpty() && path.startsWith(basePath)) {
             path = path.substring(basePath.length());
         }
-        while (path.startsWith("/")) {
-            path = path.substring(1);
-        }
-        while (path.endsWith("/")) {
-            path = path.substring(0, path.length() - 1);
-        }
-        return path;
+        return trimSlashes(path);
     }
 
     static String nameOf(String path) {
@@ -173,8 +187,8 @@ public class WebDAVClient {
 
     /**
      * Parses a PROPFIND multistatus body. Namespace aware on purpose: servers disagree about the
-     * prefix (D:, d:, lp1:), so matching on the DAV: namespace rather than the tag text is what
-     * makes this work across Nextcloud, ownCloud and a plain Apache mod_dav.
+     * prefix (D:, d:, lp1:, ns0:), so matching on the DAV: namespace rather than the tag text is
+     * what makes this work across Nextcloud, ownCloud and a plain Apache mod_dav.
      *
      * The entry describing the requested folder itself is dropped: a Depth 1 PROPFIND always
      * returns it alongside its children.
@@ -248,6 +262,22 @@ public class WebDAVClient {
         return text.toString();
     }
 
+    static String trimSlashes(String path) {
+        String result = path == null ? "" : path;
+        while (result.startsWith("/")) {
+            result = result.substring(1);
+        }
+        while (result.endsWith("/")) {
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
+    }
+
+    private static String directoryPath(String path) {
+        String trimmed = trimSlashes(path);
+        return trimmed.isEmpty() ? "" : trimmed + "/";
+    }
+
     String urlFor(String path) {
         return mBaseUrl + encodePath(path == null ? "" : path);
     }
@@ -265,111 +295,105 @@ public class WebDAVClient {
         }
     }
 
-    private HttpURLConnection open(String path, String method) throws IOException {
-        HttpURLConnection connection = (HttpURLConnection) new URL(urlFor(path)).openConnection();
-        connection.setRequestMethod(method);
-        connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
-        connection.setReadTimeout(READ_TIMEOUT_MS);
-        connection.setRequestProperty("Authorization", mAuthorization);
-        return connection;
-    }
-
-    private static boolean isSuccess(int code) {
-        return code >= 200 && code < 300;
+    private Request.Builder request(String path) {
+        return new Request.Builder()
+                .url(urlFor(path))
+                .header("Authorization", mAuthorization);
     }
 
     @NonNull
     public List<WebDAVFile> list(String path) throws WebDAVException {
-        String body = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-                + "<d:propfind xmlns:d=\"DAV:\"><d:prop>"
-                + "<d:resourcetype/><d:getcontentlength/>"
-                + "</d:prop></d:propfind>";
-        HttpURLConnection connection = null;
-        try {
-            connection = open(directoryPath(path), "PROPFIND");
-            connection.setRequestProperty("Depth", "1");
-            connection.setRequestProperty("Content-Type", "application/xml; charset=utf-8");
-            connection.setDoOutput(true);
-            byte[] payload = body.getBytes(Charset.forName("UTF-8"));
-            connection.setFixedLengthStreamingMode(payload.length);
-            try (OutputStream out = connection.getOutputStream()) {
-                out.write(payload);
+        Request request = request(directoryPath(path))
+                .method("PROPFIND", RequestBody.create(PROPFIND_BODY, XML))
+                .header("Depth", "1")
+                .build();
+        try (Response response = mHttp.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw WebDAVException.forStatus(response.code(), "list " + path);
             }
-            int code = connection.getResponseCode();
-            if (!isSuccess(code)) {
-                throw WebDAVException.forStatus(code, "list " + path);
+            ResponseBody body = response.body();
+            if (body == null) {
+                throw new WebDAVException("Server returned an empty folder listing", true);
             }
-            byte[] responseBody = readAll(connection.getInputStream());
-            return parsePropfind(new ByteArrayInputStream(responseBody), basePath(), trimSlashes(path));
+            return parsePropfind(body.byteStream(), basePath(), trimSlashes(path));
         } catch (IOException e) {
             throw new WebDAVException("Could not list " + path, e, true);
         } catch (SAXException | ParserConfigurationException e) {
             throw new WebDAVException("Could not read the server's folder listing", e, true);
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
         }
     }
 
     public void makeCollection(String path) throws WebDAVException {
-        HttpURLConnection connection = null;
-        try {
-            connection = open(directoryPath(path), "MKCOL");
-            int code = connection.getResponseCode();
-            if (!isSuccess(code)) {
-                throw WebDAVException.forStatus(code, "create folder " + path);
+        // MKCOL takes no body. OkHttp requires an explicit empty one for a method it does not know
+        // to be body-less.
+        Request request = request(directoryPath(path))
+                .method("MKCOL", RequestBody.create(new byte[0], null))
+                .build();
+        try (Response response = mHttp.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw WebDAVException.forStatus(response.code(), "create folder " + path);
             }
         } catch (IOException e) {
             throw new WebDAVException("Could not create folder " + path, e, true);
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
         }
     }
 
-    public void upload(String path, InputStream in, long size) throws WebDAVException {
-        HttpURLConnection connection = null;
-        try {
-            connection = open(path, "PUT");
-            connection.setDoOutput(true);
-            connection.setRequestProperty("Content-Type", "application/octet-stream");
-            if (size > 0) {
-                connection.setFixedLengthStreamingMode(size);
-            } else {
-                connection.setChunkedStreamingMode(0);
+    /**
+     * Streams the upload rather than buffering it: a backup archive is arbitrarily large and the
+     * caller's stream already reports progress.
+     */
+    public void upload(String path, final InputStream in, final long size) throws WebDAVException {
+        RequestBody body = new RequestBody() {
+
+            @Override
+            public MediaType contentType() {
+                return OCTET_STREAM;
             }
-            try (OutputStream out = connection.getOutputStream()) {
-                copy(in, out);
+
+            @Override
+            public long contentLength() {
+                return size > 0 ? size : -1;
             }
-            int code = connection.getResponseCode();
-            if (!isSuccess(code)) {
-                throw WebDAVException.forStatus(code, "upload " + path);
+
+            @Override
+            public void writeTo(@NonNull BufferedSink sink) throws IOException {
+                copy(in, sink.outputStream());
+            }
+        };
+        Request request = request(path).put(body).build();
+        try (Response response = mHttp.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw WebDAVException.forStatus(response.code(), "upload " + path);
             }
         } catch (IOException e) {
             throw new WebDAVException("Could not upload " + path, e, true);
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
         }
     }
 
     /**
      * Opens the download stream. The caller owns it and must close it, which also releases the
-     * connection.
+     * connection back to the pool.
      */
     public InputStream openDownload(String path) throws WebDAVException {
+        Request request = request(path).get().build();
+        Response response = null;
         try {
-            HttpURLConnection connection = open(path, "GET");
-            int code = connection.getResponseCode();
-            if (!isSuccess(code)) {
-                connection.disconnect();
+            response = mHttp.newCall(request).execute();
+            if (!response.isSuccessful()) {
+                int code = response.code();
+                response.close();
                 throw WebDAVException.forStatus(code, "download " + path);
             }
-            return connection.getInputStream();
+            ResponseBody body = response.body();
+            if (body == null) {
+                response.close();
+                throw new WebDAVException("Server returned an empty response for " + path, true);
+            }
+            return body.byteStream();
         } catch (IOException e) {
+            if (response != null) {
+                response.close();
+            }
             throw new WebDAVException("Could not download " + path, e, true);
         }
     }
@@ -380,28 +404,6 @@ public class WebDAVClient {
      */
     public void checkConnection() throws WebDAVException {
         list("");
-    }
-
-    private static String directoryPath(String path) {
-        String trimmed = trimSlashes(path);
-        return trimmed.isEmpty() ? "" : trimmed + "/";
-    }
-
-    static String trimSlashes(String path) {
-        String result = path == null ? "" : path;
-        while (result.startsWith("/")) {
-            result = result.substring(1);
-        }
-        while (result.endsWith("/")) {
-            result = result.substring(0, result.length() - 1);
-        }
-        return result;
-    }
-
-    private static byte[] readAll(InputStream in) throws IOException {
-        java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
-        copy(in, buffer);
-        return buffer.toByteArray();
     }
 
     private static void copy(InputStream in, OutputStream out) throws IOException {

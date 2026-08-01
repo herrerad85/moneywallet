@@ -21,6 +21,7 @@ package com.oriondev.moneywallet.api.webdav;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -194,7 +195,11 @@ public class WebDAVBackendService extends AbstractBackendServiceDelegate {
                 try {
                     new WebDAVClient(url, username, password).checkConnection();
                 } catch (WebDAVException e) {
-                    failure = e.getMessage();
+                    // Carry the cause into the message. "Could not list" on its own tells the user
+                    // nothing they can act on, and the cause is where the real reason lives.
+                    Log.e("WebDAVBackendService", "Connection check failed", e);
+                    Throwable cause = e.getCause();
+                    failure = cause != null ? e.getMessage() + ": " + cause.getMessage() : e.getMessage();
                 }
                 final String result = failure;
                 activity.runOnUiThread(new Runnable() {
