@@ -27,10 +27,13 @@ import com.oriondev.moneywallet.api.disk.DiskBackendService;
 import com.oriondev.moneywallet.api.disk.DiskBackendServiceAPI;
 import com.oriondev.moneywallet.api.saf.SAFBackendService;
 import com.oriondev.moneywallet.api.saf.SAFBackendServiceAPI;
+import com.oriondev.moneywallet.api.webdav.WebDAVBackendService;
+import com.oriondev.moneywallet.api.webdav.WebDAVBackendServiceAPI;
 import com.oriondev.moneywallet.model.BackupService;
 import com.oriondev.moneywallet.model.IFile;
 import com.oriondev.moneywallet.model.LocalFile;
 import com.oriondev.moneywallet.model.SAFFile;
+import com.oriondev.moneywallet.model.WebDAVFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +45,7 @@ public class BackendServiceFactory {
 
     public static final String SERVICE_ID_EXTERNAL_MEMORY = "external_memory";
     public static final String SERVICE_ID_SAF = "storage_access_framework";
+    public static final String SERVICE_ID_WEBDAV = "webdav";
 
     private static final List<BackendDescriptor> DESCRIPTORS = buildDescriptors();
 
@@ -82,6 +86,22 @@ public class BackendServiceFactory {
             @Override
             public IFile createFile(String encoded) {
                 return SAFFile.decode(encoded);
+            }
+        });
+        descriptors.add(new BackendDescriptor(SERVICE_ID_WEBDAV, R.drawable.ic_webdav_24dp) {
+            @Override
+            public AbstractBackendServiceDelegate createDelegate(AbstractBackendServiceDelegate.BackendServiceStatusListener listener) {
+                return new WebDAVBackendService(listener);
+            }
+
+            @Override
+            public IBackendServiceAPI createServiceApi(Context context) throws BackendException {
+                return new WebDAVBackendServiceAPI(context);
+            }
+
+            @Override
+            public IFile createFile(String encoded) {
+                return WebDAVFile.decode(encoded);
             }
         });
         return descriptors;
