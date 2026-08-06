@@ -480,6 +480,8 @@
     <string name="setting_title_ui_custom_digits">"Display style of digits"</string>
     <string name="setting_summary_ui_custom_digits">"Personalize the display style of digits"</string>
     <string name="setting_title_ui_date_format">"Date format"</string>
+    <string name="setting_title_ui_time_format">"Time format"</string>
+    <string name="setting_summary_ui_time_format">"%1$s, set in your device settings"</string>
     <string name="setting_title_ui_first_day_week">"First day of week"</string>
     <string name="setting_title_ui_first_day_month">"First day of month"</string>
     <string name="setting_title_ui_group_type">"Grouping"</string>

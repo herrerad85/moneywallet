@@ -98,9 +98,15 @@ public class PreferenceManager {
     private static final int DEFAULT_COLOR_EXPENSE = Color.RED;
 
     private static SharedPreferences mPreferences;
+    private static Context mApplicationContext;
 
     public static void initialize(Context context) {
+        mApplicationContext = context.getApplicationContext();
         mPreferences = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
+    }
+
+    public static Context getApplicationContext() {
+        return mApplicationContext;
     }
 
     public static void setCurrentWallet(Context context, long walletId) {

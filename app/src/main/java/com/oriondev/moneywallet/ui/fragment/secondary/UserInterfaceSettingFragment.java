@@ -19,7 +19,11 @@
 
 package com.oriondev.moneywallet.ui.fragment.secondary;
 
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentManager;
@@ -39,6 +43,7 @@ import com.oriondev.moneywallet.ui.preference.ColorPreference;
 import com.oriondev.moneywallet.ui.preference.ThemedListPreference;
 import com.oriondev.moneywallet.ui.view.theme.ITheme;
 import com.oriondev.moneywallet.ui.view.theme.ThemeEngine;
+import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 import com.oriondev.moneywallet.utils.DateFormatter;
 
 import java.text.DateFormatSymbols;
@@ -65,6 +70,7 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
     private ColorPreference mColorExpensePreference;
     private Preference mCustomDigitsSetupPreference;
     private ThemedListPreference mDateFormatPreference;
+    private Preference mTimeFormatPreference;
     private ThemedListPreference mFirstDayWeekPreference;
     private ThemedListPreference mFirstDayMonthPreference;
     private ThemedListPreference mGroupTypePreference;
@@ -86,6 +92,7 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
         mColorExpensePreference = (ColorPreference) findPreference("expense_color");
         mCustomDigitsSetupPreference = findPreference("custom_digits");
         mDateFormatPreference = (ThemedListPreference) findPreference("date_format");
+        mTimeFormatPreference = findPreference("time_format");
         mFirstDayWeekPreference = (ThemedListPreference) findPreference("first_day_week");
         mFirstDayMonthPreference = (ThemedListPreference) findPreference("first_day_month");
         mGroupTypePreference = (ThemedListPreference) findPreference("group_type");
@@ -120,18 +127,7 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
         // setup date format preference: we use a dynamic version that render the current
         // datetime of the device using all the available datetime patterns to help the
         // user to decide which is better for him
-        Date now = Calendar.getInstance().getTime();
-        mDateFormatPreference.setEntries(new String[] {
-                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_0),
-                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_1),
-                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_2),
-                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_3),
-                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_4),
-                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_5),
-                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_6),
-                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_7),
-                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_8)
-        });
+        setupDateFormatEntries();
         mDateFormatPreference.setEntryValues(new String[] {
                 String.valueOf(PreferenceManager.DATE_FORMAT_TYPE_0),
                 String.valueOf(PreferenceManager.DATE_FORMAT_TYPE_1),
@@ -193,6 +189,7 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
         mThemeTypePreference.setEntryValues(new String[] {THEME_TYPE_LIGHT, THEME_TYPE_DARK, THEME_TYPE_DEEP_DARK});
         // setup current values
         setupCurrentDateFormat();
+        setupCurrentTimeFormat();
         setupCurrentFirstDayOfWeek();
         setupCurrentFirstDayOfMonth();
         setupCurrentGroupType();
@@ -214,6 +211,26 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
                 int index = Integer.parseInt((String) newValue);
                 PreferenceManager.setCurrentDateFormatIndex(index);
                 setupCurrentDateFormat();
+                return false;
+            }
+
+        });
+        mTimeFormatPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                try {
+                    startActivity(new Intent(Settings.ACTION_DATE_SETTINGS));
+                } catch (ActivityNotFoundException e) {
+                    Activity activity = getActivity();
+                    if (activity != null) {
+                        ThemedDialog.buildMaterialDialog(activity)
+                                .title(R.string.title_error)
+                                .content(R.string.message_error_activity_not_found)
+                                .positiveText(android.R.string.ok)
+                                .show();
+                    }
+                }
                 return false;
             }
 
@@ -286,6 +303,37 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
         String summary = DateFormatter.getFormattedDateTime(Calendar.getInstance().getTime(), index);
         mDateFormatPreference.setValue(String.valueOf(index));
         mDateFormatPreference.setSummary(summary);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // the 12 or 24 hour choice lives in the system settings, which the Time format row links
+        // to, so everything that renders a time can be stale on the way back: the two summaries
+        // and the nine dated examples inside the date format dialog
+        setupCurrentTimeFormat();
+        setupCurrentDateFormat();
+        setupDateFormatEntries();
+    }
+
+    private void setupDateFormatEntries() {
+        Date now = Calendar.getInstance().getTime();
+        mDateFormatPreference.setEntries(new String[] {
+                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_0),
+                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_1),
+                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_2),
+                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_3),
+                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_4),
+                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_5),
+                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_6),
+                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_7),
+                DateFormatter.getFormattedDateTime(now, PreferenceManager.DATE_FORMAT_TYPE_8)
+        });
+    }
+
+    private void setupCurrentTimeFormat() {
+        String example = DateFormatter.getFormattedTime(Calendar.getInstance().getTime());
+        mTimeFormatPreference.setSummary(getString(R.string.setting_summary_ui_time_format, example));
     }
 
     private void setupCurrentFirstDayOfWeek() {

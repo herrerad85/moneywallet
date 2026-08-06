@@ -42,6 +42,11 @@
             android:title="@string/setting_title_ui_date_format"
             android:persistent="false" />
 
+        <com.oriondev.moneywallet.ui.preference.ThemedPreference
+            android:key="time_format"
+            android:title="@string/setting_title_ui_time_format"
+            android:persistent="false" />
+
         <com.oriondev.moneywallet.ui.preference.ThemedListPreference
             android:key="first_day_week"
             android:title="@string/setting_title_ui_first_day_week"

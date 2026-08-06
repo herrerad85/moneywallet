@@ -28,6 +28,7 @@ import androidx.fragment.app.FragmentManager;
 import android.view.ViewGroup;
 
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
+import com.oriondev.moneywallet.utils.DateFormatter;
 import com.philliphsu.bottomsheetpickers.date.DatePickerDialog;
 import com.philliphsu.bottomsheetpickers.time.BottomSheetTimePickerDialog;
 import com.philliphsu.bottomsheetpickers.time.numberpad.NumberPadTimePickerDialog;
@@ -152,7 +153,9 @@ public class DateTimePicker extends Fragment implements DatePickerDialog.OnDateS
     }
 
     public void showTimePicker() {
-        ThemedDialog.buildNumberPadTimePickerDialog(this, true)
+        // must match how the time is rendered next to this picker, which follows the device
+        // setting rather than a preference of this app
+        ThemedDialog.buildNumberPadTimePickerDialog(this, DateFormatter.is24HourFormat())
                 .build()
                 .show(getChildFragmentManager(), getTimePickerTag());
     }

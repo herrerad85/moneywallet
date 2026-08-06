@@ -47,17 +47,20 @@ public class DateFormatter {
     public static final String DATE_PATTERN_7 = "MM/dd/yyyy";
     public static final String DATE_PATTERN_8 = "EEE MM/dd/yyyy";
 
-    private static final String[][] DATE_FORMATS = new String[][] {
-            new String[] {"EEEE dd MMMM yyyy", "HH:mm", "EEEE dd MMMM yyyy, HH:mm"},
-            new String[] {"EEEE dd MMM yyyy", "HH:mm", "EEEE dd MMM yyyy, HH:mm"},
-            new String[] {"EEE dd MMM yyyy", "HH:mm", "EEE dd MMM yyyy, HH:mm"},
-            new String[] {"dd MMM yyyy", "HH:mm", "dd MMM yyyy, HH:mm"},
-            new String[] {"EEE dd/MM/yyyy", "HH:mm", "EEE dd/MM/yyyy, HH:mm"},
-            new String[] {"dd/MM/yyyy", "HH:mm", "dd/MM/yyyy, HH:mm"},
-            new String[] {"yyyy/MM/dd", "HH:mm", "yyyy/MM/dd, HH:mm"},
-            new String[] {"MM/dd/yyyy", "HH:mm", "MM/dd/yyyy, HH:mm"},
-            new String[] {"EEE MM/dd/yyyy", "HH:mm", "EEE MM/dd/yyyy, HH:mm"}
+    private static final String[] DATE_FORMATS = new String[] {
+            DATE_PATTERN_0,
+            DATE_PATTERN_1,
+            DATE_PATTERN_2,
+            DATE_PATTERN_3,
+            DATE_PATTERN_4,
+            DATE_PATTERN_5,
+            DATE_PATTERN_6,
+            DATE_PATTERN_7,
+            DATE_PATTERN_8
     };
+
+    private static final String TIME_SKELETON_24_HOUR = "Hm";
+    private static final String TIME_SKELETON_12_HOUR = "hm";
 
     public static void applyDate(TextView textView, Date date) {
         textView.setText(getFormattedDate(date));
@@ -93,11 +96,7 @@ public class DateFormatter {
     }
 
     public static String getFormattedTime(Date date) {
-        return getFormattedTime(date, PreferenceManager.getCurrentDateFormatIndex());
-    }
-
-    public static String getFormattedTime(Date date, int index) {
-        return getUserTimeFormat(index).format(date);
+        return new SimpleDateFormat(getTimePattern(), Locale.getDefault()).format(date);
     }
 
     public static String getFormattedDateTime(Date date) {
@@ -132,27 +131,36 @@ public class DateFormatter {
         textView.setText(getTimeRange(context, start, end));
     }
 
-    private static DateFormat getUserDateFormat(int index) {
-        int safeIndex = 0;
-        if (index >= 0 && index < DATE_FORMATS.length) {
-            safeIndex = index;
-        }
-        return new SimpleDateFormat(DATE_FORMATS[safeIndex][0], Locale.getDefault());
+    /**
+     * The time pattern follows the device wide 12 or 24 hour setting rather than a preference of
+     * this app, so that times here read the same way as times everywhere else on the device. The
+     * Time format row in the interface settings says so and links to the system screen.
+     * <p>
+     * The pattern comes from the locale rather than being written out here, because the position
+     * of the AM and PM marker is not the same in every language: Chinese puts it before the time.
+     */
+    public static String getTimePattern() {
+        String skeleton = is24HourFormat() ? TIME_SKELETON_24_HOUR : TIME_SKELETON_12_HOUR;
+        return android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), skeleton);
     }
 
-    private static DateFormat getUserTimeFormat(int index) {
+    public static boolean is24HourFormat() {
+        return android.text.format.DateFormat.is24HourFormat(PreferenceManager.getApplicationContext());
+    }
+
+    private static String getDatePattern(int index) {
         int safeIndex = 0;
         if (index >= 0 && index < DATE_FORMATS.length) {
             safeIndex = index;
         }
-        return new SimpleDateFormat(DATE_FORMATS[safeIndex][1], Locale.getDefault());
+        return DATE_FORMATS[safeIndex];
+    }
+
+    private static DateFormat getUserDateFormat(int index) {
+        return new SimpleDateFormat(getDatePattern(index), Locale.getDefault());
     }
 
     private static DateFormat getUserDateTimeFormat(int index) {
-        int safeIndex = 0;
-        if (index >= 0 && index < DATE_FORMATS.length) {
-            safeIndex = index;
-        }
-        return new SimpleDateFormat(DATE_FORMATS[safeIndex][2], Locale.getDefault());
+        return new SimpleDateFormat(getDatePattern(index) + ", " + getTimePattern(), Locale.getDefault());
     }
 }
