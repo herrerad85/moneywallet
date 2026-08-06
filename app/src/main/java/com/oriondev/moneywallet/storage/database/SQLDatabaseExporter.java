@@ -71,6 +71,7 @@ public class SQLDatabaseExporter {
         object.mName = cursor.getString(cursor.getColumnIndex(Schema.Wallet.NAME));
         object.mIcon = cursor.getString(cursor.getColumnIndex(Schema.Wallet.ICON));
         object.mCurrency = cursor.getString(cursor.getColumnIndex(Schema.Wallet.CURRENCY));
+        object.mNote = cursor.getString(cursor.getColumnIndex(Schema.Wallet.NOTE));
         object.mStartMoney = cursor.getLong(cursor.getColumnIndex(Schema.Wallet.START_MONEY));
         object.mCountInTotal = cursor.getInt(cursor.getColumnIndex(Schema.Wallet.COUNT_IN_TOTAL)) == 1;
         object.mArchived = cursor.getInt(cursor.getColumnIndex(Schema.Wallet.ARCHIVED)) == 1;
