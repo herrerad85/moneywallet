@@ -44,6 +44,10 @@ public class ThemedCardView extends CardView implements ThemeEngine.ThemeConsume
 
     @Override
     public void onApplyTheme(ITheme theme) {
-        setBackgroundColor(theme.getColorCardBackground());
+        // setBackgroundColor would replace the RoundRectDrawable CardView installs, taking the
+        // rounded corners with it and leaving CardView's own reference to that drawable dangling,
+        // so setRadius and friends would silently stop working. The shadow survives, squared off:
+        // elevation is a property of the View, not of the background
+        setCardBackgroundColor(theme.getColorCardBackground());
     }
 }

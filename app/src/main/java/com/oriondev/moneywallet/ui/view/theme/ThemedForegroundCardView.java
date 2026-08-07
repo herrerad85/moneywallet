@@ -45,6 +45,7 @@ public class ThemedForegroundCardView extends ForegroundCardView implements Them
 
     @Override
     public void onApplyTheme(ITheme theme) {
-        setBackgroundColor(theme.getColorWindowForeground());
+        // see ThemedCardView: setBackgroundColor would discard the rounded background
+        setCardBackgroundColor(theme.getColorWindowForeground());
     }
 }

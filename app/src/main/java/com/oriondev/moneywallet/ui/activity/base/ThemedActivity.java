@@ -22,15 +22,15 @@ package com.oriondev.moneywallet.ui.activity.base;
 import android.app.ActivityManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.AttributeSet;
 import androidx.annotation.CallSuper;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import android.graphics.Insets;
-import androidx.core.view.LayoutInflaterCompat;
 import androidx.appcompat.app.AppCompatActivity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
@@ -39,10 +39,11 @@ import android.view.WindowInsetsController;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.ui.view.theme.ITheme;
 import com.oriondev.moneywallet.ui.view.theme.ThemeEngine;
-import com.oriondev.moneywallet.ui.view.theme.ThemedLayoutInflater;
 import com.oriondev.moneywallet.utils.Utils;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This activity is used as base activity for all the application activities.
@@ -56,11 +57,69 @@ import java.lang.reflect.Field;
  */
 public abstract class ThemedActivity extends AppCompatActivity implements ThemeEngine.ThemeObserver {
 
+    private static final String THEMED_VIEW_PACKAGE = "com.oriondev.moneywallet.ui.view.theme.Themed";
+
+    private static final Map<String, Constructor<?>> sThemedViewConstructors = new HashMap<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ThemeEngine.registerObserver(this);
-        applyLayoutInflaterWrapper();
+    }
+
+    /**
+     * Themed views are handed the current theme as they are inflated. AppCompatActivity is itself
+     * the layout inflater factory and routes through here every view it does not create itself, so
+     * this is the hook for it.
+     * <p>
+     * This used to be a separate factory installed over AppCompat's by clearing the private
+     * LayoutInflater.mFactorySet field through reflection. That field has not been reachable for
+     * several Android releases, and the failure was caught and printed rather than raised, so the
+     * factory was silently never installed. Nothing else themes the hierarchy at startup, so
+     * onApplyTheme was running on nothing at all until the user changed a theme setting, which is
+     * the one thing that walks the tree.
+     */
+    @Override
+    public View onCreateView(View parent, String name, Context context, AttributeSet attrs) {
+        View themed = onCreateThemedView(name, context, attrs);
+        if (themed != null) {
+            return themed;
+        }
+        return super.onCreateView(parent, name, context, attrs);
+    }
+
+    private View onCreateThemedView(String name, Context context, AttributeSet attrs) {
+        if (!name.startsWith(THEMED_VIEW_PACKAGE)) {
+            return null;
+        }
+        View view;
+        try {
+            view = (View) getThemedViewConstructor(name).newInstance(context, attrs);
+        } catch (Exception e) {
+            // let the normal inflation path build it: it uses the same constructor and will report
+            // a genuinely missing class or constructor far better than this can
+            e.printStackTrace();
+            return null;
+        }
+        // deliberately outside the catch above. A view that was built correctly is worth keeping
+        // even if theming it fails, and rebuilding it would run its constructor a second time
+        ThemeEngine.applyTheme(view, false);
+        return view;
+    }
+
+    /**
+     * Cached because this runs for every themed view of every inflation, and a list row can carry a
+     * dozen of them. LayoutInflater and AppCompat both keep the same kind of map for the same
+     * reason. Bounded by the number of distinct themed tags in the layouts, currently about forty,
+     * and it holds only names and constructors, so nothing with a lifecycle is retained.
+     */
+    private static Constructor<?> getThemedViewConstructor(String name) throws Exception {
+        Constructor<?> constructor = sThemedViewConstructors.get(name);
+        if (constructor == null) {
+            constructor = Class.forName(name).getConstructor(Context.class, AttributeSet.class);
+            sThemedViewConstructors.put(name, constructor);
+        }
+        return constructor;
     }
 
     @Override
@@ -110,29 +169,6 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
             return WindowInsets.CONSUMED;
         });
         content.requestApplyInsets();
-    }
-
-    /**
-     * This method is used to set the layout inflater factory even if it is already set.
-     * Use reflection to access the private boolean field and set it as false.
-     * The AppCompat library uses it's own factory to correct the xml layouts.
-     * In this way both the factories will coexist without problems.
-     */
-    private void applyLayoutInflaterWrapper() {
-        LayoutInflater inflater = getLayoutInflater();
-        final LayoutInflater.Factory2 baseFactory = inflater.getFactory2();
-        try {
-            Field field = LayoutInflater.class.getDeclaredField("mFactorySet");
-            field.setAccessible(true);
-            field.setBoolean(inflater, false);
-            LayoutInflaterCompat.setFactory2(getLayoutInflater(), new ThemedLayoutInflater(baseFactory));
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
