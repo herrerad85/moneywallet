@@ -27,6 +27,10 @@ android {
         buildConfig true
     }
 
+    androidResources {
+        generateLocaleConfig true
+    }
+
     defaultConfig {
         applicationId "io.github.herrerad85.tallybook"
         minSdk 24
