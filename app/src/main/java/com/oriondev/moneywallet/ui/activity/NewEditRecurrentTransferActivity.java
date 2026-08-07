@@ -272,7 +272,7 @@ public class NewEditRecurrentTransferActivity extends NewEditItemActivity implem
         if (savedInstanceState == null) {
             ContentResolver contentResolver = getContentResolver();
             if (getMode() == Mode.EDIT_ITEM) {
-                Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSFER_MODELS, getItemId());
+                Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_RECURRENT_TRANSFERS, getItemId());
                 String[] projection = new String[] {
                         Contract.RecurrentTransfer.DESCRIPTION,
                         Contract.RecurrentTransfer.WALLET_FROM_ID,
