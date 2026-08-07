@@ -110,6 +110,7 @@ public class PieChart extends View {
         mRectangle = new RectF();
         mSlicePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mLinePaint.setTextAlign(Paint.Align.CENTER);
         // obtain attributes
         TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.PieChart, defStyleAttr, defStyleRes);
         try {
@@ -118,7 +119,8 @@ public class PieChart extends View {
             mPercentageEnabled = a.getBoolean(R.styleable.PieChart_pie_chartPercentageEnabled, DEFAULT_PERCENTAGE_ENABLED);
             mShadowColor = a.getColor(R.styleable.PieChart_pie_chartShadowColor, DEFAULT_SHADOW_COLOR);
             mHoleColor = a.getColor(R.styleable.PieChart_pie_chartHoleColor, DEFAULT_HOLE_COLOR);
-            mLinePaint.setColor(a.getColor(R.styleable.PieChart_pie_chartLineColor, DEFAULT_LINE_COLOR));
+            mLineColor = a.getColor(R.styleable.PieChart_pie_chartLineColor, DEFAULT_LINE_COLOR);
+            mLinePaint.setColor(mLineColor);
             mLinePaint.setStrokeWidth(a.getFloat(R.styleable.PieChart_pie_chartLineSize, DEFAULT_LINE_SIZE));
         } catch (Exception e) {
             // initialize variables at default state
@@ -338,9 +340,9 @@ public class PieChart extends View {
             // draw percentage
             if (mPercentageEnabled) {
                 // calculate center text coordinates
-                float textX = ((float) (Math.cos(Math.toRadians(iconAngle)) * textDistance)) + centerX - (textSize / 4 * 3);
+                float textX = ((float) (Math.cos(Math.toRadians(iconAngle)) * textDistance)) + centerX;
                 float textY = ((float) (Math.sin(Math.toRadians(iconAngle)) * textDistance)) + centerY + (textSize / 2);
-                int percentage = (int) (sweepAngle * 100 / 360f);
+                int percentage = Math.round(sweepAngle * 100 / 360f);
                 c.drawText(String.valueOf(percentage) + "%", textX, textY, mLinePaint);
             }
         }
