@@ -30,6 +30,7 @@ import androidx.multidex.MultiDex;
 import com.oriondev.moneywallet.broadcast.AutoBackupBroadcastReceiver;
 import com.oriondev.moneywallet.broadcast.DailyBroadcastReceiver;
 import com.oriondev.moneywallet.broadcast.RecurrenceBroadcastReceiver;
+import com.oriondev.moneywallet.storage.database.SystemCategoryLocalizer;
 import com.oriondev.moneywallet.storage.preference.BackendManager;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.notification.NotificationContract;
@@ -54,6 +55,10 @@ public class App extends Application {
         ThemeEngine.initialize(this);
         CurrencyManager.initialize(this);
         NotificationContract.initializeNotificationChannels(this);
+        // startup, not only onConfigurationChanged, for two reasons: every install made before
+        // this existed needs one repair whether or not its language ever changes again, and a
+        // system language changed while the process was dead delivers no configuration callback
+        SystemCategoryLocalizer.relocalize(this);
         initializeScheduledTimers();
     }
 
@@ -67,6 +72,7 @@ public class App extends Application {
             return;
         }
         NotificationContract.initializeNotificationChannels(this);
+        SystemCategoryLocalizer.relocalize(this);
         mLocales = locales;
     }
 
