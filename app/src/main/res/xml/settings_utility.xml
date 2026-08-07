@@ -45,6 +45,16 @@
     </com.oriondev.moneywallet.ui.preference.ThemedPreferenceCategory>
 
     <com.oriondev.moneywallet.ui.preference.ThemedPreferenceCategory
+        android:key="map_category"
+        android:title="@string/setting_category_utility_map" >
+
+        <com.oriondev.moneywallet.ui.preference.ThemedInputPreference
+            android:key="map_tile_server"
+            android:title="@string/setting_title_map_tile_server"/>
+
+    </com.oriondev.moneywallet.ui.preference.ThemedPreferenceCategory>
+
+    <com.oriondev.moneywallet.ui.preference.ThemedPreferenceCategory
         android:title="@string/setting_category_utility_exchange_rates" >
 
         <com.oriondev.moneywallet.ui.preference.ThemedListPreference

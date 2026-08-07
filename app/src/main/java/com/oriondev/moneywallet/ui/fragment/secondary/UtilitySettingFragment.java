@@ -31,6 +31,7 @@ import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.biometric.BiometricManager;
 import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import android.text.InputType;
@@ -49,6 +50,8 @@ import com.oriondev.moneywallet.ui.activity.LockActivity;
 import com.oriondev.moneywallet.ui.preference.ThemedInputPreference;
 import com.oriondev.moneywallet.ui.preference.ThemedListPreference;
 import com.oriondev.moneywallet.utils.DateFormatter;
+import com.oriondev.moneywallet.utils.Urls;
+import com.oriondev.moneywallet.view.MapViewWrapper;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -70,6 +73,7 @@ public class UtilitySettingFragment extends PreferenceFragmentCompat {
     private Preference mSecurityModeChangeKeyPreference;
     private ThemedListPreference mExchangeRateServiceListPreference;
     private ThemedInputPreference mExchangeRateCustomApiKey;
+    private ThemedInputPreference mMapTileServerPreference;
     private Preference mExchangeRateUpdatePreference;
     private Preference mCurrencyManagementPreference;
 
@@ -103,6 +107,14 @@ public class UtilitySettingFragment extends PreferenceFragmentCompat {
         mExchangeRateCustomApiKey = (ThemedInputPreference) findPreference("exchange_rate_api_key");
         mExchangeRateUpdatePreference = findPreference("exchange_rate_update");
         mCurrencyManagementPreference = findPreference("currency_management");
+        mMapTileServerPreference = (ThemedInputPreference) findPreference("map_tile_server");
+        if (!MapViewWrapper.supportsCustomTileServer()) {
+            PreferenceCategory mapCategory = (PreferenceCategory) findPreference("map_category");
+            if (mapCategory != null) {
+                getPreferenceScreen().removePreference(mapCategory);
+            }
+            mMapTileServerPreference = null;
+        }
     }
 
     @Override
@@ -146,6 +158,7 @@ public class UtilitySettingFragment extends PreferenceFragmentCompat {
         // setup current (or default) values
         setupCurrentDailyReminder();
         setupCurrentLockMode();
+        setupCurrentMapTileServer();
         setupCurrentExchangeRateService();
         setupCurrentExchangeRateCustomApiKey();
         setupCurrentExchangeRateUpdate();
@@ -227,6 +240,31 @@ public class UtilitySettingFragment extends PreferenceFragmentCompat {
             }
 
         });
+        if (mMapTileServerPreference != null) {
+            mMapTileServerPreference.setInput(R.string.setting_hint_map_tile_server, true, InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+            mMapTileServerPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    String url = newValue != null ? ((String) newValue).trim() : null;
+                    if (!TextUtils.isEmpty(url) && !Urls.isUsableTileAddress(url)) {
+                        // rejected here because at map load a bad address is simply ignored, so
+                        // the map quietly keeps using the default and the setting looks applied
+                        mMapTileServerPreference.setSummary(R.string.setting_summary_map_tile_server_invalid);
+                        // the widget keeps whatever was typed, and that value is both the
+                        // dialog's prefill and how it decides something changed. Put the stored one
+                        // back, or retyping the same bad address is silently a no op
+                        mMapTileServerPreference.setCurrentValue(PreferenceManager.getMapTileServer());
+                        return false;
+                    }
+                    PreferenceManager.setMapTileServer(url);
+                    setupCurrentMapTileServer();
+                    return false;
+                }
+
+            });
+            setupCurrentMapTileServer();
+        }
         mExchangeRateUpdatePreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 
             @Override
@@ -370,6 +408,22 @@ public class UtilitySettingFragment extends PreferenceFragmentCompat {
         } else {
             mExchangeRateCustomApiKey.setVisible(true);
         }
+    }
+
+    private void setupCurrentMapTileServer() {
+        if (mMapTileServerPreference == null) {
+            return;
+        }
+        String url = PreferenceManager.getMapTileServer();
+        if (TextUtils.isEmpty(url)) {
+            mMapTileServerPreference.setSummary(R.string.setting_summary_map_tile_server_default);
+        } else {
+            mMapTileServerPreference.setSummary(getString(R.string.setting_summary_map_tile_server, url));
+        }
+        // without this the dialog opens empty even when a server is configured, so an existing
+        // address has to be retyped rather than corrected, and pressing ok on the untouched field
+        // clears it
+        mMapTileServerPreference.setCurrentValue(url);
     }
 
     private void setupCurrentExchangeRateCustomApiKey() {

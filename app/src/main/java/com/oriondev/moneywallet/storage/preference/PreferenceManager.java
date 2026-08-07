@@ -65,6 +65,8 @@ public class PreferenceManager {
     private static final String CONVERTER_LAST_CURRENCY_1 = "converter_currency_iso_1";
     private static final String CONVERTER_LAST_CURRENCY_2 = "converter_currency_iso_2";
 
+    private static final String MAP_TILE_SERVER = "map_tile_server";
+
     private static final String LAST_DATA_CHANGE_TIME = "last_data_change_time";
 
     public static final int LOCK_MODE_NONE = 0;
@@ -107,6 +109,23 @@ public class PreferenceManager {
 
     public static Context getApplicationContext() {
         return mApplicationContext;
+    }
+
+    /**
+     * @return the address the user chose for tiles, either a base address or a full template,
+     *          or null to use the map library's own default. Not a promise that tiles come from
+     *          there: the map re checks it and falls back if it no longer passes.
+     */
+    public static String getMapTileServer() {
+        return mPreferences.getString(MAP_TILE_SERVER, null);
+    }
+
+    public static void setMapTileServer(String url) {
+        if (TextUtils.isEmpty(url)) {
+            mPreferences.edit().remove(MAP_TILE_SERVER).apply();
+        } else {
+            mPreferences.edit().putString(MAP_TILE_SERVER, url).apply();
+        }
     }
 
     public static void setCurrentWallet(Context context, long walletId) {

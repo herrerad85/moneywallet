@@ -42,6 +42,14 @@ import java.util.Map;
 
 public class MapViewWrapper implements OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener {
 
+    /**
+     * @return whether this map implementation can be pointed at a different tile server. The
+     *          Google Maps one cannot, so the setting is hidden in that flavor.
+     */
+    public static boolean supportsCustomTileServer() {
+        return false;
+    }
+
     private static final float DEFAULT_ZOOM_LEVEL = 14;
     private static final float GLOBAL_ZOOM_LEVEL = 8;
 

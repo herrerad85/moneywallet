@@ -398,7 +398,7 @@
     <string name="message_backup_service_storage_access_framework_disconnect">"Are you sure you want to disconnect the current folder? No files will be deleted."</string>
     <string name="message_backup_service_webdav_disconnect">"Are you sure you want to disconnect this server? The saved address and password will be removed from this device. No files will be deleted from the server."</string>
     <string name="message_webdav_app_password">"If your server supports app passwords, such as Nextcloud, create one for Tallybook instead of using your account password."</string>
-    <string name="message_webdav_url_scheme">"The address must start with https://. A plain http address is refused because it would send your password unencrypted, and Android blocks it."</string>
+    <string name="message_webdav_url_scheme">"The address must start with https:// and name a server. A plain http address is refused because it would send your password unencrypted, and Android blocks it."</string>
     <string name="message_backup_service_google_drive_disconnect">"Are you sure you want to disconnect your Google Drive account?"</string>
     <string name="message_action_archive_wallet">"Are you sure you want to archive this wallet? It will not be visible in the menu anymore."</string>
     <string name="message_action_unarchive_wallet">"Are you sure you want to unarchive this wallet? It will be visible in the menu again."</string>
@@ -491,6 +491,12 @@
 
     <string name="setting_category_utility_notification">"Notification"</string>
     <string name="setting_category_utility_security">"Security"</string>
+    <string name="setting_category_utility_map">"Map"</string>
+    <string name="setting_title_map_tile_server">"Tile server"</string>
+    <string name="setting_hint_map_tile_server" translatable="false">"https://tiles.example.org/{z}/{x}/{y}.png"</string>
+    <string name="setting_summary_map_tile_server_default">"Using the default OpenStreetMap servers. Enter another https address, with {z}, {x} and {y} or with none of them."</string>
+    <string name="setting_summary_map_tile_server">"Loading tiles from %1$s"</string>
+    <string name="setting_summary_map_tile_server_invalid">"Not a usable address. Needs https, a server name, and {z}, {x} and {y} or none of them."</string>
     <string name="setting_category_utility_exchange_rates">"Exchange rates"</string>
     <string name="setting_title_daily_reminder">"Daily reminder"</string>
     <string name="setting_summary_daily_reminder">"Every day at: %1$s"</string>
