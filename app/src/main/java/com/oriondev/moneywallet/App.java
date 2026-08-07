@@ -21,7 +21,10 @@ package com.oriondev.moneywallet;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.res.Configuration;
+import android.os.LocaleList;
 
+import androidx.annotation.NonNull;
 import androidx.multidex.MultiDex;
 
 import com.oriondev.moneywallet.broadcast.AutoBackupBroadcastReceiver;
@@ -40,15 +43,31 @@ import me.weishu.reflection.Reflection;
  */
 public class App extends Application {
 
+    private LocaleList mLocales;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        mLocales = getResources().getConfiguration().getLocales();
         PreferenceManager.initialize(this);
         BackendManager.initialize(this);
         ThemeEngine.initialize(this);
         CurrencyManager.initialize(this);
         NotificationContract.initializeNotificationChannels(this);
         initializeScheduledTimers();
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // both sides come from getResources rather than from newConfig, since that is the
+        // configuration the channel names resolve against
+        LocaleList locales = getResources().getConfiguration().getLocales();
+        if (locales.equals(mLocales)) {
+            return;
+        }
+        NotificationContract.initializeNotificationChannels(this);
+        mLocales = locales;
     }
 
     private void initializeScheduledTimers() {

@@ -38,7 +38,8 @@ import java.util.Locale;
 
 public class MonthView extends RecyclerView {
 
-    private static String[] MONTHS = DateFormatSymbols.getInstance().getShortMonths();
+    // per instance so the names follow an app language change, which rebuilds this view
+    private final String[] months = DateFormatSymbols.getInstance().getShortMonths();
 
     private MonthAdapter adapter;
     private LinearLayoutManager layoutManager;
@@ -342,8 +343,8 @@ public class MonthView extends RecyclerView {
             this.year = year;
             this.month = month;
 
-            String text = MONTHS[month];
-            text = text.substring(0, Math.min(text.length(), 3)).toUpperCase(Locale.US);
+            String text = months[month];
+            text = text.substring(0, Math.min(text.length(), 3)).toUpperCase(Locale.getDefault());
             if (yearDigitCount > 0) {
                 text += yearOnNewLine ? "\n" : " ";
                 text += year % (int) Math.pow(10, yearDigitCount);

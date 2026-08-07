@@ -42,7 +42,7 @@ public class TimelineView extends RecyclerView {
 
     private static final String TAG = "TimelineView";
 
-    private static final String[] WEEK_DAYS = DateFormatSymbols.getInstance().getShortWeekdays();
+    private final String[] weekDays = DateFormatSymbols.getInstance().getShortWeekdays();
 
     private final Calendar calendar = Calendar.getInstance(Locale.getDefault());
 
@@ -344,7 +344,7 @@ public class TimelineView extends RecyclerView {
             this.year = year;
             this.month = month;
             this.day = day;
-            lblDay.setText(WEEK_DAYS[dayOfWeek].toUpperCase(Locale.US));
+            lblDay.setText(weekDays[dayOfWeek].toUpperCase(Locale.getDefault()));
             lblDate.setText(String.valueOf(day));
             // lblDate.setBackgroundResource(selected ? R.drawable.mti_bg_lbl_date_selected : (isToday ? R.drawable.mti_bg_lbl_date_today : 0));
             lblDate.setTextColor(selected || isToday ? lblDateSelectedColor : lblDateColor);

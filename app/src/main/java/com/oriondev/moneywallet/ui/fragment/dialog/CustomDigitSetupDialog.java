@@ -32,7 +32,6 @@ import android.widget.TextView;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
-import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 import com.oriondev.moneywallet.utils.CurrencyManager;
@@ -48,7 +47,6 @@ public class CustomDigitSetupDialog extends DialogFragment {
     private static final String SS_ROUNDING_ENABLED = "CustomDigitSetupDialog::SavedState::RoundingEnabled";
     private static final String SS_SYMBOL_ENABLED = "CustomDigitSetupDialog::SavedState::SymbolEnabled";
 
-    private static final CurrencyUnit DEFAULT_CURRENCY = CurrencyManager.getDefaultCurrency();
     private static final long DEFAULT_MONEY = 1258972L;
 
     private TextView mDisplayTextView;
@@ -152,7 +150,8 @@ public class CustomDigitSetupDialog extends DialogFragment {
     }
 
     private void refreshDisplay() {
-        mFormatter.applyNotTinted(mDisplayTextView, DEFAULT_CURRENCY, DEFAULT_MONEY);
+        // read live, since the currency follows the app language and that can change
+        mFormatter.applyNotTinted(mDisplayTextView, CurrencyManager.getDefaultCurrency(), DEFAULT_MONEY);
     }
 
     private void onSaveChanges() {
