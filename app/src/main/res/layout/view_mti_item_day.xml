@@ -34,9 +34,7 @@
         android:id="@+id/mti_timeline_lbl_day"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:maxLength="1"
         android:maxLines="1"
-        android:singleLine="true"
         android:textSize="@dimen/view_mti_timeline_lbl_day_text"
         tools:text="T"/>
 

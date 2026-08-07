@@ -24,8 +24,11 @@ import android.os.Build;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import android.text.Layout;
+import android.text.TextPaint;
 import android.text.format.DateUtils;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,7 +36,7 @@ import android.widget.TextView;
 
 import com.oriondev.moneywallet.R;
 
-import java.text.DateFormatSymbols;
+import android.icu.text.DateFormatSymbols;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +45,9 @@ public class TimelineView extends RecyclerView {
 
     private static final String TAG = "TimelineView";
 
-    private final String[] weekDays = DateFormatSymbols.getInstance().getShortWeekdays();
+    private final String[] weekDays = narrowWeekdays();
+
+    private float dayLabelSize = 0f;
 
     private final Calendar calendar = Calendar.getInstance(Locale.getDefault());
 
@@ -74,6 +79,74 @@ public class TimelineView extends RecyclerView {
     public TimelineView(Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init();
+    }
+
+    /**
+     * The narrow weekday headers, indexed by the {@link Calendar#SUNDAY} to
+     * {@link Calendar#SATURDAY} values.
+     *
+     * These come from the locale rather than from cutting a longer name to a fixed
+     * number of characters. Cutting assumes every language distinguishes its days in
+     * the first character, and of the twenty locales bundled here only Persian does:
+     * the Chinese short names all begin 周 and the Catalan ones all begin d, so the
+     * whole week rendered as one repeated glyph. CLDR already publishes a narrow name
+     * per weekday for exactly this position, so the shortening is a lookup rather than
+     * a rule this app invents.
+     *
+     * A narrow name is not one char, which is what maxLength counted. CLDR gives Catalan
+     * dg, dl, dt, dc, dj, dv and ds, and gives Malayalam names wider still, so the labels
+     * are sized to fit rather than assumed to fit. The uppercasing below is this app's.
+     */
+    private static String[] narrowWeekdays() {
+        return new DateFormatSymbols(Locale.getDefault()).getWeekdays(
+                DateFormatSymbols.STANDALONE, DateFormatSymbols.NARROW);
+    }
+
+    private String dayLabel(int dayOfWeek) {
+        return weekDays[dayOfWeek].toUpperCase(Locale.getDefault());
+    }
+
+    /**
+     * One text size for all seven weekday labels, small enough that each of them measures
+     * within a cell. Returns the size unchanged if the cell has no fixed width to fit to,
+     * and for most locales it returns it unchanged anyway.
+     *
+     * Of the locales bundled here only Malayalam grows wide enough to need this, and only
+     * at accessibility font scales. The label comes from the system locale rather than
+     * from those translations, so the check is not limited to that set. Overflow is sized
+     * away rather than cut because cutting is the defect this class just removed, and one
+     * size is derived for the whole strip so that neighbouring letters match, where a size
+     * per cell would let adjacent letters differ.
+     */
+    private float dayLabelSize(TextView sample, View cell) {
+        if (dayLabelSize > 0f) {
+            return dayLabelSize;
+        }
+        dayLabelSize = sample.getTextSize();
+        int available = cell.getLayoutParams().width - cell.getPaddingLeft() - cell.getPaddingRight();
+        if (available <= 0) {
+            return dayLabelSize;
+        }
+        // Step down and measure again until every label fits, rather than deriving a ratio and
+        // trusting it. Measuring every label rather than only the one that came out widest
+        // at the starting size costs nothing here and removes the question of whether that
+        // ranking holds at every size.
+        TextPaint paint = new TextPaint(sample.getPaint());
+        while (dayLabelSize > 1f && !labelsFit(paint, available)) {
+            dayLabelSize -= 0.5f;
+            paint.setTextSize(dayLabelSize);
+        }
+        return dayLabelSize;
+    }
+
+    private boolean labelsFit(TextPaint paint, int available) {
+        for (int dayOfWeek = Calendar.SUNDAY; dayOfWeek <= Calendar.SATURDAY; dayOfWeek++) {
+            // Rounded up, which is what a TextView does with the width it asks for.
+            if (Math.ceil(Layout.getDesiredWidth(dayLabel(dayOfWeek), paint)) > available) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void init() {
@@ -327,6 +400,7 @@ public class TimelineView extends RecyclerView {
             lblDate = root.findViewById(R.id.mti_timeline_lbl_date);
 
             lblDay.setTextColor(lblDayColor);
+            lblDay.setTextSize(TypedValue.COMPLEX_UNIT_PX, dayLabelSize(lblDay, root));
             lblDate.setTextColor(lblDateColor);
 
             root.setOnClickListener(new OnClickListener() {
@@ -344,7 +418,7 @@ public class TimelineView extends RecyclerView {
             this.year = year;
             this.month = month;
             this.day = day;
-            lblDay.setText(weekDays[dayOfWeek].toUpperCase(Locale.getDefault()));
+            lblDay.setText(dayLabel(dayOfWeek));
             lblDate.setText(String.valueOf(day));
             // lblDate.setBackgroundResource(selected ? R.drawable.mti_bg_lbl_date_selected : (isToday ? R.drawable.mti_bg_lbl_date_today : 0));
             lblDate.setTextColor(selected || isToday ? lblDateSelectedColor : lblDateColor);
