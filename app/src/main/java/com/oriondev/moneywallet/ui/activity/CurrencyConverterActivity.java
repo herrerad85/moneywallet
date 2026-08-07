@@ -219,7 +219,7 @@ public class CurrencyConverterActivity extends SinglePanelActivity implements Vi
     private CurrencyUnit getDefaultCurrencyUnit(boolean primary) {
         CurrencyUnit currencyUnit = CurrencyManager.getDefaultCurrency();
         if (!primary) {
-            return currencyUnit.getIso().equals(EUR) ?
+            return currencyUnit != null && EUR.equals(currencyUnit.getIso()) ?
                     CurrencyManager.getCurrency(USD) : CurrencyManager.getCurrency(EUR);
         }
         return currencyUnit;
@@ -270,6 +270,19 @@ public class CurrencyConverterActivity extends SinglePanelActivity implements Vi
 
     @Override
     public void onCurrencyChanged(String tag, CurrencyUnit currency) {
+        if (currency == null) {
+            // nothing is selected, which CurrencyPicker allows and this screen did not
+            if (TAG_CURRENCY_FROM_PICKER.equals(tag)) {
+                clearCurrencyRow(mImageCurrencyFrom, mTextCurrencyFrom);
+            } else if (TAG_CURRENCY_TO_PICKER.equals(tag)) {
+                clearCurrencyRow(mImageCurrencyTo, mTextCurrencyTo);
+            }
+            // either side missing makes the result unconvertible, so say so for both
+            mTextMoneyTo.setText(R.string.hint_unknown);
+            // the last used preference is deliberately left pointing at the last real choice,
+            // so reopening the screen offers that rather than nothing
+            return;
+        }
         switch (tag) {
             case TAG_CURRENCY_FROM_PICKER:
                 loadCurrencyFlag(mImageCurrencyFrom, currency.getIso());
@@ -287,6 +300,17 @@ public class CurrencyConverterActivity extends SinglePanelActivity implements Vi
         }
     }
 
+    /**
+     * Empty one of the two currency rows. Both calls are needed: clear cancels a flag load that
+     * has not landed yet, and only loadCurrencyFlag's Glide branch tags a request for it to find,
+     * while the branch for a currency with no flag drawable leaves the drawable set by hand.
+     */
+    private void clearCurrencyRow(ImageView imageView, TextView textView) {
+        Glide.with(this).clear(imageView);
+        imageView.setImageDrawable(null);
+        textView.setText(null);
+    }
+
     private void loadCurrencyFlag(ImageView imageView, String iso) {
         int flag = CurrencyUnit.getCurrencyFlag(this, iso);
         if (flag > 0) {
@@ -295,6 +319,8 @@ public class CurrencyConverterActivity extends SinglePanelActivity implements Vi
                     .load(flag)
                     .into(imageView);
         } else {
+            // into() cancels a pending load for us on the branch above, this branch has to ask
+            Glide.with(this).clear(imageView);
             imageView.setImageDrawable(CurrencyUnit.getCurrencyDrawable(iso));
         }
     }

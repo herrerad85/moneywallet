@@ -23,6 +23,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.os.LocaleList;
 
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.ExchangeRate;
@@ -169,20 +170,57 @@ public class CurrencyManager {
         }
     }
 
+    /**
+     * @return the rate between the two currencies, or null if either is absent or no rate is
+     *         known for the pair.
+     */
     public static ExchangeRate getExchangeRate(CurrencyUnit currency1, CurrencyUnit currency2) {
+        if (currency1 == null || currency2 == null) {
+            return null;
+        }
         return mInstance.mExchangeRateCache.getExchangeRate(currency1.getIso(), currency2.getIso());
     }
 
     /**
-     * Obtain the currency of the current locale used by the application.
-     * If for example the user is using the Italian locale, the EUR currency will be returned.
-     * @return the current currency.
+     * Obtain the currency the user's language settings imply.
+     * If for example the user is using the it-IT locale, the EUR currency will be returned.
+     * A locale that carries no country implies no currency at all, so those are skipped and
+     * the first preferred locale that does imply one decides. Whether this installation still
+     * has that currency is a separate question, and a deleted one still answers null rather
+     * than moving on to the next locale.
+     * @return the current currency, or null if no preferred locale implies one, or the user
+     *         has deleted the one it implies.
      */
     public static CurrencyUnit getDefaultCurrency() {
         synchronized (CACHE_MUTEX) {
-            Locale locale = Locale.getDefault();
-            Currency currency = Currency.getInstance(locale);
-            return getCurrency(currency.getCurrencyCode());
+            LocaleList preferredLocales = LocaleList.getAdjustedDefault();
+            for (int index = 0; index < preferredLocales.size(); index++) {
+                Currency currency = currencyOf(preferredLocales.get(index));
+                if (currency != null) {
+                    CurrencyUnit currencyUnit = getCurrency(currency.getCurrencyCode());
+                    if (currencyUnit == null) {
+                        System.out.println("[CurrencyManager] The locale implies "
+                                + currency.getCurrencyCode() + ", which is not installed");
+                    }
+                    return currencyUnit;
+                }
+            }
+            System.out.println("[CurrencyManager] No preferred locale implies a currency: "
+                    + preferredLocales.toLanguageTags());
+            return null;
+        }
+    }
+
+    /**
+     * @return the currency the locale implies, or null if it implies none. getInstance throws
+     *         when the locale has no ISO 3166 country and returns null for a territory that has
+     *         no currency of its own, and here those mean the same thing.
+     */
+    private static Currency currencyOf(Locale locale) {
+        try {
+            return Currency.getInstance(locale);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 
