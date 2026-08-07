@@ -56,6 +56,19 @@ public abstract class MultiPanelViewPagerFragment extends MultiPanelAppBarFragme
         mViewPager.setAdapter(onCreatePagerAdapter(getChildFragmentManager()));
         mViewPager.addOnPageChangeListener(this);
         mTabLayout.setupWithViewPager(mViewPager);
+        if (savedInstanceState == null) {
+            mViewPager.setCurrentItem(getDefaultViewPagerPosition(), false);
+        }
+    }
+
+    /**
+     * Which tab this screen opens on. Overridden where the leftmost tab is not the one people
+     * reach for. The tab is preserved across a configuration change or a restore from process
+     * death, but not across leaving the screen and coming back: the navigation drawer replaces
+     * fragments without a back stack, so returning builds a new one and lands here again.
+     */
+    protected int getDefaultViewPagerPosition() {
+        return 0;
     }
 
     @Override

@@ -57,6 +57,14 @@ public class CategoryMultiPanelViewPagerFragment extends MultiPanelViewPagerItem
     }
 
     @Override
+    protected int getDefaultViewPagerPosition() {
+        // most people record far more expenses than income, so open on the expense tab. The
+        // category picker reached from a new transaction already does this; this is the standalone
+        // Categories screen catching up rather than a new idea.
+        return 1;
+    }
+
+    @Override
     protected int getTitleRes() {
         return R.string.menu_category;
     }
