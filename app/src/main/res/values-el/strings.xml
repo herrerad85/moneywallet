@@ -474,7 +474,7 @@
     <string name="setting_category_utility_security">"Ασφάλεια"</string>
     <string name="setting_category_utility_exchange_rates">"Ισοτιμίες συναλλάγματος"</string>
     <string name="setting_title_daily_reminder">"Καθημερινή υπενθύμιση"</string>
-    <string name="setting_summary_daily_reminder">"Κάθε μέρα στις: %02d:00"</string>
+    <string name="setting_summary_daily_reminder">"Κάθε μέρα στις: %1$s"</string>
     <string name="setting_title_security">"Προστασία πρόσβασης"</string>
     <string name="setting_title_security_change_pin">"Άλλαξε τον αριθμό PIN"</string>
     <string name="setting_title_security_change_sequence">"Άλλαξε την ακολουθία ξεκλειδώματος"</string>

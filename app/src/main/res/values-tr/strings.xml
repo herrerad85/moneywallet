@@ -461,7 +461,7 @@
     <string name="setting_category_utility_security"> "Güvenlik" </string>
     <string name="setting_category_utility_exchange_rates"> "Döviz kurları" </string>
     <string name="setting_title_daily_reminder"> "Günlük hatırlatma" </string>
-    <string name="setting_summary_daily_reminder"> "Her gün:% 02d: 00" </string>
+    <string name="setting_summary_daily_reminder"> "Her gün: %1$s" </string>
     <string name="setting_title_security"> "Erişim koruması" </string>
     <string name="setting_title_security_change_pin"> "PIN kodunu değiştir" </string>
     <string name="setting_title_security_change_sequence"> "Kilit açma sırasını değiştir" </string>

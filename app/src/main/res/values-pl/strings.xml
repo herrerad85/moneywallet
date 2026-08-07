@@ -476,7 +476,7 @@
     <string name="setting_category_utility_security">"Bezpieczeństwo"</string>
     <string name="setting_category_utility_exchange_rates">"Kurs wymiany"</string>
     <string name="setting_title_daily_reminder">"Codzienne przypomnienie"</string>
-    <string name="setting_summary_daily_reminder">"Codziennie o godz: %02d:00"</string>
+    <string name="setting_summary_daily_reminder">"Codziennie o godz: %1$s"</string>
     <string name="setting_title_security">"Ochrona dostępu"</string>
     <string name="setting_title_security_change_pin">"Zmień kod PIN"</string>
     <string name="setting_title_security_change_sequence">"Zmień sekwencję odblokowania"</string>

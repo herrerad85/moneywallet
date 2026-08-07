@@ -521,7 +521,7 @@
     <string name="setting_summary_exchange_rate_api_key_missing">API-Schlüssel fehlt</string>
     <string name="setting_summary_exchange_rate_api_key">API-Schlüssel: %s</string>
     <string name="setting_summary_database_backup_services">Datenbank erstellen und wiederherstellen</string>
-    <string name="setting_summary_daily_reminder">Täglich um %02d:00</string>
+    <string name="setting_summary_daily_reminder">Täglich um %1$s</string>
     <string name="setting_summary_currency_management">Benutzerdefinierte Währung hinzufügen</string>
     <string name="setting_subtitle_utility">Konfiguration</string>
     <string name="setting_subtitle_user_interface">Personalisiere</string>

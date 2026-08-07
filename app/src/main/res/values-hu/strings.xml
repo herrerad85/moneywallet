@@ -480,7 +480,7 @@
     <string name="setting_subtitle_user_interface">Személyre szabás</string>
     <string name="setting_subtitle_utility">Elérhető eszközök telepítése</string>
     <string name="setting_summary_currency_management">Saját valuták hozzáadása</string>
-    <string name="setting_summary_daily_reminder">Minden nap %02d:00 időpontban</string>
+    <string name="setting_summary_daily_reminder">Minden nap %1$s időpontban</string>
     <string name="setting_summary_database_backup_services">Adatbázis készítése és visszaállítása</string>
     <string name="setting_summary_exchange_rate_api_key">API kulcs: %s</string>
     <string name="setting_summary_exchange_rate_api_key_missing">API kulcs hiányzik</string>

@@ -460,7 +460,7 @@
     <string name="setting_category_utility_security">"സുരക്ഷ"</string>
     <string name="setting_category_utility_exchange_rates">"വിനിമയ നിരക്ക്"</string>
     <string name="setting_title_daily_reminder">"പ്രതിദിന ഓർമ്മപ്പെടുത്തൽ"</string>
-    <string name="setting_summary_daily_reminder">"എല്ലാ ദിവസവും: d: 00"</string>
+    <string name="setting_summary_daily_reminder">"എല്ലാ ദിവസവും: %1$s"</string>
     <string name="setting_title_security">"ആക്സസ് പരിരക്ഷണം"</string>
     <string name="setting_title_security_change_pin">"പിൻ കോഡ് മാറ്റുക"</string>
     <string name="setting_title_security_change_sequence">"അൺലോക്ക് സീക്വൻസ് മാറ്റുക"</string>

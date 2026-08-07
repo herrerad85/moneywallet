@@ -473,7 +473,7 @@
     <string name="setting_category_utility_security">"Sécurité"</string>
     <string name="setting_category_utility_exchange_rates">"Taux de change"</string>
     <string name="setting_title_daily_reminder">"Rappel quotidien"</string>
-    <string name="setting_summary_daily_reminder">"Chaque jour à : %02d:00"</string>
+    <string name="setting_summary_daily_reminder">"Chaque jour à : %1$s"</string>
     <string name="setting_title_security">"Protection"</string>
     <string name="setting_title_security_change_pin">"Changer le code PIN"</string>
     <string name="setting_title_security_change_sequence">"Changer le schéma"</string>

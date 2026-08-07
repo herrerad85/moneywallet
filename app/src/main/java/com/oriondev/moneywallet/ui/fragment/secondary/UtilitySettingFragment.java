@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.text.format.DateUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -49,7 +50,11 @@ import com.oriondev.moneywallet.ui.preference.ThemedInputPreference;
 import com.oriondev.moneywallet.ui.preference.ThemedListPreference;
 import com.oriondev.moneywallet.utils.DateFormatter;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by andrea on 07/03/18.
@@ -57,6 +62,8 @@ import java.util.Date;
 public class UtilitySettingFragment extends PreferenceFragmentCompat {
 
     private static final int REQUEST_CODE_LOCK_ACTIVITY = 8239;
+
+    private static final int HOURS_IN_DAY = 24;
 
     private ThemedListPreference mDailyReminderPreference;
     private ThemedListPreference mSecurityModeListPreference;
@@ -102,18 +109,9 @@ public class UtilitySettingFragment extends PreferenceFragmentCompat {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         // setup preference logic
-        mDailyReminderPreference.setEntries(new String[] {
-                getString(R.string.setting_item_security_none),
-                "00:00", "01:00", "02:00", "03:00", "04:00", "05:00",
-                "06:00", "07:00", "08:00", "09:00", "10:00", "11:00",
-                "12:00", "13:00", "14:00", "15:00", "16:00", "17:00",
-                "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"
-        });
-        mDailyReminderPreference.setEntryValues(new String[] {
-                String.valueOf(PreferenceManager.DAILY_REMINDER_DISABLED),
-                "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11",
-                "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"
-        });
+        // must precede setupCurrentDailyReminder below: setting the value looks it up in the
+        // entry values, and onResume is too late because it runs after this
+        setupDailyReminderEntries();
         if (isFingerprintAuthSupported(getActivity())) {
             mSecurityModeListPreference.setEntries(new String[] {
                     getString(R.string.setting_item_security_none),
@@ -274,13 +272,61 @@ public class UtilitySettingFragment extends PreferenceFragmentCompat {
                 || status == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // the 12 or 24 hour choice lives in the system settings and changing it is not a
+        // configuration change, so nothing recreates this screen on the way back
+        setupDailyReminderEntries();
+        setupCurrentDailyReminder();
+        // this row renders a time too, from the same place, so leaving it out would have the two
+        // rows on one screen disagreeing about the format
+        setupCurrentExchangeRateUpdate();
+    }
+
+    /**
+     * The hours were written out as fixed 24 hour strings, which read wrong on a device set to 12
+     * hour and in Persian, which does not use Latin digits. The pattern comes from DateFormatter so
+     * this row follows the same decision as every other time in the app rather than deriving it
+     * again from the platform.
+     */
+    private void setupDailyReminderEntries() {
+        String[] entries = new String[HOURS_IN_DAY + 1];
+        String[] values = new String[HOURS_IN_DAY + 1];
+        entries[0] = getString(R.string.setting_item_daily_reminder_none);
+        values[0] = String.valueOf(PreferenceManager.DAILY_REMINDER_DISABLED);
+        DateFormat format = hourOfDayFormat();
+        for (int hour = 0; hour < HOURS_IN_DAY; hour++) {
+            entries[hour + 1] = formatHourOfDay(format, hour);
+            values[hour + 1] = String.valueOf(hour);
+        }
+        mDailyReminderPreference.setEntries(entries);
+        mDailyReminderPreference.setEntryValues(values);
+    }
+
+    /**
+     * Formatted in UTC deliberately. These are hours of a day rather than moments in time, and
+     * putting an hour into a local calendar means asking for a wall time that does not exist on the
+     * morning the clocks go forward. Which hour depends on the zone: where the shift is at 02:00,
+     * that hour vanishes from the list and 03:00 appears twice, once a year.
+     */
+    private static DateFormat hourOfDayFormat() {
+        SimpleDateFormat format = new SimpleDateFormat(DateFormatter.getTimePattern(), Locale.getDefault());
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return format;
+    }
+
+    private static String formatHourOfDay(DateFormat format, int hour) {
+        return format.format(new Date(hour * DateUtils.HOUR_IN_MILLIS));
+    }
+
     private void setupCurrentDailyReminder() {
         int hour = PreferenceManager.getCurrentDailyReminder();
         mDailyReminderPreference.setValue(String.valueOf(hour));
         if (hour == PreferenceManager.DAILY_REMINDER_DISABLED) {
             mDailyReminderPreference.setSummary(R.string.setting_item_daily_reminder_none);
         } else {
-            String summary = getString(R.string.setting_summary_daily_reminder, hour);
+            String summary = getString(R.string.setting_summary_daily_reminder, formatHourOfDay(hourOfDayFormat(), hour));
             mDailyReminderPreference.setSummary(summary);
         }
     }

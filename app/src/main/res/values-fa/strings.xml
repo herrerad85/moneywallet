@@ -433,7 +433,7 @@
     <string name="setting_category_utility_security">"امنیت"</string>
     <string name="setting_category_utility_exchange_rates">"نرخ‌های تبدیل"</string>
     <string name="setting_title_daily_reminder">"یادآوری روزانه"</string>
-    <string name="setting_summary_daily_reminder">"هر روز در: %02d:00"</string>
+    <string name="setting_summary_daily_reminder">"هر روز در: %1$s"</string>
     <string name="setting_title_security">"حفاظت از دسترسی"</string>
     <string name="setting_title_security_change_pin">"تغییر کد پین"</string>
     <string name="setting_title_security_change_sequence">"تغییر توالی باز کردن"</string>
