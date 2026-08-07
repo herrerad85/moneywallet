@@ -121,7 +121,10 @@ public class DebtCursorAdapter extends AbstractCursorAdapter {
                 }
                 break;
             case DebtHeaderCursor.HEADER_ARCHIVED:
-                holder.mLeftTextView.setText(R.string.header_debts_archived);
+                // the group holds debts archived by hand, which may still have money outstanding,
+                // and debts simply paid off in full. Neither Archived nor Completed is true of
+                // both, so it is named for what they share: no longer needing attention.
+                holder.mLeftTextView.setText(R.string.header_debts_finished);
                 holder.mRightTextView.setText(null);
                 break;
         }

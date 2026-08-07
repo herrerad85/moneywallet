@@ -326,6 +326,7 @@
     <string name="header_debts_to_pay">"To pay:"</string>
     <string name="header_debts_to_receive">"To receive:"</string>
     <string name="header_debts_archived">"Archived"</string>
+    <string name="header_debts_finished">"Finished"</string>
 
     <string name="message_no_currency_found">"No currency found"</string>
     <string name="message_no_wallet_found">"No wallet found"</string>

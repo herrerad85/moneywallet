@@ -44,6 +44,27 @@ public class DebtHeaderCursor extends AbstractHeaderCursor<DebtHeaderCursor.Head
     public static final int HEADER_CURRENT = 0;
     public static final int HEADER_ARCHIVED = 1;
 
+    /**
+     * A debt counts as finished once it has been archived by hand or paid off in full. Archiving
+     * was the only thing the app treated as finished, which left a debt you had finished paying
+     * sitting in the group that still needs attention.
+     * <p>
+     * The query selects this expression under {@link #COLUMN_IS_SETTLED} and orders by it, and the
+     * grouping below reads that same column back rather than recomputing the rule. Recomputing it
+     * in Java would be a second copy that could drift, and this class throws when the grouping
+     * disagrees with the order, so the drift would surface as a crash rather than a mis-sort.
+     * <p>
+     * A debt for no money is not finished, it is unfinished data entry. The amount is not required
+     * when saving, so one can be created by accident, and filing it away as finished is how it
+     * would be lost.
+     */
+    public static final String SQL_IS_SETTLED = "(CASE WHEN " + Contract.Debt.ARCHIVED + " = 1 OR "
+            + "(" + Contract.Debt.MONEY + " <> 0 AND "
+            + "ABS(COALESCE(" + Contract.Debt.PROGRESS + ", 0)) >= ABS(" + Contract.Debt.MONEY + "))"
+            + " THEN 1 ELSE 0 END)";
+
+    public static final String COLUMN_IS_SETTLED = "debt_is_settled";
+
     private final int mIndexDebtType;
     private final Contract.DebtType mDebtType;
 
@@ -59,34 +80,36 @@ public class DebtHeaderCursor extends AbstractHeaderCursor<DebtHeaderCursor.Head
         int indexDebtCurrency = cursor.getColumnIndex(Contract.Debt.WALLET_CURRENCY);
         int indexDebtMoney = cursor.getColumnIndex(Contract.Debt.MONEY);
         int indexDebtProgress = cursor.getColumnIndex(Contract.Debt.PROGRESS);
-        int indexDebtArchived = cursor.getColumnIndex(Contract.Debt.ARCHIVED);
+        int indexIsSettled = cursor.getColumnIndex(COLUMN_IS_SETTLED);
         if (cursor.moveToFirst()) {
             Header header = null;
             do {
-                int archived = cursor.getInt(indexDebtArchived);
+                boolean settled = cursor.getInt(indexIsSettled) == 1;
                 if (header != null) {
                     // check the header state
-                    if (archived == 0 && header.mType == 1) {
+                    if (!settled && header.mType == 1) {
                         throw new IllegalStateException("SQL query has failed to sort the items.");
                     }
-                    if (header.mType == 0 && archived == 1) {
+                    if (header.mType == 0 && settled) {
                         // we can store the previous header and create a new one
                         header = new Header(HEADER_ARCHIVED);
                         addHeader(header);
                     }
                 } else {
                     // initialize the header based on current item
-                    header = new Header(archived == 0 ? HEADER_CURRENT : HEADER_ARCHIVED);
+                    header = new Header(!settled ? HEADER_CURRENT : HEADER_ARCHIVED);
                     addHeader(header);
                 }
                 addItem(cursor.getPosition());
                 // if current header than sum the remaining money
-                if (archived == 0) {
+                if (!settled) {
                     String currency = cursor.getString(indexDebtCurrency);
                     long money = cursor.getLong(indexDebtMoney);
                     long progress = cursor.getLong(indexDebtProgress);
-                    long modulus = Math.abs(money) - Math.abs(progress);
-                    // TODO if modulus is < 0 than set it to 0?
+                    // clamped, not merely expected to be positive: a debt saved for no money is
+                    // treated as unsettled and can still have payments against it, and paying more
+                    // than is owed must not subtract from what is owed on everything else
+                    long modulus = Math.max(0, Math.abs(money) - Math.abs(progress));
                     header.addMoney(currency, modulus);
                 }
             } while (cursor.moveToNext());

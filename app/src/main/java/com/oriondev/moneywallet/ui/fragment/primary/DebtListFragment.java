@@ -93,7 +93,8 @@ public class DebtListFragment extends CursorListFragment implements DebtCursorAd
                     Contract.Debt.EXPIRATION_DATE,
                     Contract.Debt.ARCHIVED,
                     Contract.Debt.PLACE_ID,
-                    Contract.Debt.PLACE_NAME
+                    Contract.Debt.PLACE_NAME,
+                    DebtHeaderCursor.SQL_IS_SETTLED + " AS " + DebtHeaderCursor.COLUMN_IS_SETTLED
             };
             String selection;
             String[] selectionArgs;
@@ -106,7 +107,10 @@ public class DebtListFragment extends CursorListFragment implements DebtCursorAd
                 selectionArgs = new String[] {String.valueOf(currentWallet)};
             }
             selection += " AND " + Contract.Debt.TYPE + " = " + String.valueOf(debtType.getValue());
-            String sortOrder = Contract.Debt.ARCHIVED + " ASC, " + Contract.Debt.DATE + " DESC";
+            // a debt that has been paid off in full is finished whether or not anyone remembered to
+            // archive it, so it belongs below the ones that still need attention. The grouping
+            // reads the same value back out of the projection, so the two cannot drift apart.
+            String sortOrder = DebtHeaderCursor.COLUMN_IS_SETTLED + " ASC, " + Contract.Debt.DATE + " DESC";
             return new WrappedCursorLoader(activity, uri, projection, selection, selectionArgs, sortOrder, debtType);
         }
         return null;
