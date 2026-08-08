@@ -174,12 +174,8 @@ public class PersonItemFragment extends SecondaryPanelFragment implements Loader
             IconLoader.loadInto(icon, mAvatarImageView);
             mNameTextView.setText(cursor.getString(cursor.getColumnIndex(Contract.Person.NAME)));
             String note = cursor.getString(cursor.getColumnIndex(Contract.Person.NOTE));
-            if (!TextUtils.isEmpty(note)) {
-                mNoteTextView.setText(note);
-                mNoteTextView.setVisibility(View.VISIBLE);
-            } else {
-                mNoteTextView.setVisibility(View.INVISIBLE);
-            }
+            mNoteTextView.setText(note);
+            mNoteTextView.setVisibility(TextUtils.isEmpty(note) ? View.GONE : View.VISIBLE);
         } else {
             showItemId(0L);
         }
