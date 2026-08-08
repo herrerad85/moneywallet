@@ -665,7 +665,17 @@ public class DataContentProvider extends ContentProvider {
                 break;
             case WALLET_ITEM:
                 notifyUri = DataContentProvider.CONTENT_WALLETS;
-                result = mDatabase.deleteWallet(ContentUris.parseId(uri));
+                long deletedWalletId = ContentUris.parseId(uri);
+                result = mDatabase.deleteWallet(deletedWalletId);
+                Context deleteContext = getContext();
+                if (result > 0 && deleteContext != null
+                        && deletedWalletId == PreferenceManager.getCurrentWallet()) {
+                    // the deleted wallet still has its id stored as the current one, and every
+                    // scoped query keeps filtering on it, so all of them come back with
+                    // nothing. reset here rather than in the screen that triggers the delete,
+                    // because every wallet delete passes through this point.
+                    PreferenceManager.setCurrentWallet(deleteContext, PreferenceManager.TOTAL_WALLET_ID);
+                }
                 break;
             case TRANSACTION_ITEM:
                 notifyUri = DataContentProvider.CONTENT_TRANSACTIONS;
