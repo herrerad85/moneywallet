@@ -227,6 +227,8 @@
     <string name="title_fragment_item_place">"Place"</string>
     <string name="title_fragment_item_person">"Person"</string>
 
+    <string name="action_open_person_details">"Open person details"</string>
+
     <string name="menu_action_attach_file">"Attach file"</string>
     <string name="menu_action_save_changes">"Save changes"</string>
     <string name="menu_refresh_currency_rate">"Refresh currency rate"</string>

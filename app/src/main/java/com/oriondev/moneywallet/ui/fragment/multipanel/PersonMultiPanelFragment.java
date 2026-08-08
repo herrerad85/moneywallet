@@ -33,6 +33,7 @@ import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.ui.activity.NewEditItemActivity;
 import com.oriondev.moneywallet.ui.activity.NewEditPersonActivity;
+import com.oriondev.moneywallet.ui.activity.TransactionListActivity;
 import com.oriondev.moneywallet.ui.adapter.recycler.AbstractCursorAdapter;
 import com.oriondev.moneywallet.ui.adapter.recycler.PersonCursorAdapter;
 import com.oriondev.moneywallet.ui.fragment.base.MultiPanelCursorListItemFragment;
@@ -89,8 +90,36 @@ public class PersonMultiPanelFragment extends MultiPanelCursorListItemFragment i
         return R.string.menu_people;
     }
 
+    /**
+     * A tap opens the person's transactions. The detail panel renders their icon, their name
+     * and their note and carries no other data, so the transaction list is the only thing on
+     * it worth navigating to.
+     *
+     * On a layout wide enough to show both panels at once the panel is permanently on screen
+     * and showing it is a no op, so there a tap has to keep feeding it instead. Otherwise it
+     * would sit beside the list holding the empty state, or a person chosen earlier.
+     */
     @Override
     public void onPersonClick(long id) {
+        if (isExtendedLayout()) {
+            showPersonPanel(id);
+        } else {
+            Intent intent = new Intent(getActivity(), TransactionListActivity.class);
+            intent.putExtra(TransactionListActivity.PERSON_ID, id);
+            startActivity(intent);
+        }
+    }
+
+    /**
+     * Long press reaches the detail panel, which is the only place in the app that can edit or
+     * delete a person.
+     */
+    @Override
+    public void onPersonLongClick(long id) {
+        showPersonPanel(id);
+    }
+
+    private void showPersonPanel(long id) {
         showItemId(id);
         showSecondaryPanel();
     }
