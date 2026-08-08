@@ -68,6 +68,11 @@ public class ModelMultiPanelViewPagerFragment extends MultiPanelViewPagerMultiIt
     }
 
     @Override
+    protected boolean showsCurrentWallet() {
+        return true;
+    }
+
+    @Override
     protected SecondaryPanelFragment onCreateSecondaryPanel(int type) {
         switch (type) {
             case TYPE_TRANSACTION_MODEL:

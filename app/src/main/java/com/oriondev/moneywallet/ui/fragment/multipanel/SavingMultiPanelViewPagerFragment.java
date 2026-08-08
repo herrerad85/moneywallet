@@ -58,6 +58,11 @@ public class SavingMultiPanelViewPagerFragment extends MultiPanelViewPagerItemFr
     }
 
     @Override
+    protected boolean showsCurrentWallet() {
+        return true;
+    }
+
+    @Override
     protected void onFloatingActionButtonClick() {
         Intent intent = new Intent(getActivity(), NewEditSavingActivity.class);
         intent.putExtra(NewEditItemActivity.MODE, NewEditItemActivity.Mode.NEW_ITEM);

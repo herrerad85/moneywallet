@@ -184,6 +184,11 @@ public class TransactionMultiPanelFragment extends MultiPanelCursorListItemFragm
     }
 
     @Override
+    protected boolean showsCurrentWallet() {
+        return true;
+    }
+
+    @Override
     protected boolean isFloatingActionButtonEnabled() {
         return false;
     }

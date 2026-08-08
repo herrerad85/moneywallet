@@ -97,6 +97,11 @@ public class RecurrenceMultiPanelViewPagerFragment extends MultiPanelViewPagerMu
     }
 
     @Override
+    protected boolean showsCurrentWallet() {
+        return true;
+    }
+
+    @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         IntentFilter filter = new IntentFilter(LocalAction.ACTION_ITEM_CLICK);

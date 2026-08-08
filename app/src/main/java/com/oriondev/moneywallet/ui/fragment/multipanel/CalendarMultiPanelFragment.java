@@ -20,6 +20,8 @@
 package com.oriondev.moneywallet.ui.fragment.multipanel;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -37,6 +39,7 @@ import android.view.ViewGroup;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.storage.preference.CurrentWalletController;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.adapter.recycler.AbstractCursorAdapter;
 import com.oriondev.moneywallet.ui.adapter.recycler.TransactionCursorAdapter;
@@ -55,7 +58,7 @@ import java.util.Date;
 /**
  * Created by andrea on 06/04/18.
  */
-public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment implements MonthView.OnMonthSelectedListener, OnDateSelectedListener, SwipeRefreshLayout.OnRefreshListener, TransactionCursorAdapter.ActionListener, LoaderManager.LoaderCallbacks<Cursor> {
+public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment implements MonthView.OnMonthSelectedListener, OnDateSelectedListener, SwipeRefreshLayout.OnRefreshListener, TransactionCursorAdapter.ActionListener, LoaderManager.LoaderCallbacks<Cursor>, CurrentWalletController {
 
     private static final String SECONDARY_PANEL_FRAGMENT_TAG = "CalendarMultiPanelFragment::Tag::TransactionItemFragment";
 
@@ -64,6 +67,8 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
     private static final String ARG_SELECTED_DAY = "CalendarMultiPanelFragment::Arguments::Day";
 
     private static final int DEFAULT_LOADER_ID = 4834;
+
+    private BroadcastReceiver mCurrentWalletObserver;
 
     private MonthView mMonthView;
     private TimelineView mTimelineView;
@@ -118,6 +123,11 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
     @Override
     protected int getTitleRes() {
         return R.string.title_activity_calendar;
+    }
+
+    @Override
+    protected boolean showsCurrentWallet() {
+        return true;
     }
 
     @Override
@@ -200,6 +210,32 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
                 mTimelineView.getSelectedDay()
         );
         mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.REFRESHING);
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        mCurrentWalletObserver = PreferenceManager.registerCurrentWalletObserver(context, this);
+    }
+
+    @Override
+    public void onDetach() {
+        PreferenceManager.unregisterCurrentWalletObserver(getActivity(), mCurrentWalletObserver);
+        super.onDetach();
+    }
+
+    @Override
+    public void onCurrentWalletChanged(long walletId) {
+        if (mTimelineView == null) {
+            return;
+        }
+        // this screen names the wallet in its toolbar, so the day list has to follow it
+        loadTransactions(
+                mTimelineView.getSelectedYear(),
+                mTimelineView.getSelectedMonth(),
+                mTimelineView.getSelectedDay()
+        );
+        mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.LOADING);
     }
 
     private void loadTransactions(int year, int month, int day) {

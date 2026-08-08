@@ -66,6 +66,11 @@ public class TransactionMultiPanelViewPagerFragment extends MultiPanelViewPagerM
         return R.string.menu_transaction;
     }
 
+    @Override
+    protected boolean showsCurrentWallet() {
+        return true;
+    }
+
     @MenuRes
     protected int onInflateMenu() {
         return R.menu.menu_transaction_multipanel_fragment;

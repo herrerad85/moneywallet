@@ -20,7 +20,15 @@
 package com.oriondev.moneywallet.ui.fragment.base;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.ContentUris;
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
 import androidx.annotation.MenuRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,6 +43,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.storage.database.Contract;
+import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.storage.preference.CurrentWalletController;
+import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.ToolbarController;
 import com.oriondev.moneywallet.utils.Utils;
 
@@ -43,7 +55,38 @@ import com.oriondev.moneywallet.utils.Utils;
  */
 public abstract class SinglePanelFragment extends Fragment implements Toolbar.OnMenuItemClickListener {
 
+    private static final int CURRENT_WALLET_LOADER_ID = 60002;
+
     private Toolbar mToolbar;
+
+    private BroadcastReceiver mCurrentWalletObserver;
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (showsCurrentWallet()) {
+            // an anonymous listener rather than this class implementing CurrentWalletController,
+            // because a subclass that implements it would override the callback and stop the
+            // toolbar updating
+            mCurrentWalletObserver = PreferenceManager.registerCurrentWalletObserver(context, new CurrentWalletController() {
+
+                @Override
+                public void onCurrentWalletChanged(long walletId) {
+                    showCurrentWalletInToolbar(true);
+                }
+
+            });
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        if (mCurrentWalletObserver != null) {
+            PreferenceManager.unregisterCurrentWalletObserver(getActivity(), mCurrentWalletObserver);
+            mCurrentWalletObserver = null;
+        }
+        super.onDetach();
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -87,6 +130,7 @@ public abstract class SinglePanelFragment extends Fragment implements Toolbar.On
     protected void setupPrimaryToolbar(Toolbar toolbar) {
         // setup toolbar title and menu (if provided)
         toolbar.setTitle(getTitleRes());
+        showCurrentWalletInToolbar(false);
         int menuResId = onInflateMenu();
         if (menuResId > 0) {
             toolbar.inflateMenu(menuResId);
@@ -108,6 +152,84 @@ public abstract class SinglePanelFragment extends Fragment implements Toolbar.On
         if (mToolbar != null) {
             mToolbar.setSubtitle(subtitle);
         }
+    }
+
+    /**
+     * Override to true on a screen whose content is filtered by the wallet selected in the
+     * drawer. Naming the wallet is what stops such a screen looking empty for the wrong reason.
+     * Leave it false everywhere else: a screen that shows every wallet, or none in particular,
+     * would be claiming a scope it does not have. First read from onAttach, so an override
+     * cannot depend on anything assigned in onCreate or later.
+     */
+    protected boolean showsCurrentWallet() {
+        return false;
+    }
+
+    private final LoaderManager.LoaderCallbacks<Cursor> mCurrentWalletCallbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
+
+        @NonNull
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
+            Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_WALLETS, PreferenceManager.getCurrentWallet());
+            return new CursorLoader(getActivity(), uri, new String[] {Contract.Wallet.NAME}, null, null, null);
+        }
+
+        @Override
+        public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
+            if (mToolbar != null) {
+                mToolbar.setSubtitle(Utils.readWalletName(data));
+            }
+        }
+
+        @Override
+        public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+            // the subtitle holds a copy of the string, not the cursor
+        }
+
+    };
+
+    /**
+     * @param reload true when the selected wallet may have changed, so the loader has to be
+     *               rebuilt against the new id. False on the view creation path, where init
+     *               redelivers the row a retained loader already holds instead of querying
+     *               again on every rotation.
+     */
+    private void showCurrentWalletInToolbar(boolean reload) {
+        if (!showsCurrentWallet() || mToolbar == null || !isAdded()) {
+            return;
+        }
+        long walletId = PreferenceManager.getCurrentWallet();
+        if (walletId == PreferenceManager.TOTAL_WALLET_ID) {
+            // synthetic, there is no row to load
+            mToolbar.setSubtitle(R.string.total_wallet_name);
+            getLoaderManager().destroyLoader(CURRENT_WALLET_LOADER_ID);
+        } else if (walletId == PreferenceManager.NO_CURRENT_WALLET) {
+            mToolbar.setSubtitle(null);
+            getLoaderManager().destroyLoader(CURRENT_WALLET_LOADER_ID);
+        } else if (reload) {
+            // clear first: the load is asynchronous, and until it lands the old name would be
+            // naming the wrong wallet rather than merely being out of date
+            mToolbar.setSubtitle(null);
+            // a loader rather than a direct query: resolving a wallet row runs a balance
+            // aggregate over the transactions table, and it redelivers when the row is renamed
+            getLoaderManager().restartLoader(CURRENT_WALLET_LOADER_ID, null, mCurrentWalletCallbacks);
+        } else if (isLoaderBuiltForAnotherWallet(walletId)) {
+            // a retained loader outlives this fragment instance, so init would redeliver the row
+            // it already holds, which belongs to a wallet that is no longer the selected one.
+            // No clear needed before the reload, unlike the branch above: this path only runs
+            // while the toolbar is freshly inflated, so there is no old name on it yet
+            getLoaderManager().restartLoader(CURRENT_WALLET_LOADER_ID, null, mCurrentWalletCallbacks);
+        } else {
+            getLoaderManager().initLoader(CURRENT_WALLET_LOADER_ID, null, mCurrentWalletCallbacks);
+        }
+    }
+
+    private boolean isLoaderBuiltForAnotherWallet(long walletId) {
+        Loader<Cursor> loader = getLoaderManager().getLoader(CURRENT_WALLET_LOADER_ID);
+        if (loader instanceof CursorLoader) {
+            return ContentUris.parseId(((CursorLoader) loader).getUri()) != walletId;
+        }
+        return false;
     }
 
     @MenuRes

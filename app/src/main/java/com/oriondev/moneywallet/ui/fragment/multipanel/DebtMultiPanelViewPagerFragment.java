@@ -59,6 +59,11 @@ public class DebtMultiPanelViewPagerFragment extends MultiPanelViewPagerItemFrag
     }
 
     @Override
+    protected boolean showsCurrentWallet() {
+        return true;
+    }
+
+    @Override
     protected void onFloatingActionButtonClick() {
         Intent intent = new Intent(getActivity(), NewEditDebtActivity.class);
         intent.putExtra(NewEditItemActivity.MODE, NewEditItemActivity.Mode.NEW_ITEM);

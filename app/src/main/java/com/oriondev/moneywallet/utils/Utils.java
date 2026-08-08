@@ -20,6 +20,7 @@
 package com.oriondev.moneywallet.utils;
 
 import android.app.Activity;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -29,6 +30,7 @@ import android.view.ViewGroup;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.IFile;
+import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.backup.BackupManager;
 
 import java.text.DecimalFormat;
@@ -143,6 +145,18 @@ public class Utils {
             if (view != null) {
                 return view;
             }
+        }
+        return null;
+    }
+
+    /**
+     * @param cursor a wallet row cursor whose projection includes the name. Moved to its first
+     *               row, but not closed: the caller, or its loader, still owns it.
+     * @return the wallet name, or null when the cursor is null or holds no row.
+     */
+    public static String readWalletName(Cursor cursor) {
+        if (cursor != null && cursor.moveToFirst()) {
+            return cursor.getString(cursor.getColumnIndexOrThrow(Contract.Wallet.NAME));
         }
         return null;
     }

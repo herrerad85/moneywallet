@@ -99,6 +99,11 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
         return R.string.menu_overview;
     }
 
+    @Override
+    protected boolean showsCurrentWallet() {
+        return true;
+    }
+
     @MenuRes
     protected int onInflateMenu() {
         return R.menu.menu_overview_fragment;
