@@ -348,7 +348,7 @@ public class BackupHandlerIntentService extends IntentService {
         // update the notification if required
         if (mNotificationBuilder != null) {
             mNotificationBuilder.setContentTitle(getNotificationContentTitle(action, false));
-            startForeground(NotificationContract.NOTIFICATION_ID_BACKUP_PROGRESS, mNotificationBuilder.build());
+            ForegroundServices.startDataSync(this, NotificationContract.NOTIFICATION_ID_BACKUP_PROGRESS, mNotificationBuilder.build());
         }
     }
 
@@ -364,7 +364,7 @@ public class BackupHandlerIntentService extends IntentService {
         if (mNotificationBuilder != null) {
             mNotificationBuilder.setContentText(getNotificationContentText(status));
             mNotificationBuilder.setProgress(100, progress, false);
-            startForeground(NotificationContract.NOTIFICATION_ID_BACKUP_PROGRESS, mNotificationBuilder.build());
+            ForegroundServices.startDataSync(this, NotificationContract.NOTIFICATION_ID_BACKUP_PROGRESS, mNotificationBuilder.build());
         }
     }
 

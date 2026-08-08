@@ -29,6 +29,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:icon="@mipmap/ic_launcher"
@@ -118,9 +119,13 @@
                 android:resource="@xml/file_provider_paths" />
         </provider>
 
-        <service android:name=".service.openexchangerates.OpenExchangeRatesCurrencyRateDownloadIntentService" />
+        <service
+            android:name=".service.openexchangerates.OpenExchangeRatesCurrencyRateDownloadIntentService"
+            android:foregroundServiceType="dataSync" />
         <service android:name=".service.AttachmentHandlerIntentService" />
-        <service android:name=".service.BackupHandlerIntentService" />
+        <service
+            android:name=".service.BackupHandlerIntentService"
+            android:foregroundServiceType="dataSync" />
         <service android:name=".service.BackendHandlerIntentService" />
         <service
             android:name=".service.RecurrenceHandlerIntentService"

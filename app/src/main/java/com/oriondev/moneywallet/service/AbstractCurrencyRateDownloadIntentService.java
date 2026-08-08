@@ -65,7 +65,7 @@ public abstract class AbstractCurrencyRateDownloadIntentService extends IntentSe
                 .setContentTitle(getString(R.string.notification_title_download_exchange_rates))
                 .setProgress(0, 0, true)
                 .setCategory(NotificationCompat.CATEGORY_PROGRESS);
-        startForeground(NotificationContract.NOTIFICATION_ID_EXCHANGE_RATE_PROGRESS, mBuilder.build());
+        ForegroundServices.startDataSync(this, NotificationContract.NOTIFICATION_ID_EXCHANGE_RATE_PROGRESS, mBuilder.build());
         Exception exception = null;
         try {
             updateExchangeRates();
@@ -94,7 +94,7 @@ public abstract class AbstractCurrencyRateDownloadIntentService extends IntentSe
     protected void setCurrentProgress(String operation, int percentage) {
         mBuilder.setContentText(operation)
                 .setProgress(100, percentage, false);
-        startForeground(NotificationContract.NOTIFICATION_ID_EXCHANGE_RATE_PROGRESS, mBuilder.build());
+        ForegroundServices.startDataSync(this, NotificationContract.NOTIFICATION_ID_EXCHANGE_RATE_PROGRESS, mBuilder.build());
     }
 
     private void showError(String error) {
