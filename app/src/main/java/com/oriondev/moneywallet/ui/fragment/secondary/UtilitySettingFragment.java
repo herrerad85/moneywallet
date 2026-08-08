@@ -19,6 +19,7 @@
 
 package com.oriondev.moneywallet.ui.fragment.secondary;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,6 +27,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.text.format.DateUtils;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -51,6 +54,7 @@ import com.oriondev.moneywallet.ui.preference.ThemedInputPreference;
 import com.oriondev.moneywallet.ui.preference.ThemedListPreference;
 import com.oriondev.moneywallet.utils.DateFormatter;
 import com.oriondev.moneywallet.utils.Urls;
+import com.oriondev.moneywallet.utils.Utils;
 import com.oriondev.moneywallet.view.MapViewWrapper;
 
 import java.text.DateFormat;
@@ -67,6 +71,15 @@ public class UtilitySettingFragment extends PreferenceFragmentCompat {
     private static final int REQUEST_CODE_LOCK_ACTIVITY = 8239;
 
     private static final int HOURS_IN_DAY = 24;
+
+    /**
+     * A fragment has to register before it is created, so this cannot move to the point of use.
+     */
+    private final ActivityResultLauncher<String> mNotificationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+                // nothing to do either way. the reminder is scheduled on a denial too, its
+                // alarm just fires into nothing, and the ask is already recorded as spent.
+            });
 
     private ThemedListPreference mDailyReminderPreference;
     private ThemedListPreference mSecurityModeListPreference;
@@ -170,6 +183,9 @@ public class UtilitySettingFragment extends PreferenceFragmentCompat {
                 int hour = Integer.parseInt((String) newValue);
                 PreferenceManager.setCurrentDailyReminder(getActivity(), hour);
                 setupCurrentDailyReminder();
+                if (hour != PreferenceManager.DAILY_REMINDER_DISABLED) {
+                    requestNotificationPermission();
+                }
                 return false;
             }
 
@@ -356,6 +372,14 @@ public class UtilitySettingFragment extends PreferenceFragmentCompat {
 
     private static String formatHourOfDay(DateFormat format, int hour) {
         return format.format(new Date(hour * DateUtils.HOUR_IN_MILLIS));
+    }
+
+    private void requestNotificationPermission() {
+        Activity activity = getActivity();
+        if (activity != null && Utils.shouldAskNotificationPermission(activity)) {
+            PreferenceManager.setAskedNotificationPermission();
+            mNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+        }
     }
 
     private void setupCurrentDailyReminder() {

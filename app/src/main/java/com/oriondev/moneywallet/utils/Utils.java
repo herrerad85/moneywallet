@@ -19,18 +19,23 @@
 
 package com.oriondev.moneywallet.utils;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import androidx.annotation.IdRes;
+import androidx.core.content.ContextCompat;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.IFile;
 import com.oriondev.moneywallet.storage.database.Contract;
+import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.storage.database.backup.BackupManager;
 
 import java.text.DecimalFormat;
@@ -87,6 +92,22 @@ public class Utils {
 
     public static boolean isAtLeastLollipop() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+    }
+
+    /**
+     * From Android 13 POST_NOTIFICATIONS is a runtime permission, and an app targeting 33 or
+     * later gets no prompt from the system, so anything that speaks through a notification has
+     * to ask for itself.
+     *
+     * <p>At most once per install. Android treats a second refusal as permanent, and the caller
+     * cannot tell a never asked state from an exhausted one, so the count is kept here instead.
+     * Callers record the ask with {@link PreferenceManager#setAskedNotificationPermission()}.
+     */
+    public static boolean shouldAskNotificationPermission(Context context) {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && !PreferenceManager.hasAskedNotificationPermission()
+                && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                        != PackageManager.PERMISSION_GRANTED;
     }
 
     public static void setBackgroundCompat(View view, Drawable drawable) {

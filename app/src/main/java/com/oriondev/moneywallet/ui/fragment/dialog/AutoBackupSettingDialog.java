@@ -19,11 +19,13 @@
 
 package com.oriondev.moneywallet.ui.fragment.dialog;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.appcompat.widget.SwitchCompat;
@@ -40,8 +42,10 @@ import com.oriondev.moneywallet.api.BackendServiceFactory;
 import com.oriondev.moneywallet.broadcast.AutoBackupBroadcastReceiver;
 import com.oriondev.moneywallet.model.IFile;
 import com.oriondev.moneywallet.storage.preference.BackendManager;
+import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.BackendExplorerActivity;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
+import com.oriondev.moneywallet.utils.Utils;
 
 /**
  * Created by andrea on 26/11/18.
@@ -56,6 +60,8 @@ public class AutoBackupSettingDialog extends DialogFragment {
     private static final int OFFSET_MIN_HOURS = 24;
     private static final int OFFSET_MAX_HOURS = 168;
     private static final int OFFSET_BETWEEN_HOURS = 4;
+
+    private static final int REQUEST_CODE_NOTIFICATION_PERMISSION = 35626;
 
     private String mBackendId;
 
@@ -184,6 +190,18 @@ public class AutoBackupSettingDialog extends DialogFragment {
         BackendManager.setAutoBackupFolder(mBackendId, mFolder != null ? mFolder.encodeToString() : null);
         BackendManager.setAutoBackupPassword(mBackendId, mPasswordEditText.getText().toString());
         AutoBackupBroadcastReceiver.scheduleAutoBackupTask(getActivity());
+        Activity activity = getActivity();
+        if (mServiceEnabledSwitchCompat.isChecked() && activity != null
+                && Utils.shouldAskNotificationPermission(activity)) {
+            // routed through the activity rather than a launcher on this fragment. this click
+            // dismisses the dialog on its way out, so a launcher owned by it is unregistered
+            // before the user can answer and the result would go nowhere. the result is
+            // discarded either way here, and the ask is recorded before it is made.
+            PreferenceManager.setAskedNotificationPermission();
+            ActivityCompat.requestPermissions(activity,
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    REQUEST_CODE_NOTIFICATION_PERMISSION);
+        }
     }
 
     @Override

@@ -44,6 +44,7 @@ public class PreferenceManager {
     private static final String FILE_NAME = "preferences";
 
     private static final String CURRENT_WALLET = "current_wallet_id";
+    private static final String ASKED_NOTIFICATION_PERMISSION = "asked_notification_permission";
     private static final String CURRENT_LOCK_MODE = "current_lock_mode";
     private static final String CURRENT_LOCK_CODE = "current_lock_code";
     private static final String LAST_LOCK_TIMESTAMP = "last_lock_timestamp";
@@ -296,6 +297,14 @@ public class PreferenceManager {
 
     public static int getCurrentDailyReminder() {
         return mPreferences.getInt(DAILY_REMINDER, DAILY_REMINDER_DISABLED);
+    }
+
+    public static boolean hasAskedNotificationPermission() {
+        return mPreferences.getBoolean(ASKED_NOTIFICATION_PERMISSION, false);
+    }
+
+    public static void setAskedNotificationPermission() {
+        mPreferences.edit().putBoolean(ASKED_NOTIFICATION_PERMISSION, true).apply();
     }
 
     public static int getCurrentExchangeRateService() {
