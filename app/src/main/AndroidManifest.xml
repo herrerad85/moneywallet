@@ -129,6 +129,10 @@
             android:foregroundServiceType="dataSync" />
         <service android:name=".service.BackendHandlerIntentService" />
         <service
+            android:name=".service.AutoBackupJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+        <service
             android:name=".service.RecurrenceHandlerIntentService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false" />
@@ -137,7 +141,6 @@
 
         <receiver android:name=".broadcast.DailyBroadcastReceiver" />
         <receiver android:name=".broadcast.RecurrenceBroadcastReceiver" />
-        <receiver android:name=".broadcast.AutoBackupBroadcastReceiver" />
         <receiver android:name=".broadcast.NotificationBroadcastReceiver" />
         <receiver android:name=".broadcast.BootBroadcastReceiver"
             android:exported="true">

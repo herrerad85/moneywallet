@@ -23,14 +23,11 @@ import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import android.text.TextUtils;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.api.BackendException;
@@ -45,18 +42,14 @@ import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.database.ExportException;
 import com.oriondev.moneywallet.storage.database.ImportException;
 import com.oriondev.moneywallet.storage.database.SQLDatabaseImporter;
-import com.oriondev.moneywallet.storage.database.backup.AbstractBackupExporter;
 import com.oriondev.moneywallet.storage.database.backup.AbstractBackupImporter;
 import com.oriondev.moneywallet.storage.database.backup.BackupManager;
-import com.oriondev.moneywallet.storage.database.backup.DefaultBackupExporter;
 import com.oriondev.moneywallet.storage.database.backup.DefaultBackupImporter;
 import com.oriondev.moneywallet.storage.database.backup.LegacyBackupImporter;
 import com.oriondev.moneywallet.storage.preference.BackendManager;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.notification.NotificationContract;
 import com.oriondev.moneywallet.utils.CurrencyManager;
-import com.oriondev.moneywallet.utils.DateUtils;
-import com.oriondev.moneywallet.utils.ProgressInputStream;
 import com.oriondev.moneywallet.utils.ProgressOutputStream;
 import com.oriondev.moneywallet.utils.Utils;
 
@@ -64,9 +57,7 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -88,11 +79,8 @@ public class BackupHandlerIntentService extends IntentService {
     public static final String PROGRESS_VALUE = "BackupHandlerIntentService::Argument::ProgressValue";
     public static final String CALLER_ID = "BackupHandlerIntentService::Argument::CallerId";
 
-    private static final String ATTACHMENT_FOLDER = "attachments";
     private static final String BACKUP_CACHE_FOLDER = "backups";
     private static final String TEMP_FOLDER = "temp";
-    private static final String FILE_DATETIME_PATTERN = "yyyy-MM-dd_HH-mm-ss";
-    private static final String OUTPUT_FILE = "backup_%s%s";
 
     private static final int ACTION_NONE = 0;
     public static final int ACTION_LIST = 1;
@@ -107,8 +95,6 @@ public class BackupHandlerIntentService extends IntentService {
     private static final boolean DEFAULT_AUTO_BACKUP = false;
     private static final boolean DEFAULT_ONLY_ON_WIFI = false;
     private static final boolean DEFAULT_RUN_FOREGROUND = false;
-
-    private boolean mAutoBackup;
 
     private IBackendServiceAPI mBackendServiceAPI;
 
@@ -135,8 +121,6 @@ public class BackupHandlerIntentService extends IntentService {
             // unpack the base intent
             int action = intent.getIntExtra(ACTION, ACTION_NONE);
             String backendId = intent.getStringExtra(BACKEND_ID);
-            mAutoBackup = intent.getBooleanExtra(AUTO_BACKUP, DEFAULT_AUTO_BACKUP);
-            boolean onlyOnWiFi = intent.getBooleanExtra(ONLY_ON_WIFI, DEFAULT_ONLY_ON_WIFI);
             boolean runForeground = intent.getBooleanExtra(RUN_FOREGROUND, DEFAULT_RUN_FOREGROUND);
             mCallerId = intent.getStringExtra(CALLER_ID);
             // execute the action in a safe code-block: if an exception is thrown, it
@@ -156,18 +140,6 @@ public class BackupHandlerIntentService extends IntentService {
                 notifyTaskStarted(action);
                 // check if backend id is available and initialize it
                 mBackendServiceAPI = BackendServiceFactory.getServiceAPIById(this, backendId);
-                // the first step is to check if the task should be executed only when
-                // connected on a WiFi network: in this case we need to check if the
-                // device is connected to a WiFi network or stop the task
-                if (onlyOnWiFi && (action == ACTION_BACKUP || action == ACTION_RESTORE)) {
-                    ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-                    if (connectivityManager != null) {
-                        NetworkInfo networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-                        if (!networkInfo.isConnected()) {
-                            throw new WiFiNotConnectedException();
-                        }
-                    }
-                }
                 switch (action) {
                     case ACTION_LIST:
                         onActionList(intent);
@@ -208,57 +180,16 @@ public class BackupHandlerIntentService extends IntentService {
 
     private void onActionBackup(@NonNull Intent intent) throws ExportException, BackendException, IOException {
         IFile remoteFolder = intent.getParcelableExtra(PARENT_FOLDER);
-        File folder = getExternalFilesDir(null);
-        File cache = new File(folder, BACKUP_CACHE_FOLDER);
-        File revision = new File(cache, UUID.randomUUID().toString());
-        try {
-            FileUtils.forceMkdir(revision);
-            String password = intent.getStringExtra(PASSWORD);
-            notifyTaskProgress(ACTION_BACKUP, STATUS_BACKUP_CREATION, 0);
-            File backup = prepareLocalBackupFile(revision, password);
-            notifyTaskProgress(ACTION_BACKUP, STATUS_BACKUP_UPLOADING, 30);
-            IFile uploaded = mBackendServiceAPI.uploadFile(remoteFolder, backup, new ProgressInputStream.UploadProgressListener() {
+        String password = intent.getStringExtra(PASSWORD);
+        IFile uploaded = BackupOperation.createAndUpload(this, mBackendServiceAPI, remoteFolder, password, new BackupOperation.ProgressListener() {
 
-                @Override
-                public void onUploadProgressUpdate(int percentage) {
-                    int realProgress = 30 + (percentage * 70 / 100);
-                    notifyTaskProgress(ACTION_BACKUP, STATUS_BACKUP_UPLOADING, realProgress);
-                }
+            @Override
+            public void onProgress(int status, int progress) {
+                notifyTaskProgress(ACTION_BACKUP, status, progress);
+            }
 
-            });
-            notifyTaskProgress(ACTION_BACKUP, STATUS_BACKUP_UPLOADING, 100);
-            notifyUploadTaskFinished(uploaded);
-        } finally {
-            FileUtils.deleteQuietly(revision);
-        }
-    }
-
-    /**
-     * Create a local zip file that contains the database entries according to the backup
-     * file specification. If a password is provided, set it to the zip file.
-     * @param folder where the local backup is stored.
-     * @param password if the backup should be protected.
-     * @return the backup file is success.
-     */
-    private File prepareLocalBackupFile(@NonNull File folder, @Nullable String password) throws ExportException, IOException {
-        File backupFile = createBackupFile(folder, BackupManager.getExtension(!TextUtils.isEmpty(password)));
-        AbstractBackupExporter exporter = new DefaultBackupExporter(getContentResolver(), backupFile, password);
-        exporter.exportDatabase(getFilesDir());
-        exporter.exportAttachments(getAttachmentFolder());
-        return backupFile;
-    }
-
-    private File createBackupFile(@NonNull File folder, @NonNull String extension) {
-        String datetime = DateUtils.getDateTimeString(new Date(), FILE_DATETIME_PATTERN);
-        String name = String.format(Locale.ENGLISH, OUTPUT_FILE, datetime, extension);
-        return new File(folder, name);
-    }
-
-    private File getAttachmentFolder() throws IOException {
-        File root = getExternalFilesDir(null);
-        File folder = new File(root, ATTACHMENT_FOLDER);
-        FileUtils.forceMkdir(folder);
-        return folder;
+        });
+        notifyUploadTaskFinished(uploaded);
     }
 
     private void onActionRestore(@NonNull Intent intent) throws ImportException, BackendException, IOException {
@@ -281,7 +212,12 @@ public class BackupHandlerIntentService extends IntentService {
                 });
                 notifyTaskProgress(ACTION_RESTORE, STATUS_BACKUP_RESTORING, 75);
                 String password = intent.getStringExtra(PASSWORD);
-                restoreLocalBackupFile(backup, password);
+                // The auto backup no longer runs on this service's serial queue, so a sweep
+                // can now be reading the database and the attachment folder that the import
+                // is about to replace and empty.
+                synchronized (BackupOperation.LOCK) {
+                    restoreLocalBackupFile(backup, password);
+                }
                 notifyTaskProgress(ACTION_RESTORE, STATUS_BACKUP_RESTORING, 100);
                 DataContentProvider.notifyDatabaseIsChanged(this);
                 PreferenceManager.setLastTimeDataIsChanged(0L);
@@ -310,7 +246,7 @@ public class BackupHandlerIntentService extends IntentService {
         try {
             File databaseFile = getDatabasePath(SQLDatabaseImporter.DATABASE_NAME);
             importer.importDatabase(temporaryFolder, databaseFile.getParentFile());
-            importer.importAttachments(getAttachmentFolder());
+            importer.importAttachments(BackupOperation.getAttachmentFolder(this));
         } finally {
             FileUtils.cleanDirectory(temporaryFolder);
         }
@@ -406,13 +342,11 @@ public class BackupHandlerIntentService extends IntentService {
         extras.putString(CALLER_ID, mCallerId);
         mReporter.broadcast(LocalAction.ACTION_BACKUP_SERVICE_FAILED, extras);
         // update the notification if required
-        if (mNotificationBuilder != null || mAutoBackup) {
+        if (mNotificationBuilder != null) {
             mNotificationBuilder = mReporter.newNotification(NotificationContract.NOTIFICATION_CHANNEL_ERROR)
                     .setContentTitle(getNotificationContentTitle(action, true))
                     .setCategory(NotificationCompat.CATEGORY_ERROR);
-            if (exception instanceof WiFiNotConnectedException) {
-                setupRetryNotification(baseIntent, action, R.string.notification_content_backup_error_wifi_network);
-            } else if (exception instanceof BackendException) {
+            if (exception instanceof BackendException) {
                 if (((BackendException) exception).isRecoverable()) {
                     setupRetryNotification(baseIntent, action, R.string.notification_content_backup_error_backend_recoverable);
                 } else {
@@ -432,10 +366,16 @@ public class BackupHandlerIntentService extends IntentService {
     }
 
     /**
-     * Build the error notification body for the two recoverable failures that
-     * offer a retry action. Both cases copy the same service arguments into the
-     * retry pending intent and differ only in the content text, so the copy is
-     * done once here and the text resource is passed in.
+     * Build the error notification body for a recoverable failure that offers a
+     * retry action, copying the service arguments into the retry pending intent.
+     *
+     * Nothing reaches this today. The builder it fills is created only when the
+     * service was asked to run in the foreground, and the only caller that asks
+     * is the retry action itself, so the first notification carrying that action
+     * is never built. The auto backup used to reach it and no longer uses this
+     * service. Left in place rather than deleted with the rest, because the
+     * screen that starts a backup is the thing that should decide whether a
+     * failure it is watching also deserves a notification.
      */
     private void setupRetryNotification(Intent baseIntent, int action, int contentTextRes) {
         // create a copy of the arguments used in this service
@@ -460,10 +400,4 @@ public class BackupHandlerIntentService extends IntentService {
         mNotificationBuilder.addAction(R.drawable.ic_refresh_black_24dp, getString(R.string.notification_action_retry), pendingIntent);
     }
 
-    private class WiFiNotConnectedException extends Exception {
-
-        private WiFiNotConnectedException() {
-            super("the device is not connected to a WiFi network");
-        }
-    }
 }

@@ -82,7 +82,7 @@ public class App extends Application {
         // canceled by the OS. This is the best place where all those things can be scheduled again.
         DailyBroadcastReceiver.scheduleDailyNotification(this);
         RecurrenceBroadcastReceiver.scheduleRecurrenceTask(this);
-        AutoBackupBroadcastReceiver.scheduleAutoBackupTask(this);
+        AutoBackupBroadcastReceiver.ensureAutoBackupTaskScheduled(this);
     }
 
     @Override
