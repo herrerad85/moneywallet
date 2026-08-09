@@ -25,12 +25,14 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.View;
 
 import com.oriondev.moneywallet.R;
@@ -50,6 +52,7 @@ public class PieChart extends View {
     private final static int DEFAULT_HOLE_COLOR = Color.WHITE;
     private final static int DEFAULT_LINE_COLOR = Color.GRAY;
     private final static float DEFAULT_LINE_SIZE = 3f;
+    private final static float PERCENTAGE_TEXT_SIZE_SP = 12f;
 
     // current data
     private int[] mColors = new int[] {
@@ -75,6 +78,7 @@ public class PieChart extends View {
     private RectF mRectangle;
     private Paint mSlicePaint;
     private Paint mLinePaint;
+    private final Rect mTextBounds = new Rect();
 
     private boolean mIsRunning;
     private PieData mPieData;
@@ -304,9 +308,9 @@ public class PieChart extends View {
         float iconDistance = maxRadius * 0.8f;
         float iconRadius = maxRadius * 0.1f;
         float textDistance = maxRadius * 0.95f;
-        float textSize = 30;
         mLinePaint.setColor(mLineColor);
-        mLinePaint.setTextSize(textSize);
+        mLinePaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
+                PERCENTAGE_TEXT_SIZE_SP, getResources().getDisplayMetrics()));
         // set padding
         mRectangle.set(centerX - chartRadius, centerY - chartRadius, centerX + chartRadius, centerY + chartRadius);
         // calculating initial angle
@@ -339,11 +343,22 @@ public class PieChart extends View {
             }
             // draw percentage
             if (mPercentageEnabled) {
-                // calculate center text coordinates
+                String label = Math.round(sweepAngle * 100 / 360f) + "%";
+                mLinePaint.getTextBounds(label, 0, label.length(), mTextBounds);
+                // half the advance, which is what a centered alignment lays the string out around
+                float halfAdvance = mLinePaint.measureText(label) / 2;
+                // calculate center text coordinates, putting the middle of the glyphs on the point.
+                // The old offset put the baseline half a text size below it, more than half the
+                // height of these glyphs, so the label sat low
                 float textX = ((float) (Math.cos(Math.toRadians(iconAngle)) * textDistance)) + centerX;
-                float textY = ((float) (Math.sin(Math.toRadians(iconAngle)) * textDistance)) + centerY + (textSize / 2);
-                int percentage = Math.round(sweepAngle * 100 / 360f);
-                c.drawText(String.valueOf(percentage) + "%", textX, textY, mLinePaint);
+                float textY = ((float) (Math.sin(Math.toRadians(iconAngle)) * textDistance)) + centerY - ((mTextBounds.top + mTextBounds.bottom) / 2f);
+                // a percentage cut off by the edge of the view reads as a different number rather
+                // than as a clipped label, so one that would cross an edge is moved in instead, at
+                // the cost of sitting nearer its icon. A label wider than the view cannot be saved
+                // this way and is still cut, from the trailing end
+                textX = Math.max(Math.min(textX, measuredWidth - halfAdvance), halfAdvance);
+                textY = Math.max(Math.min(textY, measuredHeight - mTextBounds.bottom), -mTextBounds.top);
+                c.drawText(label, textX, textY, mLinePaint);
             }
         }
         // draw hole if required
