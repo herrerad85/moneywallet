@@ -25,6 +25,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import androidx.core.content.pm.ShortcutInfoCompat;
+import androidx.core.content.pm.ShortcutManagerCompat;
+import androidx.core.graphics.drawable.IconCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.view.View;
 import android.widget.Button;
@@ -38,6 +41,8 @@ import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.base.ThemedActivity;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 import com.pnikosis.materialishprogress.ProgressWheel;
+
+import java.util.Arrays;
 
 /**
  * Created by andrea on 30/07/18.
@@ -116,7 +121,42 @@ public class LauncherActivity extends ThemedActivity {
 
     private void startMainActivity() {
         startActivity(new Intent(this, MainActivity.class));
+        publishShortcuts();
         finish();
+    }
+
+    /**
+     * Publish the launcher shortcuts. Every route into the app passes through
+     * {@link #startMainActivity()}, which is why they are published from there, and after the
+     * hand off rather than before it so that publishing them is never in front of startup.
+     *
+     * The intents are built from the activity classes, so the package is this build's own in every
+     * variant. The static definition these replace named the release application id as a literal,
+     * which is not the package of any build carrying an applicationIdSuffix.
+     *
+     * The rank is the ordering decision made when these were last touched: the launcher sorts by
+     * rank ascending, and recording a transaction is what people open this app to do, while a
+     * transfer between their own wallets is the rarer of the two.
+     *
+     * The ids are the ones the static definition used, so a pinned copy of either is addressed by
+     * the same id rather than becoming a second entry beside it.
+     */
+    private void publishShortcuts() {
+        ShortcutInfoCompat transaction = new ShortcutInfoCompat.Builder(this, "fast_transaction")
+                .setShortLabel(getString(R.string.title_activity_new_transaction))
+                .setLongLabel(getString(R.string.title_activity_new_transaction))
+                .setIcon(IconCompat.createWithResource(this, R.drawable.ic_add_24dp))
+                .setIntent(new Intent(Intent.ACTION_VIEW, null, this, NewEditTransactionActivity.class))
+                .setRank(0)
+                .build();
+        ShortcutInfoCompat transfer = new ShortcutInfoCompat.Builder(this, "fast_transfer")
+                .setShortLabel(getString(R.string.title_activity_new_transfer))
+                .setLongLabel(getString(R.string.title_activity_new_transfer))
+                .setIcon(IconCompat.createWithResource(this, R.drawable.ic_transfer_24dp))
+                .setIntent(new Intent(Intent.ACTION_VIEW, null, this, NewEditTransferActivity.class))
+                .setRank(1)
+                .build();
+        ShortcutManagerCompat.addDynamicShortcuts(this, Arrays.asList(transaction, transfer));
     }
 
     private void showUpgradeLegacyEditionErrorMessage() {
