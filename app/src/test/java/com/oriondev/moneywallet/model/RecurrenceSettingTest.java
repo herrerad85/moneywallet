@@ -216,4 +216,83 @@ public class RecurrenceSettingTest {
         assertDay(update.getLastOccurrence(), 2020, 2, 3);
         assertNull(update.getNextOccurrence());
     }
+
+    // ---------------------------------------------------------------------------------------------
+    // editing a saved recurrence. resumeAfterEdit owns the whole decision, so these fail if the
+    // editor path in SQLDatabase is reverted to writing the pointer unconditionally.
+    // ---------------------------------------------------------------------------------------------
+
+    /** The service only walks forward from the pointer, so an unrelated edit must not move it. */
+    @Test
+    public void anEditThatLeavesTheScheduleAloneKeepsAnAlreadyOwedPointer() {
+        // the service is behind: the stored pointer is a month in the past and nothing has emitted it
+        String owed = sql(day(2020, 1, 10));
+        String resumed = RecurrenceSetting.resumeAfterEdit(
+                "FREQ=MONTHLY", sql(day(2020, 0, 10)), owed,
+                "FREQ=MONTHLY", sql(day(2020, 0, 10)), day(2020, 2, 5));
+        assertEquals(owed, resumed);
+    }
+
+    @Test
+    public void anEditThatLeavesTheScheduleAloneKeepsAFuturePointerToo() {
+        String pointer = sql(day(2020, 3, 10));
+        String resumed = RecurrenceSetting.resumeAfterEdit(
+                "FREQ=MONTHLY", sql(day(2020, 0, 10)), pointer,
+                "FREQ=MONTHLY", sql(day(2020, 0, 10)), day(2020, 2, 5));
+        assertEquals(pointer, resumed);
+    }
+
+    @Test
+    public void anEditThatLeavesTheScheduleAloneKeepsAnExhaustedPointer() {
+        String resumed = RecurrenceSetting.resumeAfterEdit(
+                "FREQ=DAILY;UNTIL=20200201", sql(day(2020, 0, 10)), null,
+                "FREQ=DAILY;UNTIL=20200201", sql(day(2020, 0, 10)), day(2020, 2, 5));
+        assertNull(resumed);
+    }
+
+    @Test
+    public void changingTheRuleMovesThePointerOntoTheNewCadence() {
+        // daily would fire tomorrow; monthly keeps the day of month the rule started on
+        String resumed = RecurrenceSetting.resumeAfterEdit(
+                "FREQ=DAILY", sql(day(2020, 0, 10)), sql(day(2020, 2, 6)),
+                "FREQ=MONTHLY", sql(day(2020, 0, 10)), day(2020, 2, 5));
+        assertEquals(sql(day(2020, 2, 10)), resumed);
+    }
+
+    @Test
+    public void changingOnlyTheStartDateAlsoMovesThePointer() {
+        String resumed = RecurrenceSetting.resumeAfterEdit(
+                "FREQ=MONTHLY", sql(day(2020, 0, 10)), sql(day(2020, 2, 10)),
+                "FREQ=MONTHLY", sql(day(2020, 0, 20)), day(2020, 2, 5));
+        assertEquals(sql(day(2020, 2, 20)), resumed);
+    }
+
+    /** Pinned deliberately: a rule change does drop occurrences the old rule left owed. */
+    @Test
+    public void changingTheRuleDropsAnOwedPointer() {
+        String resumed = RecurrenceSetting.resumeAfterEdit(
+                "FREQ=DAILY", sql(day(2020, 0, 10)), sql(day(2020, 1, 10)),
+                "FREQ=MONTHLY", sql(day(2020, 0, 10)), day(2020, 2, 5));
+        assertEquals(sql(day(2020, 2, 10)), resumed);
+    }
+
+    @Test
+    public void editingOntoAnAlreadyExhaustedRuleLeavesNoNextOccurrence() {
+        String resumed = RecurrenceSetting.resumeAfterEdit(
+                "FREQ=DAILY", sql(day(2020, 0, 10)), sql(day(2020, 2, 6)),
+                "FREQ=DAILY;UNTIL=20200201", sql(day(2020, 0, 10)), day(2020, 2, 5));
+        assertNull(resumed);
+    }
+
+    @Test
+    public void editingAScheduleThatHasNotStartedResumesOnItsStartDate() {
+        String resumed = RecurrenceSetting.resumeAfterEdit(
+                "FREQ=DAILY", sql(day(2020, 0, 10)), sql(day(2020, 4, 2)),
+                "FREQ=MONTHLY", sql(day(2020, 5, 10)), day(2020, 4, 1));
+        assertEquals(sql(day(2020, 5, 10)), resumed);
+    }
+
+    private static String sql(Date date) {
+        return DateUtils.getSQLDateString(date);
+    }
 }

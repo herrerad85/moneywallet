@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -47,6 +48,8 @@ import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.RecurrenceSetting;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.ui.activity.NewEditItemActivity;
+import com.oriondev.moneywallet.ui.activity.NewEditRecurrentTransactionActivity;
 import com.oriondev.moneywallet.ui.fragment.base.SecondaryPanelFragment;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 import com.oriondev.moneywallet.utils.CurrencyManager;
@@ -112,13 +115,18 @@ public class RecurrentTransactionItemFragment extends SecondaryPanelFragment imp
 
     @Override
     protected int onInflateMenu() {
-        return R.menu.menu_delete_item;
+        return R.menu.menu_edit_delete_item;
     }
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         int itemId = item.getItemId();
-        if (itemId == R.id.action_delete_item) {
+        if (itemId == R.id.action_edit_item) {
+            Intent intent = new Intent(getActivity(), NewEditRecurrentTransactionActivity.class);
+            intent.putExtra(NewEditItemActivity.MODE, NewEditItemActivity.Mode.EDIT_ITEM);
+            intent.putExtra(NewEditItemActivity.ID, getItemId());
+            startActivity(intent);
+        } else if (itemId == R.id.action_delete_item) {
             showDeleteDialog(getActivity());
         }
         return false;

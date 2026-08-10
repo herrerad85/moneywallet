@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by andrea on 07/11/18.
@@ -369,6 +370,39 @@ public class RecurrenceSetting implements Parcelable {
                 DateUtils.getFixedDate(lastOccurrence),
                 nextOccurrence != null ? DateUtils.getFixedDate(nextOccurrence) : null
         );
+    }
+
+    /**
+     * Where an edited recurrence resumes, as an SQL date string, or null when the rule it now
+     * carries is exhausted. Every date argument is an SQL date string as stored on the row.
+     *
+     * When neither the rule nor the start date moved, the stored pointer is handed back
+     * untouched. An edit to an amount, a description or a category cannot then step over
+     * occurrences that have come due and have not yet been written to the ledger, and that
+     * matters here because the recurrence service only ever walks forward from this pointer, so
+     * an occurrence it has been moved past is never written.
+     *
+     * When the schedule itself moved, the pointer becomes the first instance of the new rule
+     * after {@code now}, seeded from the new start date so the rule keeps the anchor its own
+     * fields are relative to. Occurrences the old rule left owed are not carried across, since
+     * the new rule need not contain them at all.
+     *
+     * @param oldRule           rule currently stored on the row.
+     * @param oldStartDate      start date currently stored on the row.
+     * @param oldNextOccurrence pointer currently stored on the row, possibly already past.
+     * @param newRule           rule the editor is saving.
+     * @param newStartDate      start date the editor is saving.
+     * @param now               the moment the edit is being saved at.
+     * @return the value the NEXT_OCCURRENCE column must be set to.
+     */
+    public static String resumeAfterEdit(String oldRule, String oldStartDate, String oldNextOccurrence,
+                                         String newRule, String newStartDate, Date now) {
+        if (Objects.equals(oldRule, newRule) && Objects.equals(oldStartDate, newStartDate)) {
+            return oldNextOccurrence;
+        }
+        Date startDate = DateUtils.getDateFromSQLDateString(newStartDate);
+        Date nextOccurrence = computeOccurrences(newRule, startDate, now).getNextOccurrence();
+        return nextOccurrence != null ? DateUtils.getSQLDateString(nextOccurrence) : null;
     }
 
     public static class Builder {

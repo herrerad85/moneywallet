@@ -30,6 +30,7 @@ import android.text.TextUtils;
 import android.util.SparseLongArray;
 
 import com.oriondev.moneywallet.model.CurrencyUnit;
+import com.oriondev.moneywallet.model.RecurrenceSetting;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.DateUtils;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
@@ -3412,7 +3413,35 @@ import java.util.UUID;
             String[] selectionArgs = new String[] {String.valueOf(transactionId)};
             return getWritableDatabase().update(Schema.RecurrentTransaction.TABLE, cv, where, selectionArgs);
         }
-        return 0;
+        String rule = contentValues.getAsString(Contract.RecurrentTransaction.RULE);
+        try {
+            // parsed for its exception: an invalid rule is refused here as it is on insert
+            new RecurrenceRule(rule);
+        } catch (InvalidRecurrenceRuleException e) {
+            throw new SQLiteDataException(Contract.ErrorCode.INVALID_RECURRENCE_RULE, e.getMessage());
+        }
+        String startDate = contentValues.getAsString(Contract.RecurrentTransaction.START_DATE);
+        ContentValues cv = new ContentValues();
+        cv.put(Schema.RecurrentTransaction.MONEY, contentValues.getAsLong(Contract.RecurrentTransaction.MONEY));
+        cv.put(Schema.RecurrentTransaction.DESCRIPTION, contentValues.getAsString(Contract.RecurrentTransaction.DESCRIPTION));
+        cv.put(Schema.RecurrentTransaction.CATEGORY, contentValues.getAsLong(Contract.RecurrentTransaction.CATEGORY_ID));
+        cv.put(Schema.RecurrentTransaction.DIRECTION, contentValues.getAsInteger(Contract.RecurrentTransaction.DIRECTION));
+        cv.put(Schema.RecurrentTransaction.WALLET, contentValues.getAsLong(Contract.RecurrentTransaction.WALLET_ID));
+        cv.put(Schema.RecurrentTransaction.PLACE, contentValues.getAsLong(Contract.RecurrentTransaction.PLACE_ID));
+        cv.put(Schema.RecurrentTransaction.EVENT, contentValues.getAsLong(Contract.RecurrentTransaction.EVENT_ID));
+        cv.put(Schema.RecurrentTransaction.NOTE, contentValues.getAsString(Contract.RecurrentTransaction.NOTE));
+        cv.put(Schema.RecurrentTransaction.CONFIRMED, contentValues.getAsBoolean(Contract.RecurrentTransaction.CONFIRMED));
+        cv.put(Schema.RecurrentTransaction.COUNT_IN_TOTAL, contentValues.getAsBoolean(Contract.RecurrentTransaction.COUNT_IN_TOTAL));
+        cv.put(Schema.RecurrentTransaction.START_DATE, startDate);
+        cv.put(Schema.RecurrentTransaction.RULE, rule);
+        cv.put(Schema.RecurrentTransaction.NEXT_OCCURRENCE, resumedNextOccurrence(
+                Schema.RecurrentTransaction.TABLE, Schema.RecurrentTransaction.ID,
+                Schema.RecurrentTransaction.RULE, Schema.RecurrentTransaction.START_DATE,
+                Schema.RecurrentTransaction.NEXT_OCCURRENCE, transactionId, rule, startDate));
+        cv.put(Schema.RecurrentTransaction.LAST_EDIT, System.currentTimeMillis());
+        String where = Schema.RecurrentTransaction.ID + " = ?";
+        String[] selectionArgs = new String[] {String.valueOf(transactionId)};
+        return getWritableDatabase().update(Schema.RecurrentTransaction.TABLE, cv, where, selectionArgs);
     }
 
     /**
@@ -3667,7 +3696,36 @@ import java.util.UUID;
             String[] selectionArgs = new String[] {String.valueOf(transferId)};
             return getWritableDatabase().update(Schema.RecurrentTransfer.TABLE, cv, where, selectionArgs);
         }
-        return 0;
+        String rule = contentValues.getAsString(Contract.RecurrentTransfer.RULE);
+        try {
+            // parsed for its exception: an invalid rule is refused here as it is on insert
+            new RecurrenceRule(rule);
+        } catch (InvalidRecurrenceRuleException e) {
+            throw new SQLiteDataException(Contract.ErrorCode.INVALID_RECURRENCE_RULE, e.getMessage());
+        }
+        String startDate = contentValues.getAsString(Contract.RecurrentTransfer.START_DATE);
+        ContentValues cv = new ContentValues();
+        cv.put(Schema.RecurrentTransfer.DESCRIPTION, contentValues.getAsString(Contract.RecurrentTransfer.DESCRIPTION));
+        cv.put(Schema.RecurrentTransfer.WALLET_FROM, contentValues.getAsLong(Contract.RecurrentTransfer.WALLET_FROM_ID));
+        cv.put(Schema.RecurrentTransfer.WALLET_TO, contentValues.getAsLong(Contract.RecurrentTransfer.WALLET_TO_ID));
+        cv.put(Schema.RecurrentTransfer.MONEY_FROM, contentValues.getAsLong(Contract.RecurrentTransfer.MONEY_FROM));
+        cv.put(Schema.RecurrentTransfer.MONEY_TO, contentValues.getAsLong(Contract.RecurrentTransfer.MONEY_TO));
+        cv.put(Schema.RecurrentTransfer.MONEY_TAX, contentValues.getAsLong(Contract.RecurrentTransfer.MONEY_TAX));
+        cv.put(Schema.RecurrentTransfer.NOTE, contentValues.getAsString(Contract.RecurrentTransfer.NOTE));
+        cv.put(Schema.RecurrentTransfer.EVENT, contentValues.getAsLong(Contract.RecurrentTransfer.EVENT_ID));
+        cv.put(Schema.RecurrentTransfer.PLACE, contentValues.getAsLong(Contract.RecurrentTransfer.PLACE_ID));
+        cv.put(Schema.RecurrentTransfer.CONFIRMED, contentValues.getAsBoolean(Contract.RecurrentTransfer.CONFIRMED));
+        cv.put(Schema.RecurrentTransfer.COUNT_IN_TOTAL, contentValues.getAsBoolean(Contract.RecurrentTransfer.COUNT_IN_TOTAL));
+        cv.put(Schema.RecurrentTransfer.START_DATE, startDate);
+        cv.put(Schema.RecurrentTransfer.RULE, rule);
+        cv.put(Schema.RecurrentTransfer.NEXT_OCCURRENCE, resumedNextOccurrence(
+                Schema.RecurrentTransfer.TABLE, Schema.RecurrentTransfer.ID,
+                Schema.RecurrentTransfer.RULE, Schema.RecurrentTransfer.START_DATE,
+                Schema.RecurrentTransfer.NEXT_OCCURRENCE, transferId, rule, startDate));
+        cv.put(Schema.RecurrentTransfer.LAST_EDIT, System.currentTimeMillis());
+        String where = Schema.RecurrentTransfer.ID + " = ?";
+        String[] selectionArgs = new String[] {String.valueOf(transferId)};
+        return getWritableDatabase().update(Schema.RecurrentTransfer.TABLE, cv, where, selectionArgs);
     }
 
     /**
@@ -4488,6 +4546,42 @@ import java.util.UUID;
      */
     private String getRecurrentItemUUID(String recurrenceUUID, Date date) {
         return String.format("%s:%s", recurrenceUUID, DateUtils.getSQLDateString(date));
+    }
+
+    /**
+     * Read the schedule currently stored on a recurrence row and hand it, together with the
+     * schedule the editor is saving, to {@link RecurrenceSetting#resumeAfterEdit}, which owns
+     * the decision. Both recurrence tables use this, so the caller names every column.
+     *
+     * @param table table holding the row.
+     * @param idColumn primary key column of that table.
+     * @param ruleColumn rule column of that table.
+     * @param startDateColumn start date column of that table.
+     * @param nextOccurrenceColumn next occurrence column of that table.
+     * @param id id of the row being edited.
+     * @param newRule rule the editor is saving.
+     * @param newStartDate start date the editor is saving, as an SQL date string.
+     * @return the value the next occurrence column must be set to, null when the rule is exhausted.
+     */
+    private String resumedNextOccurrence(String table, String idColumn, String ruleColumn,
+                                         String startDateColumn, String nextOccurrenceColumn,
+                                         long id, String newRule, String newStartDate) {
+        String oldRule = null;
+        String oldStartDate = null;
+        String oldNextOccurrence = null;
+        String[] projection = new String[] {ruleColumn, startDateColumn, nextOccurrenceColumn};
+        Cursor cursor = getWritableDatabase().query(table, projection, idColumn + " = ?",
+                new String[] {String.valueOf(id)}, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                oldRule = cursor.getString(0);
+                oldStartDate = cursor.getString(1);
+                oldNextOccurrence = cursor.isNull(2) ? null : cursor.getString(2);
+            }
+            cursor.close();
+        }
+        return RecurrenceSetting.resumeAfterEdit(oldRule, oldStartDate, oldNextOccurrence,
+                newRule, newStartDate, new Date());
     }
 
     /**
