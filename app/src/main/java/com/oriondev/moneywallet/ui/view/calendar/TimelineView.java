@@ -24,8 +24,6 @@ import android.os.Build;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import android.text.Layout;
-import android.text.TextPaint;
 import android.text.format.DateUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -107,46 +105,33 @@ public class TimelineView extends RecyclerView {
     }
 
     /**
+     * The seven labels this strip renders. Built from the rendered form rather than passing the
+     * array behind it, which is indexed from {@link Calendar#SUNDAY} rather than from zero and
+     * does not carry the uppercasing this class adds.
+     */
+    private String[] dayLabels() {
+        String[] labels = new String[Calendar.SATURDAY - Calendar.SUNDAY + 1];
+        for (int dayOfWeek = Calendar.SUNDAY; dayOfWeek <= Calendar.SATURDAY; dayOfWeek++) {
+            labels[dayOfWeek - Calendar.SUNDAY] = dayLabel(dayOfWeek);
+        }
+        return labels;
+    }
+
+    /**
      * One text size for all seven weekday labels, small enough that each of them measures
-     * within a cell. Returns the size unchanged if the cell has no fixed width to fit to,
-     * and for most locales it returns it unchanged anyway.
+     * within a cell. For most locales it returns the starting size unchanged.
      *
-     * Of the locales bundled here only Malayalam grows wide enough to need this, and only
-     * at accessibility font scales. The label comes from the system locale rather than
-     * from those translations, so the check is not limited to that set. Overflow is sized
-     * away rather than cut because cutting is the defect this class just removed, and one
-     * size is derived for the whole strip so that neighbouring letters match, where a size
-     * per cell would let adjacent letters differ.
+     * Of the locales bundled here only Malayalam grows wide enough to need this, and only at
+     * accessibility font scales. The label comes from the system locale rather than from those
+     * translations, so the check is not limited to that set.
      */
     private float dayLabelSize(TextView sample, View cell) {
         if (dayLabelSize > 0f) {
             return dayLabelSize;
         }
-        dayLabelSize = sample.getTextSize();
         int available = cell.getLayoutParams().width - cell.getPaddingLeft() - cell.getPaddingRight();
-        if (available <= 0) {
-            return dayLabelSize;
-        }
-        // Step down and measure again until every label fits, rather than deriving a ratio and
-        // trusting it. Measuring every label rather than only the one that came out widest
-        // at the starting size costs nothing here and removes the question of whether that
-        // ranking holds at every size.
-        TextPaint paint = new TextPaint(sample.getPaint());
-        while (dayLabelSize > 1f && !labelsFit(paint, available)) {
-            dayLabelSize -= 0.5f;
-            paint.setTextSize(dayLabelSize);
-        }
+        dayLabelSize = LabelFit.sizeToFit(sample.getPaint(), dayLabels(), available);
         return dayLabelSize;
-    }
-
-    private boolean labelsFit(TextPaint paint, int available) {
-        for (int dayOfWeek = Calendar.SUNDAY; dayOfWeek <= Calendar.SATURDAY; dayOfWeek++) {
-            // Rounded up, which is what a TextView does with the width it asks for.
-            if (Math.ceil(Layout.getDesiredWidth(dayLabel(dayOfWeek), paint)) > available) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private void init() {

@@ -47,8 +47,8 @@
         android:layout_marginTop="16dp"
         android:ellipsize="end"
         android:gravity="center"
-        android:maxLength="8"
+        android:maxLines="1"
         android:textSize="@dimen/view_mti_month_lbl_text"
-        tools:text="Feb\n17"/>
+        tools:text="Feb 17"/>
 
 </FrameLayout>
