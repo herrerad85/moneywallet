@@ -83,4 +83,23 @@ public final class MoneyScale {
                 .movePointRight(toDecimals)
                 .longValue();
     }
+
+    /**
+     * Recover the rate {@link #convert(long, int, int, double)} was called with from the pair of
+     * stored amounts it produced. Since convert shifts the decimal point between the two currency
+     * scales as well as applying the rate, the bare ratio of the stored values is
+     * {@code rate x 10^(toDecimals - fromDecimals)} rather than the rate, and feeding that ratio
+     * back into convert would apply the shift a second time.
+     *
+     * Returns zero when the source amount is zero: the ratio is undefined there, and the infinite
+     * or NaN double it would otherwise produce cannot be read by
+     * {@link BigDecimal#valueOf(double)}. Zero is the value the currency pickers already treat as
+     * no rate known.
+     */
+    public static double deriveRate(long fromMinorUnits, long toMinorUnits, int fromDecimals, int toDecimals) {
+        if (fromMinorUnits == 0) {
+            return 0D;
+        }
+        return (double) toMinorUnits / fromMinorUnits * Math.pow(10, fromDecimals - toDecimals);
+    }
 }

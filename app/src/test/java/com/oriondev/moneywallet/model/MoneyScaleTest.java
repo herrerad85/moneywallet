@@ -3,6 +3,7 @@ package com.oriondev.moneywallet.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -166,6 +167,84 @@ public class MoneyScaleTest {
         assertNotEquals(exact, buggyResult);
         assertTrue(buggyResult.compareTo(new BigDecimal("99999999999999991611392")) == 0);
         assertTrue(canonicalResult.compareTo(exact) == 0);
+    }
+
+    // regression: the three transfer editors derived the exchange rate on load as
+    // (double) moneyTo / moneyFrom. convert() shifts the decimal point between the two
+    // currency scales as well as applying the rate, so that ratio carries the shift and
+    // saving applied it a second time.
+
+    @Test
+    public void deriveRate_thenConvert_leavesTheStoredAmountWhereItWas() {
+        // Opening a transfer and saving it again without touching the amounts is the flow
+        // that corrupted the destination value: the editor derives a rate from the stored
+        // pair on load and converts with it on save.
+        long[][] storedPairs = {
+                {10000L, 15000L}, {15000L, 10000L}, {6499L, 5832L}, {100000L, 92L}, {7L, 900000L}
+        };
+        for (int fromDecimals = 0; fromDecimals <= 3; fromDecimals++) {
+            for (int toDecimals = 0; toDecimals <= 3; toDecimals++) {
+                for (long[] pair : storedPairs) {
+                    long from = pair[0];
+                    long to = pair[1];
+                    String where = "from=" + from + " to=" + to
+                            + " fromDecimals=" + fromDecimals + " toDecimals=" + toDecimals;
+
+                    double rate = MoneyScale.deriveRate(from, to, fromDecimals, toDecimals);
+                    long resaved = MoneyScale.convert(from, fromDecimals, toDecimals, rate);
+                    // convert truncates toward zero, so a non terminating ratio can cost one
+                    // minor unit. That is a property of convert and not of the derivation.
+                    assertTrue(where + " moved to " + resaved, Math.abs(resaved - to) <= 1L);
+
+                    if (fromDecimals != toDecimals) {
+                        // the old derivation, kept here so this test discriminates: it is wrong
+                        // by the whole scale factor between the two currencies, not by one unit
+                        double oldRate = (double) to / from;
+                        long oldResaved = MoneyScale.convert(from, fromDecimals, toDecimals, oldRate);
+                        assertTrue(where + " old path happened to be right", Math.abs(oldResaved - to) > 1L);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    public void deriveRate_matchesTheOldRatioWhenBothScalesAgree() {
+        // Same decimal count on both sides is the case the bug was invisible in, and the
+        // one every same currency transfer takes. It must not move.
+        for (int decimals = 0; decimals <= 3; decimals++) {
+            assertEquals((double) 5832L / 6499L, MoneyScale.deriveRate(6499L, 5832L, decimals, decimals), 0d);
+        }
+    }
+
+    @Test
+    public void deriveRate_appliesTheScaleShiftInTheDirectionConvertUndoes() {
+        // 100.00 in a two decimal currency stored as 15000 in a zero decimal one is a rate
+        // of 150, not the bare ratio of 1.5.
+        assertEquals(150d, MoneyScale.deriveRate(10000L, 15000L, 2, 0), 1e-9);
+        assertEquals(1.5d, MoneyScale.deriveRate(10000L, 15000L, 2, 2), 1e-9);
+        assertEquals(0.015d, MoneyScale.deriveRate(10000L, 15000L, 0, 2), 1e-9);
+    }
+
+    @Test
+    public void deriveRate_zeroSourceAmountYieldsNoRateRatherThanANonFiniteOne() {
+        assertEquals(0d, MoneyScale.deriveRate(0L, 15000L, 2, 0), 0d);
+        assertEquals(0d, MoneyScale.deriveRate(0L, 0L, 2, 2), 0d);
+    }
+
+    @Test
+    public void deriveRate_guardIsLoadBearingBecauseBigDecimalRejectsNonFiniteRates() {
+        // Without the zero check the ratio is infinite or NaN, and convert cannot read it.
+        assertTrue(Double.isInfinite((double) 15000L / 0L));
+        assertTrue(Double.isNaN((double) 0L / 0L));
+        for (double nonFinite : new double[] {Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NaN}) {
+            try {
+                BigDecimal.valueOf(nonFinite);
+                fail("BigDecimal.valueOf accepted " + nonFinite);
+            } catch (NumberFormatException expected) {
+                // this is why deriveRate must not return it
+            }
+        }
     }
 
     private static void assertRoundTrip(long minorUnits, int decimals) {

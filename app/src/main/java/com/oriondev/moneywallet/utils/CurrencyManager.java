@@ -171,6 +171,14 @@ public class CurrencyManager {
     }
 
     /**
+     * @return the number of decimals of the currency, or 0 when the currency is null because
+     *         {@link #getCurrency(String)} did not know the iso code stored on the row.
+     */
+    public static int getDecimals(CurrencyUnit currency) {
+        return currency != null ? currency.getDecimals() : 0;
+    }
+
+    /**
      * @return the rate between the two currencies, or null if either is absent or no rate is
      *         known for the pair.
      */

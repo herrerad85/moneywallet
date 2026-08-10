@@ -36,6 +36,7 @@ import android.widget.TextView;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.Event;
+import com.oriondev.moneywallet.model.MoneyScale;
 import com.oriondev.moneywallet.model.Place;
 import com.oriondev.moneywallet.model.Wallet;
 import com.oriondev.moneywallet.picker.CurrencyConverterPicker;
@@ -324,7 +325,9 @@ public class NewEditTransferModelActivity extends NewEditItemActivity implements
                                     DateUtils.getDateFromSQLDateString(cursor.getString(cursor.getColumnIndex(Contract.TransferModel.EVENT_END_DATE)))
                             );
                         }
-                        conversionRate = (double) moneyTo / moneyFrom;
+                        conversionRate = MoneyScale.deriveRate(moneyFrom, moneyTo,
+                                CurrencyManager.getDecimals(walletFrom.getCurrency()),
+                                CurrencyManager.getDecimals(walletTo.getCurrency()));
                         mConfirmedCheckBox.setChecked(cursor.getInt(cursor.getColumnIndex(Contract.TransferModel.CONFIRMED)) == 1);
                         mCountInTotalCheckBox.setChecked(cursor.getInt(cursor.getColumnIndex(Contract.TransferModel.COUNT_IN_TOTAL)) == 1);
                     }

@@ -37,6 +37,7 @@ import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.broadcast.RecurrenceBroadcastReceiver;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.Event;
+import com.oriondev.moneywallet.model.MoneyScale;
 import com.oriondev.moneywallet.model.Place;
 import com.oriondev.moneywallet.model.RecurrenceSetting;
 import com.oriondev.moneywallet.model.Wallet;
@@ -345,7 +346,9 @@ public class NewEditRecurrentTransferActivity extends NewEditItemActivity implem
                                     DateUtils.getDateFromSQLDateString(cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransfer.EVENT_END_DATE)))
                             );
                         }
-                        conversionRate = (double) moneyTo / moneyFrom;
+                        conversionRate = MoneyScale.deriveRate(moneyFrom, moneyTo,
+                                CurrencyManager.getDecimals(walletFrom.getCurrency()),
+                                CurrencyManager.getDecimals(walletTo.getCurrency()));
                         mConfirmedCheckBox.setChecked(cursor.getInt(cursor.getColumnIndex(Contract.RecurrentTransfer.CONFIRMED)) == 1);
                         mCountInTotalCheckBox.setChecked(cursor.getInt(cursor.getColumnIndex(Contract.RecurrentTransfer.COUNT_IN_TOTAL)) == 1);
                         Date startDate = DateUtils.getDateFromSQLDateString(cursor.getString(cursor.getColumnIndex(Contract.RecurrentTransfer.START_DATE)));
