@@ -20,11 +20,13 @@ This fork is independent and is not endorsed by or affiliated with the original 
 ![Showcase](pictures/showcase.png)
 
 ## Status
-The Android 14/15 compatibility work has landed: a modernized FOSS/OpenStreetMap build, the Android 12+ manifest and PendingIntent updates, and a fix for the startup crash caused by a legacy auto-backup path (reported upstream as [#177](https://github.com/AndreAle94/moneywallet/issues/177) and [#286](https://github.com/AndreAle94/moneywallet/issues/286)). It has been verified on an Android 15 emulator (launch, wallet creation, income and expense entry, totals, and relaunch persistence).
+Tallybook is published on F-Droid and actively maintained. The current release is **1.2.0**. Builds are reproducible and carry the developer signature, so the F-Droid binary matches the one built from this repository.
 
-The rebrand to Tallybook is complete: a new name and application id, a verified backup and restore migration path (see [MIGRATION.md](MIGRATION.md)), export and import fixed under scoped storage, a local-folder backup option that works with file sync tools, and Android 15 edge-to-edge UI polish.
+Since the first release: backups to your own WebDAV server, such as Nextcloud, ownCloud or a NAS, with no third-party account (1.1.0); and a per-app language setting, a run of localization and date and time fixes, and a batch of smaller UI and backup fixes (1.2.0).
 
-Tallybook is published on F-Droid and is now maintained there. Builds are reproducible and carry the developer signature, so the F-Droid binary matches the one built from this repository. Backups can also go to your own WebDAV server, such as Nextcloud, ownCloud or a NAS. Progress is tracked in this repository's [issues](https://github.com/herrerad85/moneywallet/issues).
+Earlier work, all shipped: Android 14/15 compatibility on a modernized FOSS/OpenStreetMap build, the Android 12+ manifest and PendingIntent updates, a fix for the startup crash caused by a legacy auto-backup path (reported upstream as [#177](https://github.com/AndreAle94/moneywallet/issues/177) and [#286](https://github.com/AndreAle94/moneywallet/issues/286)), the rebrand to a new name and application id, a verified backup and restore migration path (see [MIGRATION.md](MIGRATION.md)), export and import under scoped storage, a local-folder backup option that works with file sync tools, and Android 15 edge-to-edge UI polish.
+
+Progress is tracked in this repository's [issues](https://github.com/herrerad85/moneywallet/issues).
 
 ## Build from source
 The fully open-source variant uses OpenStreetMap and no proprietary services. Build the `floss` + `osm` flavors:
@@ -38,14 +40,9 @@ Requirements: a recent Android SDK and JDK 17 or newer. Release builds use JDK 2
 Note on icons: the launcher and the intro illustrations are original artwork for this fork, released under the GPLv3. The category picker icons place glyphs from Phosphor Icons (MIT), Tabler Icons (MIT), Lucide (ISC), and Bootstrap Icons (MIT) on original GPLv3 disc backgrounds; a few remain original artwork. The interface also uses Material Design Icons, licensed under Apache-2.0.
 
 ## Roadmap
-- Android 14/15 compatibility: modernize the build, fix the startup crash, verify core flows. (Done.)
-- Rebrand: new name and application id, build and migration docs. (Done.)
-- Backup and export: fix export and import under scoped storage, and a local-file, Syncthing-friendly backup option. (Done.)
-- F-Droid: listing metadata and screenshots. (Done.)
-- F-Droid: submission, reproducible builds, and publication. (Done.)
-- Self-hosted sync: WebDAV/Nextcloud (upstream [#67](https://github.com/AndreAle94/moneywallet/issues/67)). (Done.)
+The original plan is complete: Android 14/15 compatibility, the rebrand, backup and export fixes, F-Droid submission and publication, and self-hosted WebDAV sync (upstream [#67](https://github.com/AndreAle94/moneywallet/issues/67)) have all shipped.
 
-See the pinned [roadmap](https://github.com/herrerad85/moneywallet/issues/15) for current details.
+Current direction, open work and anything under consideration live in the pinned [roadmap issue](https://github.com/herrerad85/moneywallet/issues/15).
 
 ## Upstream and license
 Tallybook is a fork of [AndreAle94/moneywallet](https://github.com/AndreAle94/moneywallet). MoneyWallet is free software licensed under the GNU General Public License v3.0, and Tallybook remains under the same license. See [LICENSE.md](LICENSE.md).
