@@ -54,6 +54,7 @@ public class PreferenceManager {
     private static final String GROUP_DIGITS = "group_digits";
     private static final String ROUND_DECIMALS = "round_decimals";
     private static final String SHOW_PLUS_MINUS_SYMBOL = "show_plus_minus_symbol";
+    private static final String DEBT_FINISHED_ONLY = "debt_finished_only";
     private static final String DATE_FORMAT = "date_format";
     private static final String FIRST_DAY_OF_WEEK = "first_day_of_week";
     private static final String FIRST_DAY_OF_MONTH = "first_day_of_month";
@@ -263,6 +264,18 @@ public class PreferenceManager {
 
     public static boolean isShowPlusMinusSymbolEnabled() {
         return mPreferences.getBoolean(SHOW_PLUS_MINUS_SYMBOL, false);
+    }
+
+    /**
+     * Whether the debt lists are showing only the debts that are finished. Stored once rather
+     * than held per tab, so the two debt tabs cannot disagree about it.
+     */
+    public static boolean isDebtFinishedOnlyEnabled() {
+        return mPreferences.getBoolean(DEBT_FINISHED_ONLY, false);
+    }
+
+    public static void setDebtFinishedOnlyEnabled(boolean enabled) {
+        mPreferences.edit().putBoolean(DEBT_FINISHED_ONLY, enabled).apply();
     }
 
     public static int getCurrentDateFormatIndex() {

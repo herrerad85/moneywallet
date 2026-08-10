@@ -107,6 +107,11 @@ public class DebtListFragment extends CursorListFragment implements DebtCursorAd
                 selectionArgs = new String[] {String.valueOf(currentWallet)};
             }
             selection += " AND " + Contract.Debt.TYPE + " = " + String.valueOf(debtType.getValue());
+            if (PreferenceManager.isDebtFinishedOnlyEnabled()) {
+                // the same expression the sort and the grouping use, so the filter cannot decide a
+                // debt is finished while the header above it says otherwise
+                selection += " AND " + DebtHeaderCursor.SQL_IS_SETTLED + " = 1";
+            }
             // a debt that has been paid off in full is finished whether or not anyone remembered to
             // archive it, so it belongs below the ones that still need attention. The grouping
             // reads the same value back out of the projection, so the two cannot drift apart.

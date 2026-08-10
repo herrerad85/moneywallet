@@ -103,6 +103,18 @@ public abstract class CursorListFragment extends Fragment implements SwipeRefres
         mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.REFRESHING);
     }
 
+    /**
+     * Run the query behind this list again, for when something outside the list changes what it
+     * should hold. Does nothing before the view exists, since the query is run from
+     * {@link #onViewCreated} anyway once it does.
+     */
+    public void reloadList() {
+        if (mAdvancedRecyclerView != null) {
+            getLoaderManager().restartLoader(DEFAULT_LOADER_ID, null, this);
+            mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.LOADING);
+        }
+    }
+
     protected boolean shouldRefreshOnCurrentWalletChange() {
         return false;
     }

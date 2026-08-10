@@ -24,7 +24,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.view.MenuItem;
+
+import androidx.annotation.MenuRes;
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager.widget.PagerAdapter;
@@ -33,11 +38,13 @@ import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.broadcast.Message;
 import com.oriondev.moneywallet.storage.database.Contract;
+import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.NewEditDebtActivity;
 import com.oriondev.moneywallet.ui.activity.NewEditItemActivity;
 import com.oriondev.moneywallet.ui.adapter.pager.DebtViewPagerAdapter;
 import com.oriondev.moneywallet.ui.fragment.base.MultiPanelViewPagerItemFragment;
 import com.oriondev.moneywallet.ui.fragment.base.SecondaryPanelFragment;
+import com.oriondev.moneywallet.ui.fragment.primary.DebtListFragment;
 import com.oriondev.moneywallet.ui.fragment.secondary.DebtItemFragment;
 
 /**
@@ -61,6 +68,46 @@ public class DebtMultiPanelViewPagerFragment extends MultiPanelViewPagerItemFrag
     @Override
     protected boolean showsCurrentWallet() {
         return true;
+    }
+
+    @MenuRes
+    @Override
+    protected int onInflateMenu() {
+        return R.menu.menu_debt_multipanel_fragment;
+    }
+
+    @Override
+    protected void setupPrimaryToolbar(Toolbar toolbar) {
+        super.setupPrimaryToolbar(toolbar);
+        // the menu is inflated fresh each time the toolbar is set up, so the tick has to be read
+        // back from the stored value rather than left at whatever the resource declares
+        MenuItem item = toolbar.getMenu().findItem(R.id.action_show_finished_debts_only);
+        if (item != null) {
+            item.setChecked(PreferenceManager.isDebtFinishedOnlyEnabled());
+        }
+    }
+
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        if (item.getItemId() == R.id.action_show_finished_debts_only) {
+            boolean enabled = !item.isChecked();
+            item.setChecked(enabled);
+            PreferenceManager.setDebtFinishedOnlyEnabled(enabled);
+            reloadDebtLists();
+        }
+        return false;
+    }
+
+    /**
+     * Both tabs filter on the same stored value, and the pager keeps both alive, so the one that
+     * is not on screen has to be told as well.
+     */
+    private void reloadDebtLists() {
+        for (Fragment fragment : getChildFragmentManager().getFragments()) {
+            if (fragment instanceof DebtListFragment) {
+                ((DebtListFragment) fragment).reloadList();
+            }
+        }
     }
 
     @Override
