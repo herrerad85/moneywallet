@@ -337,6 +337,7 @@
     <string name="message_no_transfer_found">"No transfer found"</string>
     <string name="message_no_category_found">"No category found"</string>
     <string name="message_no_debt_found">"No debt found"</string>
+    <string name="message_no_finished_debt_found">"No finished debt found"</string>
     <string name="message_no_budget_found">"No budget found"</string>
     <string name="message_no_saving_found">"No saving found"</string>
     <string name="message_no_event_found">"No event found"</string>

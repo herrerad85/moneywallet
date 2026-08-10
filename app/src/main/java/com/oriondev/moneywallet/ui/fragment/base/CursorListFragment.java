@@ -25,6 +25,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 import androidx.fragment.app.Fragment;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
@@ -101,6 +102,16 @@ public abstract class CursorListFragment extends Fragment implements SwipeRefres
     public void onRefresh() {
         getLoaderManager().restartLoader(DEFAULT_LOADER_ID, null, this);
         mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.REFRESHING);
+    }
+
+    /**
+     * Change the text shown when the list comes back with nothing in it. The list applies this
+     * when it next becomes empty, so it has to be set before the query it belongs to finishes.
+     */
+    protected void setEmptyText(@StringRes int stringRes) {
+        if (mAdvancedRecyclerView != null) {
+            mAdvancedRecyclerView.setEmptyText(stringRes);
+        }
     }
 
     /**
