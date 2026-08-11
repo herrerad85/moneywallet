@@ -10,7 +10,13 @@
         {
           "icon": "ic_perm_identity_black_24dp",
           "title": "Andrea Alemani",
+          "subtitle": "Original author",
           "link": "https://github.com/AndreAle94"
+        },{
+          "icon": "ic_perm_identity_black_24dp",
+          "title": "herrerad85",
+          "subtitle": "Fork maintainer",
+          "link": "https://github.com/herrerad85"
         },{
           "icon": "ic_github_circle_black_24dp",
           "title_resource": "about_hint_fork",
