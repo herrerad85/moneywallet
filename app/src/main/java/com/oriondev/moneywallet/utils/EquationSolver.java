@@ -27,6 +27,7 @@ import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.MoneyScale;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 
 /**
  * Created by andrea on 31/03/18.
@@ -153,13 +154,22 @@ public class EquationSolver {
                     result = first.multiply(second);
                     break;
                 case DIVISION:
-                    result = first.divide(second,BigDecimal.ROUND_HALF_EVEN);
+                    // divide(divisor, roundingMode) returns a value whose scale is the dividend's,
+                    // so a 10 typed with no decimals rounded 10 / 4 to 2. Divide at 16 significant
+                    // digits instead. Narrowing to the currency scale here would narrow every step
+                    // of a chain rather than the answer: with a zero decimal currency, 10.0 / 4 * 4
+                    // would give 8. getResult converts the finished equation to minor units, and
+                    // truncates whatever is left below the currency scale, as it does for a typed
+                    // amount with too many decimals.
+                    result = first.divide(second, MathContext.DECIMAL64);
                     break;
                 default:
                     result = BigDecimal.valueOf(0);
                     break;
             }
-            mFirstNumber = String.valueOf(result);
+            // String.valueOf renders a small enough result in scientific notation, the product
+            // 0.001 * 0.0001 as 1E-7, and the next keypress appends to whatever string lands here.
+            mFirstNumber = result.toPlainString();
             if (mFirstNumber.endsWith(".0")) {
                 mFirstNumber = mFirstNumber.substring(0, mFirstNumber.length() - 2);
             }
