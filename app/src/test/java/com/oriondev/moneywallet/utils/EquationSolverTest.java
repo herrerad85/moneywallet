@@ -1,15 +1,27 @@
 package com.oriondev.moneywallet.utils;
 
+import android.os.Bundle;
+import android.os.Parcelable;
+
 import com.oriondev.moneywallet.model.CurrencyUnit;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EquationSolverTest {
@@ -445,6 +457,45 @@ public class EquationSolverTest {
         assertFalse(equationSolver.execute(false));
         assertEquals("10", equationSolver.mFirstNumber);
         assertTrue(equationSolver.isPendingOperation());
+    }
+
+    // Saved state
+
+    @Test
+    public void testOnSaveInstanceState_keepsTheCurrencyThroughARotation() {
+        // CalculatorActivity only calls setValue when there is no saved state, so a currency the
+        // bundle does not carry is gone for good: getResult then returns the bare typed number
+        // instead of its minor units, and 12.50 reaches the ledger as 12.
+        mockCurrencyUnit(2);
+        equationSolver.mFirstNumber = "12.50";
+        Bundle bundle = fakeBundle();
+
+        equationSolver.onSaveInstanceState(bundle);
+        EquationSolver restored = new EquationSolver(bundle, null);
+
+        assertEquals("12.50", restored.mFirstNumber);
+        assertEquals(1250L, restored.getResult());
+    }
+
+    /**
+     * A Bundle backed by a map. The unit test classpath has the stub android.jar, whose Bundle
+     * throws on every call, so the state has to live in the mock.
+     */
+    private Bundle fakeBundle() {
+        final Map<String, Object> values = new HashMap<>();
+        Answer<Object> put = invocation -> {
+            values.put(invocation.getArgument(0), invocation.getArgument(1));
+            return null;
+        };
+        Answer<Object> get = invocation -> values.get(invocation.getArgument(0));
+        Bundle bundle = mock(Bundle.class);
+        doAnswer(put).when(bundle).putString(anyString(), nullable(String.class));
+        doAnswer(put).when(bundle).putSerializable(anyString(), nullable(Serializable.class));
+        doAnswer(put).when(bundle).putParcelable(anyString(), nullable(Parcelable.class));
+        doAnswer(get).when(bundle).getString(anyString(), nullable(String.class));
+        doAnswer(get).when(bundle).getSerializable(anyString());
+        doAnswer(get).when(bundle).getParcelable(anyString());
+        return bundle;
     }
 
     @Test

@@ -80,6 +80,10 @@ public class EquationSolver {
         outState.putString(SS_FIRST_NUMBER, mFirstNumber);
         outState.putString(SS_SECOND_NUMBER, mSecondNumber);
         outState.putSerializable(SS_OPERATION_NUMBER, mOperation);
+        // The constructor reads this key back, and the activity only calls setValue when there is
+        // no saved state, so leaving the currency out made getResult return the typed number
+        // rather than its minor units after a rotation: 12.50 came back as 12, not 1250.
+        outState.putParcelable(SS_CURRENCY, mCurrency);
     }
 
     public void clear() {
