@@ -334,6 +334,9 @@
     <string name="message_no_currency_found">"No currency found"</string>
     <string name="message_no_wallet_found">"No wallet found"</string>
     <string name="message_no_transaction_found">"No transaction found"</string>
+    <string name="message_no_transaction_found_other_wallets">"No transaction found in the selected wallet. There are transactions in other wallets."</string>
+    <string name="message_no_transaction_found_future">"No transaction found in the selected wallet. There are transactions dated in the future."</string>
+    <string name="message_no_transaction_found_other_wallets_and_future">"No transaction found in the selected wallet. There are transactions in other wallets, and transactions dated in the future."</string>
     <string name="message_no_transfer_found">"No transfer found"</string>
     <string name="message_no_category_found">"No category found"</string>
     <string name="message_no_debt_found">"No debt found"</string>

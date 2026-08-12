@@ -82,8 +82,14 @@ public class AdvancedRecyclerView extends SwipeRefreshLayout {
         mRecyclerView.setAdapter(adapter);
     }
 
+    /**
+     * The text is also written by {@link #setState(State)}. Setting it on the view here as well
+     * is what lets a caller refine the message after the empty view is already on screen, with
+     * no further state change to carry it there.
+     */
     public void setEmptyText(@StringRes int resId) {
         mEmptyTextRes = resId;
+        mEmptyTextView.setText(resId);
     }
 
     public void setErrorText(@StringRes int resId) {

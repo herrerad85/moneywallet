@@ -23,6 +23,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -58,6 +59,16 @@ public abstract class MultiPanelCursorListFragment extends MultiPanelFragment im
     }
 
     protected abstract void onPrepareRecyclerView(AdvancedRecyclerView recyclerView);
+
+    /**
+     * Replace the message shown when the list has nothing in it. Available after the primary
+     * panel has been created, which is where the recycler view is inflated.
+     */
+    protected void setEmptyText(@StringRes int resId) {
+        if (mAdvancedRecyclerView != null) {
+            mAdvancedRecyclerView.setEmptyText(resId);
+        }
+    }
 
     protected abstract AbstractCursorAdapter onCreateAdapter();
 
