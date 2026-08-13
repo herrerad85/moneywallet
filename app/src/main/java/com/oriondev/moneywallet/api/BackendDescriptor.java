@@ -67,6 +67,11 @@ public abstract class BackendDescriptor {
         return true;
     }
 
+    /** Where a backup goes when no folder was chosen. Null when there is none to offer. */
+    public IFile getDefaultFolder() {
+        return null;
+    }
+
     public abstract AbstractBackendServiceDelegate createDelegate(AbstractBackendServiceDelegate.BackendServiceStatusListener listener);
 
     public abstract IBackendServiceAPI createServiceApi(Context context) throws BackendException;

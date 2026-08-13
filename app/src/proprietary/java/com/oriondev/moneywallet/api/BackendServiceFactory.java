@@ -93,6 +93,11 @@ public class BackendServiceFactory {
         });
         descriptors.add(new BackendDescriptor(SERVICE_ID_EXTERNAL_MEMORY, R.drawable.ic_sd_24dp) {
             @Override
+            public IFile getDefaultFolder() {
+                return DiskBackendServiceAPI.getDefaultFolder();
+            }
+
+            @Override
             public AbstractBackendServiceDelegate createDelegate(AbstractBackendServiceDelegate.BackendServiceStatusListener listener) {
                 return new DiskBackendService(listener);
             }
@@ -180,12 +185,10 @@ public class BackendServiceFactory {
     }
 
     public static IFile getFile(String backendId, String encoded) {
-        if (encoded != null) {
-            BackendDescriptor descriptor = findDescriptor(backendId);
-            if (descriptor != null) {
-                return descriptor.createFile(encoded);
-            }
+        BackendDescriptor descriptor = findDescriptor(backendId);
+        if (descriptor == null) {
+            return null;
         }
-        return null;
+        return encoded != null ? descriptor.createFile(encoded) : descriptor.getDefaultFolder();
     }
 }

@@ -115,6 +115,7 @@ public class BackupHandlerFragment extends Fragment implements BackupFileAdapter
             String backendId = arguments.getString(ARG_BACKEND_ID, null);
             mBackendService = BackendServiceFactory.getServiceById(backendId, this);
             mFileStack = new ArrayList<>();
+            openOnDefaultFolder();
         } else {
             throw new IllegalStateException("Arguments bundle is null, please instantiate the fragment using the newInstance() method instead.");
         }
@@ -424,10 +425,23 @@ public class BackupHandlerFragment extends Fragment implements BackupFileAdapter
         if (enabled) {
             hideCoverView();
             if (isStackEmpty()) {
+                // asked again here: at onCreate the backend may not have been usable yet,
+                // and a default resolved then can have come back empty handed
+                openOnDefaultFolder();
                 loadCurrentFolder();
             }
         } else {
             showCoverView();
+        }
+    }
+
+    private void openOnDefaultFolder() {
+        if (!mFileStack.isEmpty() || mBackendService == null) {
+            return;
+        }
+        IFile defaultFolder = BackendServiceFactory.getFile(mBackendService.getId(), null);
+        if (defaultFolder != null) {
+            mFileStack.add(defaultFolder);
         }
     }
 

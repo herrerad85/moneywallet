@@ -110,7 +110,12 @@ public class DiskBackendServiceAPI extends AbstractBackendServiceAPI<LocalFile> 
         return folder.getFile();
     }
 
-    public static LocalFile getRootFolder() {
-        return new LocalFile(Environment.getExternalStorageDirectory());
+    /** Not the root, which is unwritable from Android 11. Null if the folder cannot be made. */
+    public static LocalFile getDefaultFolder() {
+        File folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        if (!folder.isDirectory() && !folder.mkdirs()) {
+            return null;
+        }
+        return new LocalFile(folder);
     }
 }

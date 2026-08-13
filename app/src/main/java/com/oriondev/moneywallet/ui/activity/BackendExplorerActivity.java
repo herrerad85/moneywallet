@@ -40,7 +40,7 @@ import android.view.ViewGroup;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
-import com.oriondev.moneywallet.api.disk.DiskBackendServiceAPI;
+import com.oriondev.moneywallet.api.BackendServiceFactory;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.IFile;
 import com.oriondev.moneywallet.service.BackendHandlerIntentService;
@@ -91,6 +91,11 @@ public class BackendExplorerActivity extends SinglePanelActivity implements Swip
         mBackendId = intent.getStringExtra(BACKEND_ID);
         mActivityMode = intent.getIntExtra(MODE, MODE_EXPLORER);
         mFileStack = new ArrayList<>();
+        // open where a backup would go, the same folder the backup screen opens on
+        IFile defaultFolder = BackendServiceFactory.getFile(mBackendId, null);
+        if (defaultFolder != null) {
+            mFileStack.add(defaultFolder);
+        }
         // attach the activity to the service
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(LocalAction.ACTION_BACKEND_SERVICE_STARTED);
@@ -160,8 +165,8 @@ public class BackendExplorerActivity extends SinglePanelActivity implements Swip
             if (mActivityMode == MODE_FOLDER_PICKER) {
                 IFile folder = getCurrentFolder();
                 if (folder == null) {
-                    // return the root folder of the device instead of null
-                    folder = DiskBackendServiceAPI.getRootFolder();
+                    // this backend's own default, rather than a local path it cannot decode
+                    folder = BackendServiceFactory.getFile(mBackendId, null);
                 }
                 Intent intent = new Intent();
                 intent.putExtra(RESULT_FILE, folder);
