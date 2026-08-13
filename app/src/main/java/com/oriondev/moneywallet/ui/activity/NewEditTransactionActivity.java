@@ -657,7 +657,13 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                     mSavingId = intent.getLongExtra(SAVING_ID, 0L);
                     long savingMoney = 0L;
                     long savingProgress = 0L;
-                    Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, getItemId());
+                    // getItemId is the id of the transaction being edited, and this branch only
+                    // runs when there is no transaction yet, so it was always the NEW_ITEM
+                    // placeholder of -1. The query matched no saving, wallet stayed null, and the
+                    // amount keypad opened with no currency to scale against, so it read the typed
+                    // digits as minor units: 2000 became 20.00. Load the saving the intent names,
+                    // the way the debt branch above loads its debt.
+                    Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, mSavingId);
                     String[] projection = new String[] {
                             Contract.Saving.END_MONEY,
                             Contract.Saving.WALLET_ID,
