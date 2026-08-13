@@ -18,6 +18,7 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
@@ -422,15 +423,242 @@ public class EquationSolverTest {
     }
 
     @Test
-    public void testGetResult_recurringDivisionTruncatesAtTheCurrencyScale() {
-        // A quotient that does not terminate keeps its digits on the display and loses the ones
-        // below the currency scale in the conversion, the same way a typed 6.669 does.
+    public void testGetResult_recurringDivisionRoundsAtTheCurrencyScale() {
+        // A quotient that does not terminate keeps its digits on the display and is rounded, not
+        // truncated, on the way to the ledger. Master stored 667 for the same division typed as
+        // 20.00, where the dividend's scale it rounded at was the currency scale.
         mockCurrencyUnit(2);
         enter("20", EquationSolver.Operation.DIVISION, "3");
 
         assertTrue(equationSolver.execute(false));
         assertEquals("6.666666666666667", equationSolver.mFirstNumber);
+        assertEquals(667L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testGetResult_anAnswerRoundsHalfEvenAndATypedNumberDoesNot() {
+        // Half up would store 3 and 1 for the two answers. The typed number is the control: it
+        // truncates, so rounding it at all would store 65.
+        mockCurrencyUnit(0);
+        enter("5", EquationSolver.Operation.DIVISION, "2");
+        assertEquals(2L, equationSolver.getResult());
+
+        equationSolver.clear();
+        mockCurrencyUnit(0);
+        enter("1", EquationSolver.Operation.DIVISION, "2");
+        assertEquals(0L, equationSolver.getResult());
+
+        equationSolver.clear();
+        mockCurrencyUnit(0);
+        type("64.9");
+        assertEquals(64L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testGetResult_anOperatorWithNoSecondNumberLeavesATypedAmountTyped() {
+        // Confirming right after an operator key runs the equation against the zero a missing
+        // second number parses to. That press computed nothing, so 0.999 has to truncate to 99
+        // the way it does with no operator at all, rather than round up to a whole unit.
+        mockCurrencyUnit(2);
+        type("0.999");
+        equationSolver.appendOperation(EquationSolver.Operation.ADDITION);
+
+        assertEquals(99L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testGetResult_aSecondOperatorPressLeavesATypedAmountTyped() {
+        // appendOperation runs the pending equation before it takes the new operator, which is the
+        // same empty run as the case above reached by pressing an operator key twice.
+        mockCurrencyUnit(2);
+        type("0.999");
+        equationSolver.appendOperation(EquationSolver.Operation.ADDITION);
+        equationSolver.appendOperation(EquationSolver.Operation.ADDITION);
+
+        assertEquals(99L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testGetResult_anOperatorWithNoSecondNumberLeavesAnAnswerAnAnswer() {
+        // The mirror of the two above: an empty run must not retype a quotient either, or the
+        // rounding is lost to a stray keypress.
+        mockCurrencyUnit(2);
+        enter("20", EquationSolver.Operation.DIVISION, "3");
+        assertTrue(equationSolver.execute(false));
+        equationSolver.appendOperation(EquationSolver.Operation.ADDITION);
+
+        assertEquals(667L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testAppendNumber_aKeypressThatDoesNotChangeTheAmountLeavesAnAnswerAnAnswer() {
+        // A zero appended to a quotient reads as the same amount, so it is not a retype. Compared
+        // as strings rather than as numbers this stored 666.
+        mockCurrencyUnit(2);
+        enter("20", EquationSolver.Operation.DIVISION, "3");
+        assertTrue(equationSolver.execute(false));
+
+        equationSolver.appendNumber("0");
+
+        assertEquals("6.6666666666666670", equationSolver.mFirstNumber);
+        assertEquals(667L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testAppendNumber_anAnswerTypedOverAndTakenBackIsTypedFromThenOn() {
+        // Editing an answer hands it to the keypad, and taking the edit back does not hand it
+        // returned: the amount stores as the same digits typed from scratch would, 666 rather
+        // than 667. The alternative, recording the answer and rounding again whenever the display
+        // matches it, rounds a number that was typed by hand later in the same session.
+        mockCurrencyUnit(2);
+        enter("20", EquationSolver.Operation.DIVISION, "3");
+        assertTrue(equationSolver.execute(false));
+
+        equationSolver.appendNumber("5");
+        equationSolver.cancel();
+
+        assertEquals("6.666666666666667", equationSolver.mFirstNumber);
         assertEquals(666L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testAppendNumber_anAmountTypedAfterAnAnswerIsClearedAwayIsTyped() {
+        // Backspacing an answer down to zero and typing an amount that happens to equal it must
+        // store what those digits store on a fresh keypad. On a currency with no decimals any
+        // half unit shows the difference: 7 typed, 8 rounded.
+        mockCurrencyUnit(0);
+        enter("15", EquationSolver.Operation.DIVISION, "2");
+        assertTrue(equationSolver.execute(false));
+        assertEquals("7.5", equationSolver.mFirstNumber);
+
+        for (int press = 0; press < 5; press++) {
+            equationSolver.cancel();
+        }
+        type("7.5");
+
+        assertEquals(7L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testAppendNumber_anAmountRebuiltOnTopOfAnAnswerIsTyped() {
+        mockCurrencyUnit(0);
+        enter("15", EquationSolver.Operation.DIVISION, "2");
+        assertTrue(equationSolver.execute(false));
+
+        equationSolver.cancel();
+        equationSolver.cancel();
+        equationSolver.appendPoint();
+        equationSolver.appendNumber("5");
+
+        assertEquals("7.5", equationSolver.mFirstNumber);
+        assertEquals(7L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testAppendNumber_aKeypressThatChangesTheAmountRetypesIt() {
+        mockCurrencyUnit(2);
+        enter("20", EquationSolver.Operation.DIVISION, "3");
+        assertTrue(equationSolver.execute(false));
+
+        equationSolver.appendNumber("5");
+
+        assertEquals(666L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testCancel_backspaceThatChangesTheAmountRetypesIt() {
+        mockCurrencyUnit(2);
+        enter("20", EquationSolver.Operation.DIVISION, "3");
+        assertTrue(equationSolver.execute(false));
+
+        equationSolver.cancel();
+
+        assertEquals(666L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testCancel_backspaceThatDoesNotChangeTheAmountLeavesAnAnswerAnAnswer() {
+        // The mirror of the appended zero: taking a trailing zero back off an answer leaves the
+        // display reading the same amount, so it is not a retype either.
+        mockCurrencyUnit(2);
+        enter("0.3335", EquationSolver.Operation.MULTIPLICATION, "2.0");
+        assertTrue(equationSolver.execute(false));
+        assertEquals("0.66700", equationSolver.mFirstNumber);
+
+        equationSolver.cancel();
+
+        assertEquals("0.6670", equationSolver.mFirstNumber);
+        assertEquals(67L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testGetResult_anOperationThatChangesNothingLeavesATypedAmountTyped() {
+        // Adding a zero, multiplying by one and pressing an operator on a number nobody followed
+        // up all hand back the amount that was typed, so none of them is an answer to round.
+        mockCurrencyUnit(2);
+        type("0.999");
+        equationSolver.appendOperation(EquationSolver.Operation.ADDITION);
+        type("0");
+        assertEquals(99L, equationSolver.getResult());
+
+        equationSolver.clear();
+        mockCurrencyUnit(2);
+        type("0.999");
+        equationSolver.appendOperation(EquationSolver.Operation.MULTIPLICATION);
+        type("1");
+        assertEquals(99L, equationSolver.getResult());
+
+        equationSolver.clear();
+        mockCurrencyUnit(2);
+        type("0.999");
+        equationSolver.appendOperation(EquationSolver.Operation.ADDITION);
+        equationSolver.appendPoint();
+        assertEquals(99L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testGetResult_aSecondNumberBackspacedAwayLeavesATypedAmountTyped() {
+        mockCurrencyUnit(2);
+        type("0.999");
+        equationSolver.appendOperation(EquationSolver.Operation.ADDITION);
+        type("5");
+        equationSolver.cancel();
+
+        assertEquals(99L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testGetResult_aSecondNumberBackspacedAwayLeavesAnAnswerAnAnswer() {
+        // The helper only looks at the first number, and this is the sequence that proves it has
+        // to: the 1 typed here goes to the second number, and taking it back off must not retype
+        // the quotient underneath.
+        mockCurrencyUnit(2);
+        enter("20", EquationSolver.Operation.DIVISION, "3");
+        assertTrue(equationSolver.execute(false));
+        equationSolver.appendOperation(EquationSolver.Operation.ADDITION);
+        type("1");
+        equationSolver.cancel();
+
+        assertEquals(667L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testGetResult_everyOperationRoundsItsAnswer() {
+        // Not only division. Master truncated all four, and a multiplication that lands below the
+        // currency scale is where that shows: 2.5 * 3 stored 7 there and stores 8 here.
+        mockCurrencyUnit(0);
+        enter("2.5", EquationSolver.Operation.MULTIPLICATION, "3");
+        assertEquals(8L, equationSolver.getResult());
+
+        equationSolver.clear();
+        mockCurrencyUnit(2);
+        enter("10", EquationSolver.Operation.SUBTRACTION, "0.001");
+        assertEquals(1000L, equationSolver.getResult());
+
+        equationSolver.clear();
+        mockCurrencyUnit(2);
+        enter("0.005", EquationSolver.Operation.ADDITION, "0.001");
+        assertEquals(1L, equationSolver.getResult());
     }
 
     @Test
@@ -477,6 +705,34 @@ public class EquationSolverTest {
         assertEquals(1250L, restored.getResult());
     }
 
+    @Test
+    public void testOnSaveInstanceState_keepsAnAnswerAnAnswerThroughARotation() {
+        mockCurrencyUnit(2);
+        enter("20", EquationSolver.Operation.DIVISION, "3");
+        assertTrue(equationSolver.execute(false));
+        Bundle bundle = fakeBundle();
+
+        equationSolver.onSaveInstanceState(bundle);
+        EquationSolver restored = new EquationSolver(bundle, null);
+
+        assertEquals(667L, restored.getResult());
+    }
+
+    @Test
+    public void testConstructor_aBundleWithoutTheComputedKeyLeavesTheAmountTyped() {
+        // The default a missing key falls back to is what a bundle written by any earlier build
+        // hands back, and it has to be the safe one: truncate rather than round an amount whose
+        // history is unknown.
+        Bundle bundle = fakeBundle();
+        bundle.putString("EquationSolver::SavedState::FirstNumber", "6.666666666666667");
+        bundle.putParcelable("EquationSolver::SavedState::Currency", new CurrencyUnit("", "", "", 2));
+
+        EquationSolver restored = new EquationSolver(bundle, null);
+
+        assertFalse(restored.mComputed);
+        assertEquals(666L, restored.getResult());
+    }
+
     /**
      * A Bundle backed by a map. The unit test classpath has the stub android.jar, whose Bundle
      * throws on every call, so the state has to live in the mock.
@@ -488,11 +744,19 @@ public class EquationSolverTest {
             return null;
         };
         Answer<Object> get = invocation -> values.get(invocation.getArgument(0));
+        // The two argument getters hand back the caller's default for a key the bundle never
+        // carried, which is the case a bundle written by an earlier build produces.
+        Answer<Object> getOrDefault = invocation -> {
+            Object stored = values.get(invocation.getArgument(0));
+            return stored != null ? stored : invocation.getArgument(1);
+        };
         Bundle bundle = mock(Bundle.class);
         doAnswer(put).when(bundle).putString(anyString(), nullable(String.class));
         doAnswer(put).when(bundle).putSerializable(anyString(), nullable(Serializable.class));
         doAnswer(put).when(bundle).putParcelable(anyString(), nullable(Parcelable.class));
-        doAnswer(get).when(bundle).getString(anyString(), nullable(String.class));
+        doAnswer(put).when(bundle).putBoolean(anyString(), anyBoolean());
+        doAnswer(getOrDefault).when(bundle).getString(anyString(), nullable(String.class));
+        doAnswer(getOrDefault).when(bundle).getBoolean(anyString(), anyBoolean());
         doAnswer(get).when(bundle).getSerializable(anyString());
         doAnswer(get).when(bundle).getParcelable(anyString());
         return bundle;
