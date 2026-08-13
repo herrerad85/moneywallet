@@ -657,11 +657,13 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                     mSavingId = intent.getLongExtra(SAVING_ID, 0L);
                     long savingMoney = 0L;
                     // getItemId is the id of the transaction being edited, and this branch only
-                    // runs when there is no transaction yet, so it was always the NEW_ITEM
-                    // placeholder of -1. The query matched no saving, wallet stayed null, and the
-                    // amount keypad opened with no currency to scale against, so it read the typed
-                    // digits as minor units: 2000 became 20.00. Load the saving the intent names,
-                    // the way the debt branch above loads its debt.
+                    // runs when there is no transaction yet, so it was always the -1 assigned for
+                    // a new item. That built the uri savings/-1, which matches no route in the
+                    // content provider, so the query returned null without reaching the database,
+                    // wallet stayed null, and the amount keypad opened with no currency to scale
+                    // against: it read the typed digits as minor units and 2000 became 20.00.
+                    // Load the saving the intent names, the way the debt branch above loads its
+                    // debt.
                     Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, mSavingId);
                     String[] projection = new String[] {
                             Contract.Saving.START_MONEY,
@@ -708,6 +710,10 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                         case SAVING_WITHDRAW_EVERYTHING:
                             money = savingMoney;
                             mSavingCompleted = true;
+                            // Deliberate fall through: withdraw everything needs the withdraw
+                            // category set below. A break here, which is what an IDE inspection
+                            // offers, leaves selectionArgs[0] null, and the query below then
+                            // crashes the editor as it opens: the bind value at index 1 is null.
                         case SAVING_WITHDRAW:
                             selectionArgs[0] = Contract.CategoryTag.SAVING_WITHDRAW;
                             break;

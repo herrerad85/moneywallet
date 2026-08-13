@@ -21,31 +21,32 @@ import static org.junit.Assert.fail;
  * Comments and string literals are stripped before anything is matched, so no assertion here can
  * be satisfied or broken by the wording of a comment.
  *
- * What these assertions check is that specific token sequences are still present in the source:
+ * What these assertions check is which token sequences the source does and does not carry:
  * that getItemId appears nowhere in the intent branch, that the saving uri is built from
- * mSavingId, that the statement assigning savingMoney reads START_MONEY and PROGRESS and adds
- * them, and that the statement assigning wallet builds a Wallet from the saving's wallet columns.
- * That makes them a tripwire against a revert or a careless rewrite. It does not make them a proof
- * of behaviour, and they cannot show the value the keypad ends up with. A rewrite that keeps those
- * tokens and still breaks the editor goes through: moving the prefill out of the withdraw
- * everything case, dropping a column from the projection while the getColumnIndex call that names
- * it stays, and adding a second assignment written with += or -= are all invisible here.
+ * mSavingId, that the statement assigning savingMoney reads START_MONEY and PROGRESS once each
+ * and adds them, that both columns are in the projection, that the prefill sits in the withdraw
+ * everything case and that the case falls through, and that the statement assigning wallet builds
+ * a Wallet from the saving's wallet columns. That makes them a tripwire against a revert or a
+ * careless rewrite. It does not make them a proof of behaviour, and they cannot show the value the
+ * keypad ends up with. A rewrite that keeps those tokens and still breaks the editor goes through.
+ * One example, not a list: a second assignment written with += or -= is invisible here, because
+ * "savingMoney -=" does not contain the "savingMoney =" the statement is found by.
  *
  * Invariant one: inside the branch that fills a new transaction from its intent, getItemId is
- * always the NEW_ITEM placeholder of -1, because that branch is the else of a
- * getMode() == EDIT_ITEM test. Loading the saving with getItemId matched no row, so the editor
- * opened with no wallet, the amount keypad had no currency to scale against, and a typed 2000 was
- * stored as 20.00.
+ * always -1, the value NewEditItemActivity assigns whenever it was not launched to edit an
+ * existing item, because that branch is the else of a getMode() == EDIT_ITEM test. A saving uri
+ * built from -1 is savings/-1, which matches no route in the content provider, so the query
+ * returned null without reaching the database. The editor opened with no wallet, the amount keypad
+ * had no currency to scale against, and a typed 2000 was stored as 20.00.
  *
  * Invariant two: the prefill that WITHDRAW EVERYTHING opens on is what the saving holds, which is
  * START_MONEY plus PROGRESS, the same sum SavingCursorAdapter draws its current amount from.
  * END_MONEY is the target. Reading END_MONEY there returns too little for any saving deposited
  * past its target and leaves the overshoot behind with the saving already marked complete.
  *
- * Invariant three: the same row builds the wallet the editor opens on, currency included. That
- * wallet is the whole point of the fix, so its construction has to stay: without it the wallet
- * field is empty, the keypad has no currency to scale against, and a typed 2000 is stored as
- * 20.00.
+ * Invariant three: the same row builds the wallet the editor opens on, currency included. Without
+ * that construction the wallet field is empty, the keypad has no currency to scale against, and a
+ * typed 2000 is stored as 20.00.
  */
 public class NewEditTransactionActivitySourceTest {
 
@@ -57,6 +58,10 @@ public class NewEditTransactionActivitySourceTest {
 
     private static final String SAVING_BRANCH_START = "} else if (mType == TYPE_SAVING) {";
     private static final String SAVING_BRANCH_END = "} else if (mType == TYPE_MODEL) {";
+
+    private static final String WITHDRAW_EVERYTHING_CASE = "case SAVING_WITHDRAW_EVERYTHING:";
+    private static final String WITHDRAW_CASE = "case SAVING_WITHDRAW:";
+    private static final String CATEGORY_QUERY_START = "uri = DataContentProvider.CONTENT_CATEGORIES;";
 
     @Test
     public void newItemBranchDoesNotReadTheItemId() throws IOException {
@@ -91,6 +96,51 @@ public class NewEditTransactionActivitySourceTest {
     }
 
     @Test
+    public void withdrawEverythingPrefillsOnlyItsOwnCase() throws IOException {
+        String saving = region(SAVING_BRANCH_START, SAVING_BRANCH_END);
+        String everything = saving.substring(saving.indexOf(WITHDRAW_EVERYTHING_CASE));
+        int ownCaseEnd = everything.indexOf(WITHDRAW_CASE);
+        assertTrue("the prefill has to sit in the withdraw everything case: moved into the deposit "
+                + "case it offers the saving's whole balance every time a deposit is opened",
+                everything.substring(0, ownCaseEnd).contains("money = savingMoney;"));
+    }
+
+    @Test
+    public void withdrawEverythingFallsThroughToTheWithdrawCategory() throws IOException {
+        String saving = region(SAVING_BRANCH_START, SAVING_BRANCH_END);
+        String everything = saving.substring(saving.indexOf(WITHDRAW_EVERYTHING_CASE));
+        String ownCase = everything.substring(0, everything.indexOf(WITHDRAW_CASE));
+        assertEquals("the withdraw everything case falls through on purpose to pick up the "
+                + "withdraw category below it. A break here, which is what an IDE inspection "
+                + "offers, leaves the category selection argument null, and the query below then "
+                + "crashes the editor as it opens: the bind value at index 1 is null",
+                -1, ownCase.indexOf("break"));
+    }
+
+    @Test
+    public void bothColumnsTheSumReadsAreInTheProjection() throws IOException {
+        // The saving branch builds two projections, one for the saving and one for its category,
+        // so this looks only at the part before the category query starts.
+        String saving = region(SAVING_BRANCH_START, SAVING_BRANCH_END);
+        String projection = statementAssigning(
+                saving.substring(0, saving.indexOf(CATEGORY_QUERY_START)), "projection =");
+        assertTrue("a column read through getColumnIndex but left out of the projection returns "
+                + "index -1 and throws when it is read, so both have to be listed: " + projection,
+                projection.contains("Contract.Saving.START_MONEY")
+                        && projection.contains("Contract.Saving.PROGRESS"));
+    }
+
+    @Test
+    public void theSumReadsEachColumnOnce() throws IOException {
+        String computed = statementAssigning(
+                region(SAVING_BRANCH_START, SAVING_BRANCH_END), "savingMoney =");
+        assertEquals("START_MONEY has to be read once, or the prefill counts it twice: " + computed,
+                1, occurrences(computed, "Contract.Saving.START_MONEY"));
+        assertEquals("PROGRESS has to be read once: " + computed,
+                1, occurrences(computed, "Contract.Saving.PROGRESS"));
+    }
+
+    @Test
     public void savingWalletIsBuiltFromTheSavingRow() throws IOException {
         String built = statementAssigning(region(SAVING_BRANCH_START, SAVING_BRANCH_END), "wallet =");
         assertTrue("the editor has to open on the saving's own wallet, built from the row just "
@@ -102,10 +152,11 @@ public class NewEditTransactionActivitySourceTest {
     }
 
     /**
-     * Returns the statement that assigns to the given left hand side, skipping the declaration
-     * that only sets a default. Fails when the literal text passed in matches more than once, so a
-     * second plain assignment cannot slip past unread. Compound assignments do not contain that
-     * text: "savingMoney -=" does not contain "savingMoney =", so a later += or -= is not seen.
+     * Returns the statement that assigns to the given left hand side, skipping any long
+     * declaration of the same name, which is how the running total is declared before the block
+     * fills it. Fails when the literal text passed in matches more than once, so a second plain
+     * assignment cannot slip past unread. Compound assignments do not contain that text:
+     * "savingMoney -=" does not contain "savingMoney =", so a later += or -= is not seen.
      */
     private static String statementAssigning(String block, String assignment) {
         String found = null;
@@ -152,9 +203,9 @@ public class NewEditTransactionActivitySourceTest {
     }
 
     /**
-     * Removes comments and string literals, replacing each with a single space so that offsets
-     * never merge two tokens into one. Without this the assertions above could be satisfied, or
-     * broken, by prose that no compiler ever sees.
+     * Removes comments and string literals, replacing each with a single space so that the tokens
+     * on either side of a removed comment do not run together. Without this the assertions above
+     * could be satisfied, or broken, by prose that no compiler ever sees.
      */
     private static String stripCommentsAndStrings(String text) {
         StringBuilder out = new StringBuilder(text.length());
@@ -180,6 +231,14 @@ public class NewEditTransactionActivitySourceTest {
             }
         }
         return out.toString();
+    }
+
+    private static int occurrences(String text, String token) {
+        int count = 0;
+        for (int at = text.indexOf(token); at >= 0; at = text.indexOf(token, at + 1)) {
+            count++;
+        }
+        return count;
     }
 
     private static int skipTo(String text, int from, String token) {
