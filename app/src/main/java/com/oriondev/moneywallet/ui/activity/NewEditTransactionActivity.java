@@ -656,7 +656,6 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                 } else if (mType == TYPE_SAVING) {
                     mSavingId = intent.getLongExtra(SAVING_ID, 0L);
                     long savingMoney = 0L;
-                    long savingProgress = 0L;
                     // getItemId is the id of the transaction being edited, and this branch only
                     // runs when there is no transaction yet, so it was always the NEW_ITEM
                     // placeholder of -1. The query matched no saving, wallet stayed null, and the
@@ -665,7 +664,8 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                     // the way the debt branch above loads its debt.
                     Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, mSavingId);
                     String[] projection = new String[] {
-                            Contract.Saving.END_MONEY,
+                            Contract.Saving.START_MONEY,
+                            Contract.Saving.PROGRESS,
                             Contract.Saving.WALLET_ID,
                             Contract.Saving.WALLET_NAME,
                             Contract.Saving.WALLET_ICON,
@@ -674,7 +674,12 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                     Cursor cursor = contentResolver.query(uri, projection, null, null, null);
                     if (cursor != null) {
                         if (cursor.moveToFirst()) {
-                            savingMoney = cursor.getLong(cursor.getColumnIndex(Contract.Saving.END_MONEY));
+                            // What a saving holds is its start money plus its progress, the same
+                            // sum the savings list draws its current amount from. END_MONEY is the
+                            // target, and a saving can be deposited past its target, so the target
+                            // would strand the overshoot in a withdraw everything.
+                            savingMoney = cursor.getLong(cursor.getColumnIndex(Contract.Saving.START_MONEY))
+                                    + cursor.getLong(cursor.getColumnIndex(Contract.Saving.PROGRESS));
                             wallet = new Wallet(
                                     cursor.getLong(cursor.getColumnIndex(Contract.Saving.WALLET_ID)),
                                     cursor.getString(cursor.getColumnIndex(Contract.Saving.WALLET_NAME)),
