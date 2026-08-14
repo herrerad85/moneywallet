@@ -23,12 +23,16 @@ import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.CallSuper;
 import androidx.annotation.MenuRes;
+import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.ui.activity.base.SinglePanelActivity;
 import com.oriondev.moneywallet.ui.activity.base.SinglePanelScrollActivity;
+
+import java.util.Date;
 
 /**
  * This activity is an abstract implementation that act as a base for every
@@ -123,4 +127,26 @@ public abstract class NewEditItemActivity extends SinglePanelScrollActivity {
      * @param mode current mode of the activity.
      */
     protected abstract void onSaveChanges(Mode mode);
+
+    /**
+     * Ends a save, saying first that the item is not counted yet when the date it was saved with
+     * is ahead of now. The transaction and transfer lists, the per item lists, the overview and
+     * every balance all filter on DATETIME(date) <= DATETIME('now', 'localtime'), so a row dated
+     * ahead is written and then counts for nothing, and the save reads as though it did nothing.
+     *
+     * A toast rather than a dialog, because this activity is closing and a dialog would have to
+     * hold it open to be read.
+     *
+     * The wording says what the balance does rather than where the row is. The editor can close
+     * back to another application entirely, or to search, which carries no date filter and does
+     * list the row.
+     *
+     * @param date the date the item was saved with.
+     */
+    protected void finishSaveDatedAt(@Nullable Date date) {
+        if (date != null && date.after(new Date())) {
+            Toast.makeText(this, R.string.message_saved_dated_ahead, Toast.LENGTH_LONG).show();
+        }
+        finish();
+    }
 }

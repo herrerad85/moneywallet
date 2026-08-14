@@ -673,7 +673,7 @@ public class NewEditTransferActivity extends NewEditItemActivity  implements Cur
             }
             mAttachmentPicker.cleanUp(false);
             setResult(RESULT_OK);
-            finish();
+            finishSaveDatedAt(mDateTimePicker.getCurrentDateTime());
         }
     }
 

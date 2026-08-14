@@ -69,14 +69,19 @@ public class TransferListFragment extends CursorListFragment implements Transfer
             String selection;
             String[] arguments;
             long currentWallet = PreferenceManager.getCurrentWallet();
+            // A transfer touches two wallets, so both branches below select on a pair joined by
+            // OR. The brackets matter: AND binds tighter than OR, so without them the date test
+            // at the end read as "the first term matches, OR the second term matches and the
+            // date has passed". A transfer dated ahead was listed when it matched on its from
+            // side and hidden when it matched only on its to side.
             if (currentWallet == PreferenceManager.TOTAL_WALLET_ID) {
-                selection = Contract.Transfer.TRANSACTION_FROM_WALLET_COUNT_IN_TOTAL + " = 1 OR " +
-                        Contract.Transfer.TRANSACTION_TO_WALLET_COUNT_IN_TOTAL + " = 1";
+                selection = "(" + Contract.Transfer.TRANSACTION_FROM_WALLET_COUNT_IN_TOTAL + " = 1 OR " +
+                        Contract.Transfer.TRANSACTION_TO_WALLET_COUNT_IN_TOTAL + " = 1)";
                 arguments = null;
             } else {
                 String walletId = String.valueOf(currentWallet);
-                selection = Contract.Transfer.TRANSACTION_FROM_WALLET_ID + " = ? OR " +
-                Contract.Transfer.TRANSACTION_TO_WALLET_ID + " = ?";
+                selection = "(" + Contract.Transfer.TRANSACTION_FROM_WALLET_ID + " = ? OR " +
+                Contract.Transfer.TRANSACTION_TO_WALLET_ID + " = ?)";
                 arguments = new String[] {walletId, walletId};
             }
             selection += " AND DATETIME(" + Contract.Transfer.DATE + ") <= DATETIME('now', 'localtime')";

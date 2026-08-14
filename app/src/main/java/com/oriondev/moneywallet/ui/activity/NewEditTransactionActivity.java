@@ -954,7 +954,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
             }
             mAttachmentPicker.cleanUp(false);
             setResult(RESULT_OK);
-            finish();
+            finishSaveDatedAt(mDateTimePicker.getCurrentDateTime());
         }
     }
 
