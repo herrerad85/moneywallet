@@ -29,6 +29,7 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.util.SparseLongArray;
 
+import com.oriondev.moneywallet.model.Attachment;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.RecurrenceSetting;
 import com.oriondev.moneywallet.utils.CurrencyManager;
@@ -44,12 +45,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -510,6 +513,14 @@ import java.util.UUID;
             }
         }
         // if this line is reached it means that the wallet can be deleted
+        // the attachments go first: the transactions below are removed in one statement rather
+        // than through deleteTransactionItem, and on the build that ships, where deletes are
+        // hard, the link rows go with them on the cascade
+        deleteAttachmentsOf(Schema.TransactionAttachment.TABLE, Schema.TransactionAttachment.ATTACHMENT,
+                Schema.TransactionAttachment.TRANSACTION + " IN (SELECT " + Schema.Transaction.ID +
+                        " FROM " + Schema.Transaction.TABLE + " WHERE " + Schema.Transaction.WALLET +
+                        " = ?) AND " + Schema.TransactionAttachment.DELETED + " = 0",
+                new String[] {String.valueOf(walletId)});
         // we can start to delete all the transactions related to this wallet
         String where = Schema.Transaction.WALLET + " = ?";
         String[] whereArgs = new String[]{String.valueOf(walletId)};
@@ -1025,6 +1036,12 @@ import java.util.UUID;
      * @return the number of row affected.
      */
     private int deleteTransactionItem(long transactionId) {
+        // the attachments have to go before the rows that link them to this transaction, since
+        // that link is how they are found
+        deleteAttachmentsOf(Schema.TransactionAttachment.TABLE, Schema.TransactionAttachment.ATTACHMENT,
+                Schema.TransactionAttachment.TRANSACTION + " = ? AND "
+                        + Schema.TransactionAttachment.DELETED + " = 0",
+                new String[] {String.valueOf(transactionId)});
         // remove all TransactionPeople
         String where = Schema.TransactionPeople.TRANSACTION + " = ?";
         String[] whereArgs = new String[]{String.valueOf(transactionId)};
@@ -1613,6 +1630,15 @@ import java.util.UUID;
      * @return the number of row affected.
      */
     /*package-local*/ int deleteTransfer(long transferId) {
+        // this has to be the first thing done. Where deletes are hard, which is every build that
+        // ships, removing the from or the to leg below takes the transfer row with it, since
+        // transfers references those two ON DELETE CASCADE, and that takes the
+        // transfer_attachment rows with it in turn, leaving the block further down nothing to
+        // read the attachments from
+        deleteAttachmentsOf(Schema.TransferAttachment.TABLE, Schema.TransferAttachment.ATTACHMENT,
+                Schema.TransferAttachment.TRANSFER + " = ? AND "
+                        + Schema.TransferAttachment.DELETED + " = 0",
+                new String[] {String.valueOf(transferId)});
         // obtain the transaction ids related to the transfer
         for (Long transactionId : getTransferTransactionIds(transferId)) {
             if (transactionId != null) {
@@ -4491,6 +4517,106 @@ import java.util.UUID;
         } else {
             return getWritableDatabase().delete(Schema.Attachment.TABLE, where, whereArgs);
         }
+    }
+
+    /**
+     * Removes the attachment rows the rows being deleted own, and the files those name, except
+     * for any that something outside this call still links to.
+     *
+     * Deleting a transaction used to drop only the row linking it to its attachment. The
+     * attachment row stayed live and its file stayed on disk, and no screen in the app reaches an
+     * attachment except through the item that owns it, so neither could be opened again. The
+     * backup writer takes every attachment not flagged as deleted, so every backup from then on
+     * carried the file.
+     *
+     * The attachments are found through the link rows, so this has to run before those are gone.
+     */
+    private void deleteAttachmentsOf(String linkTable, String attachmentColumn, String linkSelection,
+                                     String[] selectionArgs) {
+        String query = "SELECT " + Schema.Attachment.ID + ", " + Schema.Attachment.FILE +
+                " FROM " + Schema.Attachment.TABLE +
+                " WHERE " + Schema.Attachment.DELETED + " = 0 AND " + Schema.Attachment.ID +
+                " IN (SELECT " + attachmentColumn + " FROM " + linkTable + " WHERE " + linkSelection + ")";
+        Map<Long, String> attachments = new LinkedHashMap<>();
+        Cursor cursor = getReadableDatabase().rawQuery(query, selectionArgs);
+        if (cursor != null) {
+            try {
+                while (cursor.moveToNext()) {
+                    attachments.put(cursor.getLong(cursor.getColumnIndex(Schema.Attachment.ID)),
+                            cursor.getString(cursor.getColumnIndex(Schema.Attachment.FILE)));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        if (attachments.isEmpty()) {
+            return;
+        }
+        // resolved once, and only once there is something to delete, since it touches the volume.
+        // A row goes whether or not its file can be reached: the row is what puts the file into
+        // every backup, so keeping the two in step by leaving the row would leave the problem this
+        // exists to fix
+        File folder = getAttachmentFolder();
+        for (Map.Entry<Long, String> attachment : attachments.entrySet()) {
+            if (isLinkedOutside(attachment.getKey(), linkTable, attachmentColumn, linkSelection,
+                    selectionArgs)) {
+                continue;
+            }
+            deleteAttachment(attachment.getKey());
+            if (folder != null) {
+                deleteAttachmentFile(folder, attachment.getValue());
+            }
+        }
+    }
+
+    /**
+     * Whether a live link points at this attachment from outside the set this call is about to
+     * remove. Nothing in the app makes one: picking a file writes a new row and a new file name for
+     * the item being edited. A backup written somewhere else can, and once one has been restored
+     * every backup this app writes carries it on.
+     *
+     * Counting every live link instead would go wrong when two owners are inside the same delete,
+     * since each would see the other and neither would remove the attachment.
+     */
+    private boolean isLinkedOutside(long attachmentId, String linkTable, String attachmentColumn,
+                                    String linkSelection, String[] selectionArgs) {
+        // the id is a long read out of the database, so it goes in the text. The only placeholders
+        // are the caller's own, in the last subquery, so its arguments still bind in order
+        String query = "SELECT (SELECT COUNT(*) FROM " + Schema.TransactionAttachment.TABLE +
+                " WHERE " + Schema.TransactionAttachment.ATTACHMENT + " = " + attachmentId + " AND " +
+                Schema.TransactionAttachment.DELETED + " = 0) + (SELECT COUNT(*) FROM " +
+                Schema.TransferAttachment.TABLE + " WHERE " + Schema.TransferAttachment.ATTACHMENT +
+                " = " + attachmentId + " AND " + Schema.TransferAttachment.DELETED +
+                " = 0) - (SELECT COUNT(*) FROM " + linkTable + " WHERE " + attachmentColumn +
+                " = " + attachmentId + " AND (" + linkSelection + "))";
+        Cursor cursor = getReadableDatabase().rawQuery(query, selectionArgs);
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    return cursor.getInt(0) > 0;
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        return false;
+    }
+
+    private File getAttachmentFolder() {
+        File external = mContext.getExternalFilesDir(null);
+        return external != null ? new File(external, Attachment.FOLDER_NAME) : null;
+    }
+
+    private void deleteAttachmentFile(File folder, String fileName) {
+        // the name is read back out of a column, and a restored backup writes that column through,
+        // so it is used only when it is a plain file name and not a way out of this folder
+        if (TextUtils.isEmpty(fileName) || fileName.contains("/") || fileName.contains("\\")
+                || fileName.equals(".") || fileName.equals("..")) {
+            return;
+        }
+        // a file that will not delete is left where it is. Its row has gone either way, so it is
+        // out of every backup from here on and nothing in the app can open it
+        new File(folder, fileName).delete();
     }
 
     /**
