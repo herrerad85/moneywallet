@@ -35,11 +35,11 @@ public class CSVDataImporter extends AbstractDataImporter {
     }
 
     /**
-     * Reads the whole file once without writing, then reads it again to write it. Writing a row as
-     * it was read left every row ahead of a refused one in the ledger, under an import the app
-     * reported as failed, and with no count of what had landed. Reading twice parses every row
-     * twice, which is the price of not holding the parsed rows: an import file has no ceiling, and
-     * a list of them would grow with it.
+     * Reads the whole file once without saving anything, then reads it again to save it. Saving
+     * each row as it was read left every row before a bad one in the ledger, under a message
+     * telling the user the import had failed. Reading twice parses every row twice. That is the
+     * cost of not keeping the parsed rows: an import file can be any size, and a list of them
+     * would grow with it.
      */
     @Override
     public void importData() throws IOException {
@@ -50,11 +50,10 @@ public class CSVDataImporter extends AbstractDataImporter {
     }
 
     /**
-     * Reads every row, throwing on the first row that is refused, and writes each row as it is
-     * read when asked to. The caller runs a pass with writing off first, so that a refused file
-     * ends the import with nothing written. That does not make the writing pass
-     * itself safe: {@link #insertTransaction} can throw part way through, and what it wrote by then
-     * stays.
+     * Reads every row and throws on the first bad one. Saves a row only when write is true.
+     * {@link #importData} calls this twice, with write off and then on, so that a bad file is
+     * caught before anything is saved. Saving itself can still fail part way through, and whatever
+     * {@link #insertTransaction} already saved stays.
      */
     private void readRows(CSVReaderHeaderAware reader, boolean write) throws IOException {
         Map<String, String> lineMap = reader.readMap();
