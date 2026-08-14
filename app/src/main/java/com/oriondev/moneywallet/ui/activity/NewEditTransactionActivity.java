@@ -89,6 +89,12 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     public static final String SAVING_ACTION = "NewEditTransactionActivity::SavingAction";
     public static final String MODEL_ID = "NewEditTransactionActivity::ModelId";
 
+    /**
+     * Id of a transaction a new one is being copied from. Only read in {@link Mode#NEW_ITEM},
+     * where it fills the editor from that transaction instead of from the arguments above.
+     */
+    public static final String DUPLICATE_ID = "NewEditTransactionActivity::DuplicateId";
+
     public static final int TYPE_STANDARD = 0;
     public static final int TYPE_TRANSFER = 1;
     public static final int TYPE_DEBT = 2;
@@ -344,8 +350,26 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
         ArrayList<Attachment> attachments = null;
         if (savedInstanceState == null) {
             ContentResolver contentResolver = getContentResolver();
-            if (getMode() == Mode.EDIT_ITEM) {
-                Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSACTIONS, getItemId());
+            // A copy opens on what the transaction it came from holds, so it reads that row
+            // through the same block the editor reads its own. Two things it does not take: the
+            // date, which starts at now because the copy is being entered now, and the
+            // attachments, since removing one in this editor deletes the attachment row and its
+            // file outright, with no check for anything else pointing at it, which would leave a
+            // copy holding nothing.
+            //
+            // Only a plain transaction is copied. The others each carry a link the editor does
+            // not draw: a leg belongs to a transfer, and a payment or a deposit belongs to a debt
+            // or a saving whose totals a second one would move with nothing on screen saying so.
+            // The action is not offered for them, and the kind is checked again here rather than
+            // trusted from the caller, since this activity is exported.
+            long duplicateId = getMode() == Mode.NEW_ITEM ? getIntent().getLongExtra(DUPLICATE_ID, 0L) : 0L;
+            boolean duplicating = duplicateId > 0L && isPlainTransaction(contentResolver, duplicateId);
+            if (duplicating) {
+                datetime = new Date();
+            }
+            if (getMode() == Mode.EDIT_ITEM || duplicating) {
+                Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSACTIONS,
+                        duplicating ? duplicateId : getItemId());
                 String[] projection = new String[] {
                         Contract.Transaction.MONEY,
                         Contract.Transaction.DATE,
@@ -383,7 +407,9 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                 if (cursor != null) {
                     if (cursor.moveToFirst()) {
                         money = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY));
-                        datetime = DateUtils.getDateFromSQLDateTimeString(cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE)));
+                        if (!duplicating) {
+                            datetime = DateUtils.getDateFromSQLDateTimeString(cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE)));
+                        }
                         mDescriptionEditText.setText(cursor.getString(cursor.getColumnIndex(Contract.Transaction.DESCRIPTION)));
                         category = new Category(
                                 cursor.getLong(cursor.getColumnIndex(Contract.Transaction.CATEGORY_ID)),
@@ -481,30 +507,32 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                     cursor.close();
                 }
                 // load all attachments
-                attachments = new ArrayList<>();
-                Uri attachmentsUri = Uri.withAppendedPath(uri, "attachments");
-                projection = new String[] {
-                        Contract.Attachment.ID,
-                        Contract.Attachment.FILE,
-                        Contract.Attachment.NAME,
-                        Contract.Attachment.TYPE,
-                        Contract.Attachment.SIZE
-                };
-                cursor = contentResolver.query(attachmentsUri, projection, null, null, null);
-                if (cursor != null) {
-                    if (cursor.moveToFirst()) {
-                        for (int i = 0; cursor.moveToPosition(i) && i < cursor.getCount(); i++) {
-                            Attachment attachment = new Attachment(
-                                    cursor.getLong(cursor.getColumnIndex(Contract.Attachment.ID)),
-                                    cursor.getString(cursor.getColumnIndex(Contract.Attachment.FILE)),
-                                    cursor.getString(cursor.getColumnIndex(Contract.Attachment.NAME)),
-                                    cursor.getString(cursor.getColumnIndex(Contract.Attachment.TYPE)),
-                                    cursor.getLong(cursor.getColumnIndex(Contract.Attachment.SIZE))
-                            );
-                            attachments.add(attachment);
+                if (!duplicating) {
+                    attachments = new ArrayList<>();
+                    Uri attachmentsUri = Uri.withAppendedPath(uri, "attachments");
+                    projection = new String[] {
+                            Contract.Attachment.ID,
+                            Contract.Attachment.FILE,
+                            Contract.Attachment.NAME,
+                            Contract.Attachment.TYPE,
+                            Contract.Attachment.SIZE
+                    };
+                    cursor = contentResolver.query(attachmentsUri, projection, null, null, null);
+                    if (cursor != null) {
+                        if (cursor.moveToFirst()) {
+                            for (int i = 0; cursor.moveToPosition(i) && i < cursor.getCount(); i++) {
+                                Attachment attachment = new Attachment(
+                                        cursor.getLong(cursor.getColumnIndex(Contract.Attachment.ID)),
+                                        cursor.getString(cursor.getColumnIndex(Contract.Attachment.FILE)),
+                                        cursor.getString(cursor.getColumnIndex(Contract.Attachment.NAME)),
+                                        cursor.getString(cursor.getColumnIndex(Contract.Attachment.TYPE)),
+                                        cursor.getLong(cursor.getColumnIndex(Contract.Attachment.SIZE))
+                                );
+                                attachments.add(attachment);
+                            }
                         }
+                        cursor.close();
                     }
-                    cursor.close();
                 }
             } else {
                 Intent intent = getIntent();
@@ -836,6 +864,26 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
         if (savedInstanceState == null) {
             fillFieldsFromIntent(getIntent());
         }
+    }
+
+    /**
+     * Whether this id names a transaction that stands on its own, which is the only kind that is
+     * copied. Asked before the load above rather than read out of it, because that load reaches
+     * for a leg's transfer with the id of the item being edited, which a new item does not have,
+     * so it would find nothing, leave the type saying transfer, and carry on filling the editor
+     * in from a half of something.
+     */
+    private static boolean isPlainTransaction(ContentResolver contentResolver, long transactionId) {
+        Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSACTIONS, transactionId);
+        Cursor cursor = contentResolver.query(uri, new String[] {Contract.Transaction.TYPE}, null, null, null);
+        boolean plain = false;
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                plain = cursor.getInt(cursor.getColumnIndex(Contract.Transaction.TYPE)) == TYPE_STANDARD;
+            }
+            cursor.close();
+        }
+        return plain;
     }
 
     private void fillFieldsFromIntent(Intent intent) {

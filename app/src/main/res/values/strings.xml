@@ -235,6 +235,7 @@
     <string name="menu_refresh_currency_rate">"Refresh currency rate"</string>
     <string name="menu_advanced_settings">"Advanced settings"</string>
     <string name="menu_action_edit_item">"Edit"</string>
+    <string name="menu_action_duplicate_item">"Duplicate"</string>
     <string name="menu_action_delete_item">"Delete"</string>
     <string name="menu_action_archive_item">"Archive"</string>
     <string name="menu_action_unarchive_item">"Unarchive"</string>

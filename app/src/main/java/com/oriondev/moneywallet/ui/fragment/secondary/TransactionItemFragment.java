@@ -125,7 +125,7 @@ public class TransactionItemFragment extends SecondaryPanelFragment implements L
 
     @Override
     protected int onInflateMenu() {
-        return R.menu.menu_edit_delete_item;
+        return R.menu.menu_duplicate_edit_delete_item;
     }
 
     @Override
@@ -135,6 +135,11 @@ public class TransactionItemFragment extends SecondaryPanelFragment implements L
             Intent intent = new Intent(getActivity(), NewEditTransactionActivity.class);
             intent.putExtra(NewEditItemActivity.MODE, NewEditItemActivity.Mode.EDIT_ITEM);
             intent.putExtra(NewEditItemActivity.ID, getItemId());
+            startActivity(intent);
+        } else if (itemId == R.id.action_duplicate_item) {
+            Intent intent = new Intent(getActivity(), NewEditTransactionActivity.class);
+            intent.putExtra(NewEditItemActivity.MODE, NewEditItemActivity.Mode.NEW_ITEM);
+            intent.putExtra(NewEditTransactionActivity.DUPLICATE_ID, getItemId());
             startActivity(intent);
         } else if (itemId == R.id.action_delete_item) {
             showDeleteDialog(getActivity());
@@ -186,6 +191,9 @@ public class TransactionItemFragment extends SecondaryPanelFragment implements L
 
     private void setLoadingScreen(boolean loading) {
         if (loading) {
+            // The toolbar sits above the part this hides, so it stays tappable. Whether a copy
+            // is offered is only known once the row has been read.
+            setMenuItemVisibility(R.id.action_duplicate_item, false);
             mMoneyTextView.setText(null);
             mCurrencyTextView.setText(null);
             mDescriptionTextView.setText(null);
@@ -247,6 +255,10 @@ public class TransactionItemFragment extends SecondaryPanelFragment implements L
                 } else {
                     mCurrencyTextView.setText("?");
                 }
+                // Only a plain transaction is offered a copy, and the toolbar is tappable while
+                // this loads, so the item is hidden until the row says which kind this is.
+                setMenuItemVisibility(R.id.action_duplicate_item, cursor.getInt(
+                        cursor.getColumnIndex(Contract.Transaction.TYPE)) == NewEditTransactionActivity.TYPE_STANDARD);
                 long money = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY));
                 mMoneyTextView.setText(mMoneyFormatter.getNotTintedString(currency, money, MoneyFormatter.CurrencyMode.ALWAYS_HIDDEN));
                 String description = cursor.getString(cursor.getColumnIndex(Contract.Transaction.DESCRIPTION));
