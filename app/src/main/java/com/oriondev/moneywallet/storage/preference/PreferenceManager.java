@@ -35,6 +35,9 @@ import com.oriondev.moneywallet.model.Group;
 import com.oriondev.moneywallet.model.LockMode;
 
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by andrea on 24/01/18.
@@ -68,6 +71,7 @@ public class PreferenceManager {
     private static final String CONVERTER_LAST_CURRENCY_2 = "converter_currency_iso_2";
 
     private static final String MAP_TILE_SERVER = "map_tile_server";
+    private static final String COLLAPSED_CATEGORIES = "collapsed_categories";
 
     private static final String LAST_DATA_CHANGE_TIME = "last_data_change_time";
 
@@ -128,6 +132,23 @@ public class PreferenceManager {
         } else {
             mPreferences.edit().putString(MAP_TILE_SERVER, url).apply();
         }
+    }
+
+    /**
+     * @return the ids, as text, of the categories whose children the user has hidden in the
+     *          category list and the category picker. Nothing stored means nothing hidden,
+     *          which is how the list has always been drawn. Stored once rather than held per
+     *          list, so that two lists cannot write each other's hiding away. Each list still
+     *          has to re-read it to redraw, which CategoryListFragment does when it resumes.
+     */
+    public static Set<String> getCollapsedCategories() {
+        // A copy, because getStringSet is documented as returning a set the caller must not
+        // modify, and the callers here are building the next value out of this one.
+        return new HashSet<>(mPreferences.getStringSet(COLLAPSED_CATEGORIES, Collections.<String>emptySet()));
+    }
+
+    public static void setCollapsedCategories(Set<String> categoryIds) {
+        mPreferences.edit().putStringSet(COLLAPSED_CATEGORIES, categoryIds).apply();
     }
 
     public static void setCurrentWallet(Context context, long walletId) {

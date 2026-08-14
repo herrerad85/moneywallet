@@ -27,11 +27,13 @@ import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.database.ImportException;
 import com.oriondev.moneywallet.storage.database.SQLDatabaseImporter;
 import com.oriondev.moneywallet.storage.database.SyncContentProvider;
+import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 /**
  * Created by andrea on 25/10/18.
@@ -60,6 +62,11 @@ public abstract class AbstractBackupImporter {
         File temporary = createBackupCopyOfCurrentDatabase(databaseFolder);
         try {
             importDatabase(temporaryFolder);
+            // The categories the user had hidden are remembered by id, and the database that
+            // knew those ids has just been replaced. The rows that went into the new one were
+            // given fresh ids in the order they were read, so the remembered ones now name other
+            // categories. Forgetting them leaves every category showing, where the list starts.
+            PreferenceManager.setCollapsedCategories(Collections.<String>emptySet());
         } catch (ImportException e) {
             restoreBackupCopyOfDatabase(databaseFolder, temporary);
             throw e;
