@@ -150,6 +150,7 @@
     <string name="hint_export_folder">"Export folder"</string>
     <string name="hint_export_optional_columns">"Optional columns"</string>
     <string name="hint_export_unique_wallet">"Join transactions from different wallets"</string>
+    <string name="hint_export_csv_no_transfers">"The two sides of a transfer are left out of a CSV file, because nothing in it marks which two rows were one transfer. A transfer fee is still written, and the other formats include transfers in full."</string>
     <string name="hint_data_format_csv" translatable="false">"CSV"</string>
     <string name="hint_data_format_xls" translatable="false">"XLS"</string>
     <string name="hint_data_format_pdf" translatable="false">"PDF"</string>

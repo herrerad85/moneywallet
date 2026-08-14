@@ -74,6 +74,7 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
 
     private MaterialEditText mImportFormatEditText;
     private MaterialEditText mExportFormatEditText;
+    private View mExportCsvNoTransfersTextView;
     private MaterialEditText mStartDateEditText;
     private MaterialEditText mEndDateEditText;
     private MaterialEditText mWalletsEditText;
@@ -175,6 +176,7 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
         View view = inflater.inflate(R.layout.layout_panel_import_export, parent, true);
         mImportFormatEditText = view.findViewById(R.id.import_format_edit_text);
         mExportFormatEditText = view.findViewById(R.id.export_format_edit_text);
+        mExportCsvNoTransfersTextView = view.findViewById(R.id.export_csv_no_transfers_text_view);
         mStartDateEditText = view.findViewById(R.id.start_date_edit_text);
         mEndDateEditText = view.findViewById(R.id.end_date_edit_text);
         mWalletsEditText = view.findViewById(R.id.wallets_edit_text);
@@ -607,6 +609,7 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
                     mExportFormatEditText.setText(R.string.hint_data_format_csv);
                     if (mMode == MODE_EXPORT) {
                         mExportColumnsEditText.setVisibility(View.VISIBLE);
+                        mExportCsvNoTransfersTextView.setVisibility(View.VISIBLE);
                     }
                     break;
                 case XLS:
@@ -614,6 +617,7 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
                     mExportFormatEditText.setText(R.string.hint_data_format_xls);
                     if (mMode == MODE_EXPORT) {
                         mExportColumnsEditText.setVisibility(View.VISIBLE);
+                        mExportCsvNoTransfersTextView.setVisibility(View.GONE);
                     }
                     break;
                 case PDF:
@@ -621,6 +625,7 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
                     mExportFormatEditText.setText(R.string.hint_data_format_pdf);
                     if (mMode == MODE_EXPORT) {
                         mExportColumnsEditText.setVisibility(View.VISIBLE);
+                        mExportCsvNoTransfersTextView.setVisibility(View.GONE);
                     }
                     break;
             }
@@ -628,6 +633,7 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
             mImportFormatEditText.setText(null);
             mExportFormatEditText.setText(null);
             mExportColumnsEditText.setVisibility(View.GONE);
+            mExportCsvNoTransfersTextView.setVisibility(View.GONE);
         }
         onFormatOrWalletChanged();
     }

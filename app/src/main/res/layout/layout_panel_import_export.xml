@@ -107,6 +107,17 @@
             android:text="@string/hint_export_unique_wallet"
             android:checked="true" />
 
+        <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+            android:id="@+id/export_csv_no_transfers_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/material_activity_body_check_box_start_end_margin"
+            android:layout_marginRight="@dimen/material_activity_body_check_box_start_end_margin"
+            android:layout_marginBottom="@dimen/material_activity_body_check_box_top_bottom_margin"
+            android:text="@string/hint_export_csv_no_transfers"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:visibility="gone" />
+
     </LinearLayout>
 
 </com.oriondev.moneywallet.ui.view.theme.ThemedScrollView>

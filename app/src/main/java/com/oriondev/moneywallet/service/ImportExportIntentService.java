@@ -135,6 +135,15 @@ public class ImportExportIntentService extends IntentService {
                 selectionBuilder.append(" AND DATE (" + Contract.Transaction.DATE + ") >= DATE(?)");
                 selectionArguments.add(DateUtils.getSQLDateString(startDate));
             }
+            if (dataFormat == DataFormat.CSV) {
+                // CSV is the only format that can be imported back, and it carries nothing that
+                // pairs the two legs of a transfer, so importing them recreates each leg as an
+                // ordinary transaction. The fee stays: it is one expense, not half of anything.
+                selectionBuilder.append(" AND (" + Contract.Transaction.TYPE + " != ? OR " +
+                        Contract.Transaction.CATEGORY_TAG + " = ?)");
+                selectionArguments.add(String.valueOf(Contract.TransactionType.TRANSFER));
+                selectionArguments.add(Contract.CategoryTag.TRANSFER_TAX);
+            }
             String sortOrder = Contract.Transaction.DATE + " DESC";
             // check if we should create a unique wallet or if we can export each wallet
             // in a separate way
