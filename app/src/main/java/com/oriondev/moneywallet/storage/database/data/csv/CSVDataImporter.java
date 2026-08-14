@@ -24,16 +24,40 @@ import java.util.Map;
  */
 public class CSVDataImporter extends AbstractDataImporter {
 
+    private final File mFile;
+
     private final CSVReaderHeaderAware mReader;
 
     public CSVDataImporter(Context context, File file) throws IOException {
         super(context, file);
+        mFile = file;
         mReader = new CSVReaderHeaderAware(new FileReader(file));
     }
 
+    /**
+     * Reads the whole file once without writing, then reads it again to write it. Writing a row as
+     * it was read left every row ahead of a refused one in the ledger, under an import the app
+     * reported as failed, and with no count of what had landed. Reading twice parses every row
+     * twice, which is the price of not holding the parsed rows: an import file has no ceiling, and
+     * a list of them would grow with it.
+     */
     @Override
     public void importData() throws IOException {
-        Map<String, String> lineMap = mReader.readMap();
+        try (CSVReaderHeaderAware check = new CSVReaderHeaderAware(new FileReader(mFile))) {
+            readRows(check, false);
+        }
+        readRows(mReader, true);
+    }
+
+    /**
+     * Reads every row, throwing on the first row that is refused, and writes each row as it is
+     * read when asked to. The caller runs a pass with writing off first, so that a refused file
+     * ends the import with nothing written. That does not make the writing pass
+     * itself safe: {@link #insertTransaction} can throw part way through, and what it wrote by then
+     * stays.
+     */
+    private void readRows(CSVReaderHeaderAware reader, boolean write) throws IOException {
+        Map<String, String> lineMap = reader.readMap();
         while (lineMap != null) {
             // extract required information from the csv file
             String wallet = getTrimmedString(lineMap.get(Constants.COLUMN_WALLET));
@@ -66,8 +90,10 @@ public class CSVDataImporter extends AbstractDataImporter {
             long money = MoneyScale.toMinorUnits(moneyDecimal, currencyUnit.getDecimals());
             int direction = money < 0 ? Contract.Direction.EXPENSE : Contract.Direction.INCOME;
             Date datetime = DateUtils.getDateFromSQLDateTimeString(datetimeString);
-            insertTransaction(wallet, currencyUnit, category, datetime, Math.abs(money), direction, description, event, place, people, note);
-            lineMap = mReader.readMap();
+            if (write) {
+                insertTransaction(wallet, currencyUnit, category, datetime, Math.abs(money), direction, description, event, place, people, note);
+            }
+            lineMap = reader.readMap();
         }
     }
 
