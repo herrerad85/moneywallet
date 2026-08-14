@@ -415,6 +415,7 @@
     <string name="message_action_archive_saving">"Are you sure you want to archive this saving?"</string>
     <string name="message_action_unarchive_saving">"Are you sure you want to unarchive this saving?"</string>
     <string name="message_error_activity_not_found">"No application found on this device to handle the request."</string>
+    <string name="message_error_negative_amount">"The amount cannot be negative. The minus key is for subtracting."</string>
     <string name="message_delete_currency">"Are you sure you want to delete this currency?"</string>
     <string name="message_error_delete_currency">"This currency cannot be deleted because it is in use."</string>
     <string name="message_delete_wallet">"Are you sure you want to delete this wallet? All the related data will be removed."</string>

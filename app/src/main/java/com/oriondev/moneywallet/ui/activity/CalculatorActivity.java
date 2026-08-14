@@ -30,6 +30,7 @@ import android.widget.TextView;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.ui.activity.base.SinglePanelActivity;
+import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 import com.oriondev.moneywallet.utils.EquationSolver;
 
 /**
@@ -40,6 +41,7 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
     public static final String ACTIVITY_MODE = "CalculatorActivity::Parameters::ActivityMode";
     public static final String CURRENCY = "CalculatorActivity::Parameters::Currency";
     public static final String MONEY = "CalculatorActivity::Parameters::Money";
+    public static final String ALLOW_NEGATIVE = "CalculatorActivity::Parameters::AllowNegative";
 
     public static final int MODE_CALCULATOR = 0;
     public static final int MODE_KEYPAD = 1;
@@ -69,6 +71,7 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
     private EquationSolver mSolver;
 
     private boolean mKeypadMode;
+    private boolean mAllowNegative;
 
     @Override
     protected void onCreatePanelView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
@@ -101,6 +104,7 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
     protected void onViewCreated(Bundle savedInstanceState) {
         Intent intent = getIntent();
         mKeypadMode = intent.getIntExtra(ACTIVITY_MODE, MODE_CALCULATOR) == MODE_KEYPAD;
+        mAllowNegative = intent.getBooleanExtra(ALLOW_NEGATIVE, false);
         if (savedInstanceState == null) {
             CurrencyUnit currency = intent.getParcelableExtra(CURRENCY);
             long money = intent.getLongExtra(MONEY, 0L);
@@ -170,8 +174,20 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
                 // TODO: show error!
             }
         } else if (mKeypadMode) {
+            long money = mSolver.getResult();
+            // The screen that opened the keypad says whether a negative belongs in the field it is
+            // filling. Where it does not, an amount below zero is not handed back, and is left on
+            // the display so it can be corrected.
+            if (money < 0 && !mAllowNegative) {
+                ThemedDialog.buildMaterialDialog(this)
+                        .title(R.string.title_error)
+                        .content(R.string.message_error_negative_amount)
+                        .positiveText(android.R.string.ok)
+                        .show();
+                return;
+            }
             Intent intent = new Intent();
-            intent.putExtra(MONEY, mSolver.getResult());
+            intent.putExtra(MONEY, money);
             setResult(RESULT_OK, intent);
             finish();
         }

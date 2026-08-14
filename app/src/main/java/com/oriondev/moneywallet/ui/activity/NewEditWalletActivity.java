@@ -192,7 +192,9 @@ public class NewEditWalletActivity extends NewEditItemActivity implements IconPi
         FragmentManager fragmentManager = getSupportFragmentManager();
         mIconPicker = IconPicker.createPicker(fragmentManager, TAG_ICON_PICKER, icon);
         mCurrencyPicker = CurrencyPicker.createPicker(fragmentManager, TAG_CURRENCY_PICKER, currencyUnit);
-        mMoneyPicker = MoneyPicker.createPicker(fragmentManager, TAG_MONEY_PICKER, currencyUnit, startMoney);
+        // A wallet is the one place a negative belongs: a credit card or an overdrawn account
+        // starts below zero, and the balance is drawn with its sign.
+        mMoneyPicker = MoneyPicker.createPicker(fragmentManager, TAG_MONEY_PICKER, currencyUnit, startMoney, true);
         // configure pickers
         mIconPicker.listenOn(mNameEditText);
     }
