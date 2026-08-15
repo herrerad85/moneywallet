@@ -34,6 +34,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -91,11 +92,25 @@ public class AutoBackupSettingDialog extends DialogFragment {
                 .customView(R.layout.dialog_auto_backup_setting, true)
                 .positiveText(android.R.string.ok)
                 .negativeText(android.R.string.cancel)
+                // OK does not close the dialog by itself, so a setting it refuses to save leaves
+                // the rest of what was typed on screen. Tapping outside and the back button are
+                // not affected and still cancel.
+                .autoDismiss(false)
                 .onPositive(new MaterialDialog.SingleButtonCallback() {
 
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        onSaveSetting();
+                        if (onSaveSetting()) {
+                            dialog.dismiss();
+                        }
+                    }
+
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        dialog.dismiss();
                     }
 
                 })
@@ -174,15 +189,40 @@ public class AutoBackupSettingDialog extends DialogFragment {
         mOffsetTextView.setText(getString(R.string.hint_auto_backup_every_n_hours, hours));
     }
 
+    /**
+     * A folder that is stored but cannot be read comes back from
+     * {@link BackendServiceFactory#getFile} as null, and so does one that is not stored when the
+     * backend has no default folder. The two do not get the same line. The notification the sweep
+     * posts already separates them, and a row reading "not chosen" under a notification saying
+     * the location is gone would be the app arguing with itself.
+     */
     private void onFolderChanged() {
         if (mFolder != null) {
             mFolderTextView.setText(mFolder.getName());
+        } else if (BackendManager.getAutoBackupFolder(mBackendId) != null) {
+            mFolderTextView.setText(R.string.hint_auto_backup_folder_unavailable);
         } else {
-            mFolderTextView.setText(R.string.hint_auto_backup_root_folder);
+            mFolderTextView.setText(R.string.hint_auto_backup_folder_not_chosen);
         }
     }
 
-    private void onSaveSetting() {
+    /**
+     * Saves the settings, or refuses and returns false. Nowhere else writes a backup folder.
+     * {@link BackendManager#setAutoBackupEnabled} erases one, and the two callers that reach it
+     * from outside this screen turn the backend off in the same call, so neither can leave a
+     * backend enabled with no folder.
+     *
+     * A backend with no usable folder is what the refusal is about. Some backends offer a default
+     * one and {@link BackendServiceFactory#getFile} hands it back for a folder that is not stored,
+     * which is what fills in {@code mFolder} when this dialog opens, so a null here means there is
+     * no folder to back up to and none to fall back on. Saved enabled, that backend can only fail:
+     * the sweep asks for the same file, gets null, and reports a failed backup instead.
+     */
+    private boolean onSaveSetting() {
+        if (mServiceEnabledSwitchCompat.isChecked() && mFolder == null) {
+            Toast.makeText(getContext(), R.string.message_auto_backup_folder_required, Toast.LENGTH_LONG).show();
+            return false;
+        }
         BackendManager.setAutoBackupEnabled(mBackendId, mServiceEnabledSwitchCompat.isChecked());
         BackendManager.setAutoBackupOnWiFiOnly(mBackendId, mOnlyWiFiCheckBox.isChecked());
         BackendManager.setAutoBackupWhenDataIsChangedOnly(mBackendId, mOnlyDataChangedCheckBox.isChecked());
@@ -202,6 +242,7 @@ public class AutoBackupSettingDialog extends DialogFragment {
                     new String[]{Manifest.permission.POST_NOTIFICATIONS},
                     REQUEST_CODE_NOTIFICATION_PERMISSION);
         }
+        return true;
     }
 
     @Override

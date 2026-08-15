@@ -192,14 +192,24 @@ public class AutoBackupJobService extends JobService {
     }
 
     private static void runBackend(Context context, String backendId) throws Exception {
-        IFile folder = BackendServiceFactory.getFile(backendId, BackendManager.getAutoBackupFolder(backendId));
+        String encodedFolder = BackendManager.getAutoBackupFolder(backendId);
+        IFile folder = BackendServiceFactory.getFile(backendId, encodedFolder);
         if (folder == null) {
             // Legacy or undecodable backup location (issue #177): skip this backend instead of
             // failing the sweep. The backend stays configured; the folder can be chosen again.
             // The occurrence is consumed either way, so tell the user rather than leaving a
             // backup that never runs to be discovered when it is needed.
-            Log.w(TAG, "Skipping auto backup for '" + backendId + "': backup location missing or not decodable");
-            notifyMessage(context, context.getString(R.string.notification_content_backup_error_location));
+            //
+            // Nothing stored is a different failure from something stored that will not decode.
+            // The settings dialog refuses to save the first, so what reaches here was written by
+            // a build before it. Telling that user the location is no longer available sends
+            // them looking for a folder that is not there to find.
+            boolean nothingStored = encodedFolder == null;
+            Log.w(TAG, "Skipping auto backup for '" + backendId + "': "
+                    + (nothingStored ? "no backup folder is set" : "backup location not decodable"));
+            notifyMessage(context, context.getString(nothingStored
+                    ? R.string.notification_content_backup_error_location_unset
+                    : R.string.notification_content_backup_error_location));
             return;
         }
         if (BackendManager.isAutoBackupOnWiFiOnly(backendId) && !isConnectedToWiFi(context)) {

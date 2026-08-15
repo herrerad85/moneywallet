@@ -320,7 +320,6 @@
     <string name="hint_auto_backup_every_n_hours">Alle %d Stunden</string>
     <string name="hint_auto_backup_folder">Ordner</string>
     <string name="hint_auto_backup_only_if_data_changed">Nur wenn die Daten verändert wurden</string>
-    <string name="hint_auto_backup_root_folder">Wurzel</string>
     <string name="hint_auto_backup_wifi_only">Nur über WLAN</string>
     <string name="hint_decimals">Anzahl der Nachkommastellen</string>
     <string name="hint_directory">Ordner</string>

@@ -159,7 +159,6 @@
     <string name="hint_auto_backup_only_if_data_changed">"Μόνο αν άλλαξαν τα δεδομένα"</string>
     <string name="hint_auto_backup_every_n_hours">"Κάθε %d ώρες"</string>
     <string name="hint_auto_backup_folder">"Φάκελος"</string>
-    <string name="hint_auto_backup_root_folder">"Αρχικός φάκελος"</string>
 
     <string name="total_wallet_name">"Σύνολο"</string>
 

@@ -160,7 +160,6 @@
     <string name="hint_auto_backup_only_if_data_changed">"Apenas se os dados forem alterados"</string>
     <string name="hint_auto_backup_every_n_hours">"Toda %d horas"</string>
     <string name="hint_auto_backup_folder">"Pasta"</string>
-    <string name="hint_auto_backup_root_folder">"Raiz"</string>
 
     <string name="total_wallet_name">"Total"</string>
 

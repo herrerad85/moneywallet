@@ -155,7 +155,6 @@
     <string name="hint_auto_backup_only_if_data_changed"> "Yalnızca veriler değiştirilirse" </string>
     <string name="hint_auto_backup_every_n_hours"> "Her %d saat" </string>
     <string name="hint_auto_backup_folder"> "Klasör" </string>
-    <string name="hint_auto_backup_root_folder"> "Kök dizin" </string>
 
     <string name="total_wallet_name"> "Toplam" </string>
 

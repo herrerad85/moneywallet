@@ -148,7 +148,6 @@
     <string name="hint_auto_backup_only_if_data_changed">"فقط اگر داده تغییر کند"</string>
     <string name="hint_auto_backup_every_n_hours">"هر %d ساعت"</string>
     <string name="hint_auto_backup_folder">"پوشه"</string>
-    <string name="hint_auto_backup_root_folder">"ریشه"</string>
 
     <string name="total_wallet_name">"جمع کل"</string>
 

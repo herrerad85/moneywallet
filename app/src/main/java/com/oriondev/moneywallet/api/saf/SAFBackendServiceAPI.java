@@ -213,17 +213,23 @@ public class SAFBackendServiceAPI extends AbstractBackendServiceAPI<SAFFile> {
 
     @Override
     public SAFFile newFolder(SAFFile parent, String name) throws BackendException {
-        DocumentFile docParent = DocumentFile.fromTreeUri(mContext, parent.getUri());
+        // No parent means the top of the granted tree, which is where the explorer starts and
+        // is the only place a first folder can be made. Reading a uri off it threw instead, and
+        // BackendHandlerIntentService catches BackendException only, so it took the app down.
+        // upload and list already read a missing parent this way.
+        DocumentFile docParent = parent == null ? mRoot
+                : DocumentFile.fromTreeUri(mContext, parent.getUri());
+        String parentName = parent == null ? "root directory" : parent.getUri().toString();
         if (docParent == null) {
             throw new BackendException(
-                    String.format("Couldn't access parent '%s'", parent.getUri())
+                    String.format("Couldn't access parent '%s'", parentName)
             );
         }
         DocumentFile docFolder = docParent.createDirectory(name);
         if (docFolder == null) {
             throw new BackendException(
                     String.format(
-                            "Couldn't create folder '%s' under parent '%s'", name, parent.getUri()
+                            "Couldn't create folder '%s' under parent '%s'", name, parentName
                     )
             );
         }

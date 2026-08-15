@@ -167,7 +167,10 @@
     <string name="hint_auto_backup_only_if_data_changed">"Only if data is changed"</string>
     <string name="hint_auto_backup_every_n_hours">"Every %d hours"</string>
     <string name="hint_auto_backup_folder">"Folder"</string>
-    <string name="hint_auto_backup_root_folder">"Root"</string>
+    <string name="hint_auto_backup_folder_not_chosen">"Not chosen"</string>
+    <string name="hint_auto_backup_folder_unavailable">"Not available"</string>
+    <string name="message_auto_backup_folder_required">"Choose a folder before turning automatic backup on."</string>
+    <string name="message_backend_open_a_folder">"Open a folder to choose it."</string>
 
     <string name="total_wallet_name">"Total"</string>
 
@@ -571,6 +574,7 @@
     <string name="notification_content_backup_error_backend">"There was an error with the backend and the auto backup has been disabled. Check if there is any problem."</string>
     <string name="notification_content_backup_error_internal">"There was an internal error during the operation, which is probably a bug. Please report this message to the developer: %s"</string>
     <string name="notification_content_backup_error_location">"The backup location is no longer available, so the automatic backup did not run. Open the backup settings and choose the folder again."</string>
+    <string name="notification_content_backup_error_location_unset">"No folder is set for this backup, so the automatic backup did not run. Open the backup settings and choose one."</string>
     <string name="notification_action_retry">"Retry"</string>
     <string name="message_error_network_connection">"network connection"</string>
     <string name="message_error_invalid_response">"invalid response"</string>

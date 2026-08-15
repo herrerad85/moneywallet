@@ -159,7 +159,6 @@
     <string name="hint_auto_backup_only_if_data_changed">"Seulement si les données ont changé"</string>
     <string name="hint_auto_backup_every_n_hours">"Toutes les %d heures"</string>
     <string name="hint_auto_backup_folder">"Dossier"</string>
-    <string name="hint_auto_backup_root_folder">"Racine"</string>
 
     <string name="total_wallet_name">Total</string>
 

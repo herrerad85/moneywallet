@@ -150,7 +150,6 @@
     <string name="hint_auto_backup_every_n_hours">Minden %d órában</string>
     <string name="hint_auto_backup_folder">Mappa</string>
     <string name="hint_auto_backup_only_if_data_changed">Csak ha az adat változott</string>
-    <string name="hint_auto_backup_root_folder">Gyökér</string>
     <string name="hint_auto_backup_wifi_only">Csak Wifi hálózaton</string>
     <string name="hint_bank_name">Bank név</string>
     <string name="hint_category">Kategória</string>

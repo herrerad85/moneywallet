@@ -146,7 +146,6 @@
     <string name="hint_auto_backup_only_if_data_changed">"ഡാറ്റ മാറ്റിയാൽ മാത്രം"</string>
     <string name="hint_auto_backup_every_n_hours">"ഓരോ %d മണിക്കൂറിലും"</string>
     <string name="hint_auto_backup_folder">"ഫോൾഡർ"</string>
-    <string name="hint_auto_backup_root_folder">"റൂട്ട്"</string>
 
     <string name="total_wallet_name">"ആകെ"</string>
 

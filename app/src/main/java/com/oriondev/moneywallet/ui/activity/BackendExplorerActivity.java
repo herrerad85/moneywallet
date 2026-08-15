@@ -32,6 +32,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.widget.Toast;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -167,6 +168,13 @@ public class BackendExplorerActivity extends SinglePanelActivity implements Swip
                 if (folder == null) {
                     // this backend's own default, rather than a local path it cannot decode
                     folder = BackendServiceFactory.getFile(mBackendId, null);
+                }
+                if (folder == null) {
+                    // The top of the list is not a folder this backend can name. Choosing it used
+                    // to send back a result carrying no file, and the settings dialog read that as
+                    // the answer and dropped the folder it already held.
+                    Toast.makeText(this, R.string.message_backend_open_a_folder, Toast.LENGTH_LONG).show();
+                    return false;
                 }
                 Intent intent = new Intent();
                 intent.putExtra(RESULT_FILE, folder);
