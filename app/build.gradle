@@ -135,6 +135,10 @@ dependencies {
     // fixed list and throws ProtocolException for both, so a real HTTP client is not optional here.
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'androidx.multidex:multidex:2.0.1'
+    // Without this line documentfile resolves to 1.0.0, by way of legacy-support-core-utils.
+    // In 1.0.0 fromTreeUri drops the document id, so every folder under a granted tree
+    // resolves to the top of the tree. 1.0.1 keeps the id when the uri is a document uri.
+    implementation 'androidx.documentfile:documentfile:1.0.1'
     implementation 'androidx.activity:activity:1.2.0-alpha08'
     implementation 'androidx.fragment:fragment:1.3.0-alpha08'
     implementation 'net.lingala.zip4j:zip4j:1.3.2'
