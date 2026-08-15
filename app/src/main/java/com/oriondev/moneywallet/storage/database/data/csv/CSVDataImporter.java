@@ -30,6 +30,8 @@ public class CSVDataImporter extends AbstractDataImporter {
 
     private final CSVReaderHeaderAware mReader;
 
+    private int mRoundedAmounts;
+
     public CSVDataImporter(Context context, File file) throws IOException {
         super(context, file);
         mFile = file;
@@ -99,12 +101,49 @@ public class CSVDataImporter extends AbstractDataImporter {
         } catch (NumberFormatException e) {
             throw new RuntimeException("Invalid money amount (" + e.getMessage() + ")");
         }
-        long money = MoneyScale.toMinorUnits(moneyDecimal, currencyUnit.getDecimals());
+        long money = toMinorUnitsCounting(moneyDecimal, moneyString, currencyUnit.getDecimals(), write);
         int direction = money < 0 ? Contract.Direction.EXPENSE : Contract.Direction.INCOME;
         Date datetime = parseDatetime(datetimeString);
         if (write) {
             insertTransaction(wallet, currencyUnit, category, datetime, Math.abs(money), direction, description, event, place, people, note);
         }
+    }
+
+    @Override
+    public int getRoundedAmounts() {
+        return mRoundedAmounts;
+    }
+
+    /**
+     * The amount of a row in minor units. Rounded rather than cut off, because a file written
+     * elsewhere carries whatever precision that place kept, and nothing here shows the amount
+     * for review before it is saved. The row's own currency column decides the scale.
+     *
+     * Rows the currency could not hold exactly are counted, so the screen that reports the
+     * import can say so. The test is the stored amount read back against what the row said, not
+     * the rounded amount against the cut off one: a row rounded down lands where cutting off
+     * would have left it, and its value moved just the same. Counted only on the pass that
+     * writes, since every row is read twice.
+     *
+     * @param cell  the money column as the row wrote it, which is what a refusal quotes.
+     * @param write true on the pass that saves, which is the one that counts.
+     */
+    private long toMinorUnitsCounting(BigDecimal amount, String cell, int decimals, boolean write) {
+        long money;
+        try {
+            money = MoneyScale.toMinorUnitsRounded(amount, decimals);
+        } catch (ArithmeticException e) {
+            throw new RuntimeException("Money amount is out of range (" + cell + ")");
+        }
+        // The one value abs cannot turn positive, which would otherwise reach the ledger as a
+        // negative amount sitting on an expense.
+        if (money == Long.MIN_VALUE) {
+            throw new RuntimeException("Money amount is out of range (" + cell + ")");
+        }
+        if (write && MoneyScale.toHumanAmount(money, decimals).compareTo(amount) != 0) {
+            mRoundedAmounts++;
+        }
+        return money;
     }
 
     /**

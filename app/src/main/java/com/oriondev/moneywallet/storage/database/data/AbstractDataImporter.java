@@ -48,6 +48,13 @@ public abstract class AbstractDataImporter {
 
     public abstract void importData() throws IOException;
 
+    /**
+     * How many amounts this import had to round to fit the currency they were in, once
+     * {@link #importData()} has run, and zero before it. A format that cannot carry an amount
+     * the currency does not hold answers zero, but it has to say so rather than inherit it.
+     */
+    public abstract int getRoundedAmounts();
+
     protected void insertTransaction(String wallet, CurrencyUnit currencyUnit, String category,
                                      Date datetime, Long money, int direction, String description,
                                      String event, String place, String people, String note) {

@@ -733,9 +733,15 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
                             mProgressDialog.dismissAllowingStateLoss();
                             mProgressDialog = null;
                         }
+                        // An amount a file carries more precisely than its currency can hold is
+                        // rounded on the way in, so the screen that says the import worked says
+                        // that too rather than leaving the user to find it in the ledger.
+                        int roundedAmounts = intent.getIntExtra(ImportExportIntentService.ROUNDED_AMOUNTS, 0);
                         ThemedDialog.buildMaterialDialog(ImportExportActivity.this)
                                 .title(R.string.title_success)
-                                .content(R.string.message_data_import_success)
+                                .content(roundedAmounts > 0
+                                        ? getString(R.string.message_data_import_success_rounded, roundedAmounts)
+                                        : getString(R.string.message_data_import_success))
                                 .positiveText(android.R.string.ok)
                                 .show();
                         break;

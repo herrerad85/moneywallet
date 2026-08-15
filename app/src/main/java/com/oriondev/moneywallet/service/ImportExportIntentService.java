@@ -48,6 +48,7 @@ public class ImportExportIntentService extends IntentService {
     public static final String RESULT_FILE_URI = "ImportExportIntentService::Results::FileUri";
     public static final String RESULT_FILE_TYPE = "ImportExportIntentService::Results::FileType";
     public static final String EXCEPTION = "ImportExportIntentService::Results::Exception";
+    public static final String ROUNDED_AMOUNTS = "ImportExportIntentService::Results::RoundedAmounts";
 
     public static final int MODE_EXPORT = 0;
     public static final int MODE_IMPORT = 1;
@@ -88,12 +89,14 @@ public class ImportExportIntentService extends IntentService {
             }
             // initialize the correct data importer
             AbstractDataImporter dataImporter = getDataImporter(dataFormat, file);
+            int roundedAmounts;
             try {
                 dataImporter.importData();
+                roundedAmounts = dataImporter.getRoundedAmounts();
             } finally {
                 dataImporter.close();
             }
-            notifyTaskFinished(LocalAction.ACTION_IMPORT_SERVICE_FINISHED);
+            notifyTaskFinished(LocalAction.ACTION_IMPORT_SERVICE_FINISHED, roundedAmounts);
         } catch (Exception e) {
             notifyTaskFailed(LocalAction.ACTION_IMPORT_SERVICE_FAILED, e);
         }
@@ -218,8 +221,10 @@ public class ImportExportIntentService extends IntentService {
         mReporter.broadcast(action);
     }
 
-    private void notifyTaskFinished(String action) {
-        mReporter.broadcast(action);
+    private void notifyTaskFinished(String action, int roundedAmounts) {
+        Bundle extras = new Bundle();
+        extras.putInt(ROUNDED_AMOUNTS, roundedAmounts);
+        mReporter.broadcast(action, extras);
     }
 
     private void notifyTaskFinished(String action, Uri resultUri, String resultType) {

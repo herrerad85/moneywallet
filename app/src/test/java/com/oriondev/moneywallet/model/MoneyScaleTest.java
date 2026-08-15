@@ -81,6 +81,53 @@ public class MoneyScaleTest {
         assertEquals(0L, MoneyScale.toMinorUnits(null, 2));
     }
 
+    // human amount -> long minor units rounded to the nearest, half to even, which is what an
+    // amount arriving from outside the app gets
+
+    @Test
+    public void toMinorUnitsRounded_roundsToTheNearestMinorUnit() {
+        assertEquals(1002L, MoneyScale.toMinorUnitsRounded(new BigDecimal("10.019"), 2));
+        assertEquals(1001L, MoneyScale.toMinorUnitsRounded(new BigDecimal("10.011"), 2));
+        assertEquals(-1002L, MoneyScale.toMinorUnitsRounded(new BigDecimal("-10.019"), 2));
+        assertEquals(65L, MoneyScale.toMinorUnitsRounded(new BigDecimal("64.9"), 0));
+    }
+
+    @Test
+    public void toMinorUnitsRounded_sendsAHalfToTheEvenNeighbour() {
+        // this one only says the half is not dropped: rounding every half up agrees with it
+        assertEquals(1002L, MoneyScale.toMinorUnitsRounded(new BigDecimal("10.015"), 2));
+        // these two are what tell this apart from rounding every half up, which would
+        // send them to 1003 and -1003
+        assertEquals(1002L, MoneyScale.toMinorUnitsRounded(new BigDecimal("10.025"), 2));
+        assertEquals(-1002L, MoneyScale.toMinorUnitsRounded(new BigDecimal("-10.025"), 2));
+    }
+
+    @Test
+    public void toMinorUnitsRounded_usesTheDecimalsItIsGiven() {
+        assertEquals(10016L, MoneyScale.toMinorUnitsRounded(new BigDecimal("10.0155"), 3));
+        // both halves go to the even neighbour, so one comes down and the other goes up
+        assertEquals(64L, MoneyScale.toMinorUnitsRounded(new BigDecimal("64.5"), 0));
+        assertEquals(66L, MoneyScale.toMinorUnitsRounded(new BigDecimal("65.5"), 0));
+    }
+
+    @Test(expected = ArithmeticException.class)
+    public void toMinorUnitsRounded_refusesAnAmountTooLargeToHold() {
+        // rounding carries this over the edge of a long, where truncating left it just inside
+        MoneyScale.toMinorUnitsRounded(new BigDecimal("92233720368547758.075"), 2);
+    }
+
+    @Test
+    public void toMinorUnitsRounded_leavesAnAmountTheCurrencyHoldsAlone() {
+        assertEquals(1001L, MoneyScale.toMinorUnitsRounded(new BigDecimal("10.01"), 2));
+        assertEquals(0L, MoneyScale.toMinorUnitsRounded(BigDecimal.ZERO, 2));
+        assertEquals(1234567L, MoneyScale.toMinorUnitsRounded(new BigDecimal("12345.67"), 2));
+    }
+
+    @Test
+    public void toMinorUnitsRounded_nullAmountIsZero() {
+        assertEquals(0L, MoneyScale.toMinorUnitsRounded(null, 2));
+    }
+
     // exchange rate conversion across differing decimal counts
 
     @Test

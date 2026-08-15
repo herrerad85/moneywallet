@@ -20,6 +20,7 @@
 package com.oriondev.moneywallet.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * Canonical conversions between a human readable decimal amount and the bare
@@ -27,9 +28,10 @@ import java.math.BigDecimal;
  * currency is 10^decimals, with decimals in the range 0..3.
  *
  * Every conversion shifts the decimal point with {@link BigDecimal} so the
- * arithmetic is exact, and truncates toward zero when narrowing back to a
- * {@code long} (the same rounding the individual call sites relied on before
- * this was consolidated). The class is intentionally free of Android
+ * arithmetic is exact. All of them but one truncate toward zero when narrowing
+ * back to a {@code long}, which is the rounding the individual call sites
+ * relied on before this was consolidated; {@link #toMinorUnitsRounded} is the
+ * exception and says why. The class is intentionally free of Android
  * dependencies so it can be unit tested on the JVM.
  */
 public final class MoneyScale {
@@ -47,6 +49,28 @@ public final class MoneyScale {
             return 0L;
         }
         return amount.movePointRight(decimals).longValue();
+    }
+
+    /**
+     * The same conversion for an amount that came from somewhere the currency scale was not
+     * known: the fraction the currency cannot hold is rounded to the nearest minor unit rather
+     * than dropped. Half goes to the even neighbour, the same rounding the amount keypad uses on
+     * an answer it computed, so a value the app works out and the same value read from a file
+     * land on the same minor unit. An amount typed by hand still drops its fraction, which is a
+     * separate decision this does not touch.
+     *
+     * Dropping the fraction instead loses up to a whole minor unit rather than half of one, and
+     * always toward zero, so every row of a file comes out smaller than it was written.
+     *
+     * A null amount maps to zero. Unlike {@link #toMinorUnits(BigDecimal, int)} this refuses an
+     * amount too large to hold, with an {@link ArithmeticException}, rather than keeping the low
+     * bits of it: rounding can carry a value over the edge that truncating left inside.
+     */
+    public static long toMinorUnitsRounded(BigDecimal amount, int decimals) {
+        if (amount == null) {
+            return 0L;
+        }
+        return amount.setScale(decimals, RoundingMode.HALF_EVEN).movePointRight(decimals).longValueExact();
     }
 
     /**
