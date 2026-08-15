@@ -207,10 +207,9 @@ public class AutoBackupSettingDialog extends DialogFragment {
     }
 
     /**
-     * Saves the settings, or refuses and returns false. Nowhere else writes a backup folder.
-     * {@link BackendManager#setAutoBackupEnabled} erases one, and the two callers that reach it
-     * from outside this screen turn the backend off in the same call, so neither can leave a
-     * backend enabled with no folder.
+     * Saves the settings, or refuses and returns false. Nowhere else writes a backup folder. The
+     * two callers of {@link BackendManager#setAutoBackupEnabled} outside this screen only ever
+     * pass false, so neither can leave a backend enabled with no folder.
      *
      * A backend with no usable folder is what the refusal is about. Some backends offer a default
      * one and {@link BackendServiceFactory#getFile} hands it back for a folder that is not stored,

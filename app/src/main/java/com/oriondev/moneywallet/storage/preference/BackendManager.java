@@ -57,9 +57,13 @@ public class BackendManager {
             backendIdSet.add(backendId);
         } else if (backendIdSet != null) {
             backendIdSet.remove(backendId);
+            // The folder and the password stay. Two of the three callers are failure paths that
+            // never write them back, so erasing them threw away what the user chose when a
+            // backup, a restore or a listing failed. The last run time still goes, because
+            // AutoBackupJobService leans on it being cleared, skipping the write back for a
+            // backend a failure has just disabled so that switching the backend on again does
+            // not fire a backup at once.
             mPreferences.edit()
-                    .remove(BACKEND_AUTO_BACKUP_FOLDER + backendId)
-                    .remove(BACKEND_AUTO_BACKUP_PASSWORD + backendId)
                     .remove(BACKEND_AUTO_BACKUP_LAST_TIME + backendId)
                     .apply();
         }
