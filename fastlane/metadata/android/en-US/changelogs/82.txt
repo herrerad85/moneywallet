@@ -1,0 +1,3 @@
+New: duplicate a transaction, and hide a category's children behind an arrow.
+
+Fixes: the amount keypad divides correctly, 10 divided by 4 is 2.50, and refuses a negative. A Local folder backup goes where you picked, not the top of the granted folder. A failed backup or restore no longer erases the folder and password you set. CSV import reads the whole file before writing any of it, takes a date with no time, and rounds an amount to the nearest unit the currency holds.
