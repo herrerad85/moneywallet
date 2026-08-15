@@ -105,8 +105,8 @@ public abstract class CursorListFragment extends Fragment implements SwipeRefres
     }
 
     /**
-     * Change the text shown when the list comes back with nothing in it. The list applies this
-     * when it next becomes empty, so it has to be set before the query it belongs to finishes.
+     * Change the text shown when the list comes back with nothing in it. The view takes it at
+     * once, so this reaches an empty list that is already on screen as well as the next one.
      */
     protected void setEmptyText(@StringRes int stringRes) {
         if (mAdvancedRecyclerView != null) {
