@@ -42,7 +42,7 @@ public class ThemedRadioButton extends AppCompatRadioButton implements ThemeEngi
 
     @Override
     public void onApplyTheme(ITheme theme) {
-        TintHelper.applyTint(this, theme.getColorAccent(), theme.isDark());
+        TintHelper.applyTint(this, Util.accentAsIcon(theme), theme.isDark());
         setTextColor(theme.getTextColorPrimary());
         setHintTextColor(theme.getHintTextColor());
     }

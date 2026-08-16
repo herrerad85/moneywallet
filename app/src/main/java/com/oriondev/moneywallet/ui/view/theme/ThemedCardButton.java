@@ -43,6 +43,7 @@ public class ThemedCardButton extends CardButton implements ThemeEngine.ThemeCon
 
     @Override
     public void onApplyTheme(ITheme theme) {
-        setTextColor(theme.getColorAccent());
+        int background = theme.getColorCardBackground();
+        setTextColor(Util.visibleOr(theme.getColorAccent(), background, theme.getBestTextColor(background)));
     }
 }

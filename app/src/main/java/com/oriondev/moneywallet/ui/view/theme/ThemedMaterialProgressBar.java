@@ -47,7 +47,8 @@ public class ThemedMaterialProgressBar extends MaterialProgressBar implements Th
 
     @Override
     public void onApplyTheme(ITheme theme) {
-        setReachedBarColor(theme.getColorAccent());
+        int background = theme.getColorCardBackground();
+        setReachedBarColor(Util.visibleOr(theme.getColorAccent(), background, theme.getBestColor(background)));
         setUnreachedBarColor(theme.getIconColor());
     }
 }

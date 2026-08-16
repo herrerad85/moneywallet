@@ -340,7 +340,7 @@ public class ThemeEngine implements ITheme {
 
     @Override
     public int getDrawerSelectedIconColor() {
-        return getColorPrimary();
+        return drawerSelectedForeground();
     }
 
     @Override
@@ -350,7 +350,14 @@ public class ThemeEngine implements ITheme {
 
     @Override
     public int getDrawerSelectedTextColor() {
-        return getColorPrimary();
+        return drawerSelectedForeground();
+    }
+
+    // The opaque black or white, not the surface's own icon or text color: those are what the
+    // closed entries are already drawn in.
+    private int drawerSelectedForeground() {
+        int background = getDrawerSelectedItemColor();
+        return Util.visibleOr(getColorPrimary(), background, getBestColor(background));
     }
 
     @Override

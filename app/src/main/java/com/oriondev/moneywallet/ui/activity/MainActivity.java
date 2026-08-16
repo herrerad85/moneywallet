@@ -25,7 +25,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -462,11 +461,13 @@ public class MainActivity extends BaseActivity implements DrawerController, Acco
         mCursor = cursor;
         mAccountHeader.clear();
         ITheme theme = ThemeEngine.getTheme();
-        int iconColor = theme.isDark() ? Color.parseColor("#8AFFFFFF") : Color.parseColor("#8A000000");
-        int selectedIconColor = theme.getColorPrimary();
-        int textColor = theme.isDark() ? Color.parseColor("#DEFFFFFF") : Color.parseColor("#DE000000");
-        int selectedTextColor = theme.getColorPrimary();
-        int selectedColor = theme.isDark() ? Color.parseColor("#202020") : Color.parseColor("#E8E8E8");
+        // applyNavigationDrawerBodyTheme runs against an empty profile list before the wallets
+        // load, and again on a theme change after they have, so the two write the same profiles
+        // in either order and have to agree on where the colors come from.
+        int iconColor = theme.getDrawerIconColor();
+        int textColor = theme.getDrawerTextColor();
+        int selectedTextColor = theme.getDrawerSelectedTextColor();
+        int selectedColor = theme.getDrawerSelectedItemColor();
         if (mCursor != null) {
             int indexWalletId = mCursor.getColumnIndex(Contract.Wallet.ID);
             int indexWalletName = mCursor.getColumnIndex(Contract.Wallet.NAME);

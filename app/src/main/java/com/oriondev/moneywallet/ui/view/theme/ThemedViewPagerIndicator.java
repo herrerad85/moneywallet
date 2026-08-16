@@ -47,7 +47,8 @@ public class ThemedViewPagerIndicator extends ViewPagerIndicator implements Them
 
     @Override
     public void onApplyTheme(ITheme theme) {
-        setSelectedDotColor(theme.getColorPrimary());
+        int background = theme.getColorWindowForeground();
+        setSelectedDotColor(Util.visibleOr(theme.getColorPrimary(), background, theme.getBestColor(background)));
         setUnselectedDotColor(theme.getIconColor());
     }
 }

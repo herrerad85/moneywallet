@@ -39,15 +39,7 @@ public class ThemedProgressWheel extends ProgressWheel implements ThemeEngine.Th
 
     @Override
     public void onApplyTheme(ITheme theme) {
-        // This view is commonly used on the background color so we can
-        // double check if the color to use as bar-color is very similar
-        // to the color of the background. In this case we can dynamically
-        // calculate the best color to use instead of the color accent.
-        int barColor = theme.getColorAccent();
-        int windowBackground = theme.getColorWindowBackground();
-        if (!Util.isColorVisible(barColor, windowBackground)) {
-            barColor = theme.getBestIconColor(windowBackground);
-        }
-        setBarColor(barColor);
+        int background = theme.getColorWindowForeground();
+        setBarColor(Util.visibleOr(theme.getColorAccent(), background, theme.getBestIconColor(background)));
     }
 }

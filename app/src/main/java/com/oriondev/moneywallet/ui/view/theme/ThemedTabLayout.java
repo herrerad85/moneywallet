@@ -99,7 +99,8 @@ public class ThemedTabLayout extends TabLayout implements ThemeEngine.ThemeConsu
     }
 
     private void setSelectedTabIndicatorColor(ITheme theme) {
-        setSelectedTabIndicatorColor(theme.getColorAccent());
+        int background = getBackgroundColor(theme);
+        setSelectedTabIndicatorColor(Util.visibleOr(theme.getColorAccent(), background, theme.getBestTextColor(background)));
     }
 
     private int getBackgroundColor(ITheme theme) {

@@ -42,6 +42,6 @@ public class ThemedSeekBar extends AppCompatSeekBar implements ThemeEngine.Theme
 
     @Override
     public void onApplyTheme(ITheme theme) {
-        TintHelper.applyTint(this, theme.getColorAccent(), theme.isDark());
+        TintHelper.applyTint(this, Util.accentAsIcon(theme), theme.isDark());
     }
 }

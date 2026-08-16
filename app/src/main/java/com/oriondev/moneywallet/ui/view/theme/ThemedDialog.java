@@ -40,10 +40,12 @@ public class ThemedDialog {
         MaterialDialog.Builder builder = new MaterialDialog.Builder(context);
         ITheme theme = ThemeEngine.getTheme();
         builder.theme(theme.isDark() ? Theme.DARK : Theme.LIGHT);
-        builder.positiveColor(theme.getColorAccent());
-        builder.negativeColor(theme.getColorAccent());
-        builder.neutralColor(theme.getColorAccent());
-        builder.widgetColor(theme.getColorAccent());
+        int background = theme.getDialogBackgroundColor();
+        int accent = Util.visibleOr(theme.getColorAccent(), background, theme.getBestTextColor(background));
+        builder.positiveColor(accent);
+        builder.negativeColor(accent);
+        builder.neutralColor(accent);
+        builder.widgetColor(accent);
         return builder;
     }
 

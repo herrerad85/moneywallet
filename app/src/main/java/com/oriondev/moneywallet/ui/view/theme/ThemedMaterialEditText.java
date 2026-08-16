@@ -66,13 +66,15 @@ public class ThemedMaterialEditText extends MaterialEditText implements ThemeEng
             setTextColor(theme.getBestTextColor(backgroundColor));
             setFloatingLabelColorNormal(theme.getBestHintColor(backgroundColor));
             setHintTextColor(theme.getBestHintColor(backgroundColor));
-            setFloatingLabelColorFocused(theme.getColorAccent());
+            int focused = Util.visibleOr(theme.getColorAccent(), backgroundColor,
+                    theme.getBestColor(backgroundColor));
+            setFloatingLabelColorFocused(focused);
             setLeftIconColorNormal(theme.getBestIconColor(backgroundColor));
-            setLeftIconColorFocused(theme.getColorAccent());
+            setLeftIconColorFocused(focused);
             setBottomLineColorNormal(theme.getBestIconColor(backgroundColor));
-            setBottomLineColorFocused(theme.getColorAccent());
+            setBottomLineColorFocused(focused);
             setBottomLineColorError(theme.getErrorColor());
-            TintHelper.setCursorTint(this, theme.getColorAccent());
+            TintHelper.setCursorTint(this, focused);
         }
     }
 }
