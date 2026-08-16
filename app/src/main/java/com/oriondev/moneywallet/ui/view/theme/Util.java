@@ -81,22 +81,21 @@ import androidx.core.graphics.ColorUtils;
         return isColorVisible(color, background) ? color : fallback;
     }
 
-    // These two serve classes that are used on a page and in a dialog, and onApplyTheme is given
-    // no way to tell which of the two an instance is on, so the accent has to hold up on both.
     /*package-local*/ static int accentAsIcon(ITheme theme) {
-        return accentHoldsUpAnywhere(theme) ? theme.getColorAccent()
+        return holdsUpAnywhere(theme, theme.getColorAccent()) ? theme.getColorAccent()
                 : theme.getBestColor(theme.getColorWindowForeground());
     }
 
     /*package-local*/ static int accentAsText(ITheme theme) {
-        return accentHoldsUpAnywhere(theme) ? theme.getColorAccent()
+        return holdsUpAnywhere(theme, theme.getColorAccent()) ? theme.getColorAccent()
                 : theme.getBestTextColor(theme.getColorWindowForeground());
     }
 
-    private static boolean accentHoldsUpAnywhere(ITheme theme) {
-        int accent = theme.getColorAccent();
-        return isColorVisible(accent, theme.getColorWindowForeground())
-                && isColorVisible(accent, theme.getDialogBackgroundColor());
+    // The surfaces a chosen color has to survive when nothing says which one it lands on. A
+    // dialog is a card, so this covers a tinted control in a dialog as well as an amount on a row.
+    /*package-local*/ static boolean holdsUpAnywhere(ITheme theme, @ColorInt int color) {
+        return isColorVisible(color, theme.getColorWindowForeground())
+                && isColorVisible(color, theme.getColorCardBackground());
     }
 
     /*package-local*/ static int stripAlpha(@ColorInt int color) {

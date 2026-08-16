@@ -34,6 +34,8 @@ import com.oriondev.moneywallet.model.PeriodMoney;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
+import com.oriondev.moneywallet.ui.view.theme.ITheme;
+import com.oriondev.moneywallet.ui.view.theme.ThemeEngine;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.DateUtils;
 
@@ -122,6 +124,11 @@ public class PeriodDetailSummaryLoader extends AbstractGenericLoader<PeriodDetai
         // the total net income contains all the available currencies
         List<BarData> barDataList = new ArrayList<>();
         List<CurrencyUnit> barDataCurrencies = new ArrayList<>();
+        ITheme theme = ThemeEngine.getTheme();
+        int incomeColor = theme.getVisibleColor(PreferenceManager.getCurrentIncomeColor(),
+                PreferenceManager.getDefaultColorIncome());
+        int expenseColor = theme.getVisibleColor(PreferenceManager.getCurrentExpenseColor(),
+                PreferenceManager.getDefaultColorExpense());
         for (String currency : totalNetIncomes.getCurrencies()) {
             // for each currency we have to iterate the period money items and generate
             // the chart data set composed by two sub data sets:
@@ -137,8 +144,8 @@ public class PeriodDetailSummaryLoader extends AbstractGenericLoader<PeriodDetai
             }
             BarDataSet incomeDataSet = new BarDataSet(incomeBarEntries, getContext().getString(R.string.hint_incomes));
             BarDataSet expenseDataSet = new BarDataSet(expenseBarEntries, getContext().getString(R.string.hint_expenses));
-            incomeDataSet.setColor(PreferenceManager.getCurrentIncomeColor());
-            expenseDataSet.setColor(PreferenceManager.getCurrentExpenseColor());
+            incomeDataSet.setColor(incomeColor);
+            expenseDataSet.setColor(expenseColor);
             barDataList.add(new BarData(incomeDataSet, expenseDataSet));
             barDataCurrencies.add(currencyUnit);
         }

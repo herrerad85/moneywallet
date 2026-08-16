@@ -106,12 +106,6 @@ public class ThemeEngine implements ITheme {
             Color.parseColor("#33ffffff") // OK
     };
 
-    private static final int[] DEFAULT_DIALOG_BACKGROUND_COLOR = new int[] {
-            Color.parseColor("#FFFFFF"), // OK
-            Color.parseColor("#424242"), // OK
-            Color.parseColor("#424242")  // OK
-    };
-
     private static final int[] DRAWER_BACKGROUND_COLOR = new int[] {
             Color.parseColor("#F9F9F9"),
             Color.parseColor("#303030"),
@@ -324,11 +318,6 @@ public class ThemeEngine implements ITheme {
     }
 
     @Override
-    public int getDialogBackgroundColor() {
-        return DEFAULT_DIALOG_BACKGROUND_COLOR[getMode().getIndex()];
-    }
-
-    @Override
     public int getDrawerBackgroundColor() {
         return DRAWER_BACKGROUND_COLOR[getMode().getIndex()];
     }
@@ -380,6 +369,11 @@ public class ThemeEngine implements ITheme {
     public int getBestHintColor(int background) {
         int index = Util.isColorLight(background) ? INDEX_MODE_LIGHT : INDEX_MODE_DARK;
         return DEFAULT_HINT_TEXT_COLOR[index];
+    }
+
+    @Override
+    public int getVisibleColor(int color, int fallback) {
+        return Util.holdsUpAnywhere(this, color) ? color : fallback;
     }
 
     @Override

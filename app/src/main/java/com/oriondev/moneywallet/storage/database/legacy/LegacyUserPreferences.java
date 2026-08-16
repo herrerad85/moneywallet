@@ -21,7 +21,6 @@ package com.oriondev.moneywallet.storage.database.legacy;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 
 import com.oriondev.moneywallet.model.Group;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
@@ -88,11 +87,13 @@ public class LegacyUserPreferences {
     }
 
     public int getColorIn() {
-        return mPreferences.getInt(COLOR_INFLOW, Color.BLUE);
+        // The importer writes this in as a chosen color, so a legacy user who never chose one
+        // has to land on the same default as everybody else.
+        return mPreferences.getInt(COLOR_INFLOW, PreferenceManager.getDefaultColorIncome());
     }
 
     public int getColorOut() {
-        return mPreferences.getInt(COLOR_OUTFLOW, Color.RED);
+        return mPreferences.getInt(COLOR_OUTFLOW, PreferenceManager.getDefaultColorExpense());
     }
 
     public Group getGroupType() {

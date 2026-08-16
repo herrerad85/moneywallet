@@ -56,8 +56,6 @@ public interface ITheme {
 
     int getErrorColor();
 
-    int getDialogBackgroundColor();
-
     int getDrawerBackgroundColor();
 
     int getDrawerIconColor();
@@ -77,4 +75,6 @@ public interface ITheme {
     int getBestHintColor(int background);
 
     int getBestIconColor(int background);
+
+    int getVisibleColor(int color, int fallback);
 }

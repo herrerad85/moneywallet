@@ -40,7 +40,7 @@ public class ThemedDialog {
         MaterialDialog.Builder builder = new MaterialDialog.Builder(context);
         ITheme theme = ThemeEngine.getTheme();
         builder.theme(theme.isDark() ? Theme.DARK : Theme.LIGHT);
-        int background = theme.getDialogBackgroundColor();
+        int background = theme.getColorCardBackground();
         int accent = Util.visibleOr(theme.getColorAccent(), background, theme.getBestTextColor(background));
         builder.positiveColor(accent);
         builder.negativeColor(accent);
@@ -75,7 +75,7 @@ public class ThemedDialog {
     public static BottomSheetBuilder buildBottomSheet(Context context) {
         BottomSheetBuilder builder = new BottomSheetBuilder(context);
         ITheme theme = ThemeEngine.getTheme();
-        builder.setBackgroundColor(theme.getDialogBackgroundColor());
+        builder.setBackgroundColor(theme.getColorCardBackground());
         builder.setTitleTextColor(theme.getTextColorPrimary());
         builder.setItemTextColor(theme.getTextColorPrimary());
         builder.setIconTintColor(theme.getIconColor());
