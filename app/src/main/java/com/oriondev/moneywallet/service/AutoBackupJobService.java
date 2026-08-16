@@ -218,8 +218,17 @@ public class AutoBackupJobService extends JobService {
             notifyMessage(context, context.getString(R.string.notification_content_backup_error_wifi_network));
             return;
         }
-        IBackendServiceAPI backendServiceAPI = BackendServiceFactory.getServiceAPIById(context, backendId);
         try {
+            // Built inside the block, so a service API that throws a BackendException the app
+            // cannot recover from while it is built turns automatic backup off like any other
+            // such failure. Outside it, a backend that is not connected any more, a released
+            // grant or a cleared server address stayed switched on and failed the same way the
+            // next time a backup ran, while the failure notification said automatic backup had
+            // been disabled.
+            // BackupHandlerIntentService, which the backup screen uses, builds its backend
+            // inside the block that disables, so that failure already turned the service off
+            // there.
+            IBackendServiceAPI backendServiceAPI = BackendServiceFactory.getServiceAPIById(context, backendId);
             BackupOperation.createAndUpload(context, backendServiceAPI, folder, BackendManager.getAutoBackupPassword(backendId), null);
         } catch (BackendException e) {
             if (!e.isRecoverable()) {
