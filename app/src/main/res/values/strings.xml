@@ -170,6 +170,7 @@
     <string name="hint_auto_backup_folder_not_chosen">"Not chosen"</string>
     <string name="hint_auto_backup_folder_unavailable">"Not available"</string>
     <string name="message_auto_backup_folder_required">"Choose a folder before turning automatic backup on."</string>
+    <string name="message_auto_backup_disabled_after_failure">"Automatic backup was turned off after this backup service failed. Check it before turning automatic backup back on."</string>
     <string name="message_backend_open_a_folder">"Open a folder to choose it."</string>
 
     <string name="total_wallet_name">"Total"</string>

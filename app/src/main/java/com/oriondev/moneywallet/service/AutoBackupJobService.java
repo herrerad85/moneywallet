@@ -223,7 +223,7 @@ public class AutoBackupJobService extends JobService {
             BackupOperation.createAndUpload(context, backendServiceAPI, folder, BackendManager.getAutoBackupPassword(backendId), null);
         } catch (BackendException e) {
             if (!e.isRecoverable()) {
-                BackendManager.setAutoBackupEnabled(backendId, false);
+                BackendManager.disableAutoBackupAfterFailure(backendId);
             }
             throw e;
         }

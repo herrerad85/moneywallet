@@ -40,11 +40,46 @@ public class BackendManager {
     private static final String BACKEND_AUTO_BACKUP_FOLDER = "auto_backup_folder_";
     private static final String BACKEND_AUTO_BACKUP_PASSWORD = "auto_backup_password_";
     private static final String BACKEND_AUTO_BACKUP_LAST_TIME = "auto_backup_last_time_";
+    private static final String BACKEND_AUTO_BACKUP_DISABLED_BY_FAILURE = "auto_backup_disabled_by_failure_";
 
     private static SharedPreferences mPreferences;
 
     public static void initialize(Context context) {
         mPreferences = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
+    }
+
+    /**
+     * Turns automatic backup off for a backend because a backup, a restore or a listing failed in
+     * a way the app treats as not recoverable, and records that the app is the one that turned it
+     * off. Nothing else sets that flag, so a user switching the service off in the settings dialog
+     * is not mistaken for a failure.
+     *
+     * The sweep builds its backend before the block that calls this, so a backend that cannot be
+     * built at all, a released storage grant or a cleared server address, never gets here from
+     * the sweep, and stays enabled while its notification says otherwise. The manual backup,
+     * restore and browse path builds its backend inside the block, so the same failure does get
+     * here from there.
+     *
+     * The flag is what the settings dialog has to work with. The saved folder and password survive
+     * a failure, so the dialog reopens showing them, and without this it cannot tell the two
+     * states apart: a backend the user switched off and a backend a failure switched off look
+     * identical in these preferences.
+     *
+     * Only recorded for a backend that had automatic backup on. The manual backup, restore and
+     * browse paths share the caller in {@link
+     * com.oriondev.moneywallet.service.BackupHandlerIntentService}, and browsing a backend runs a
+     * listing every time that screen resumes, so without this a backend the user never turned
+     * automatic backup on for would report that a failure turned it off.
+     */
+    public static void disableAutoBackupAfterFailure(String backendId) {
+        if (isAutoBackupEnabled(backendId)) {
+            mPreferences.edit().putBoolean(BACKEND_AUTO_BACKUP_DISABLED_BY_FAILURE + backendId, true).apply();
+        }
+        setAutoBackupEnabled(backendId, false);
+    }
+
+    public static boolean isAutoBackupDisabledByFailure(String backendId) {
+        return mPreferences.getBoolean(BACKEND_AUTO_BACKUP_DISABLED_BY_FAILURE + backendId, false);
     }
 
     public static void setAutoBackupEnabled(String backendId, boolean enabled) {
@@ -55,11 +90,18 @@ public class BackendManager {
                 backendIdSet = new HashSet<>();
             }
             backendIdSet.add(backendId);
+            // Turning the service on is what forgets the failure that turned it off. The record
+            // describes a service that is off, so keeping it past this point would let it be
+            // shown against a service that is running.
+            mPreferences.edit()
+                    .remove(BACKEND_AUTO_BACKUP_DISABLED_BY_FAILURE + backendId)
+                    .apply();
         } else if (backendIdSet != null) {
             backendIdSet.remove(backendId);
-            // The folder and the password stay. Two of the three callers are failure paths that
-            // never write them back, so erasing them threw away what the user chose when a
-            // backup, a restore or a listing failed. The last run time still goes, because
+            // The folder and the password stay. This is reached from the failure path above as
+            // well as from the settings dialog, and the failure path never writes them back, so
+            // erasing them threw away what the user chose when a backup, a restore or a listing
+            // failed. The last run time still goes, because
             // AutoBackupJobService leans on it being cleared, skipping the write back for a
             // backend a failure has just disabled so that switching the backend on again does
             // not fire a backup at once.

@@ -159,7 +159,7 @@ public class BackupHandlerIntentService extends IntentService {
                 if (exception instanceof BackendException) {
                     if (!((BackendException) exception).isRecoverable()) {
                         // disable auto-backup for this backend id
-                        BackendManager.setAutoBackupEnabled(backendId, false);
+                        BackendManager.disableAutoBackupAfterFailure(backendId);
                         AutoBackupBroadcastReceiver.scheduleAutoBackupTask(this);
                     }
                 }

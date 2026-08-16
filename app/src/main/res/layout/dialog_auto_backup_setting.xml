@@ -73,6 +73,18 @@
         android:layout_marginTop="@dimen/material_dialog_seek_bar_top_bottom_margin"
         android:layout_marginBottom="@dimen/material_dialog_seek_bar_top_bottom_margin"/>
 
+    <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+        android:id="@+id/auto_backup_failure_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/material_dialog_text_view_start_end_margin"
+        android:layout_marginRight="@dimen/material_dialog_text_view_start_end_margin"
+        android:layout_marginTop="@dimen/material_dialog_text_view_top_bottom_margin"
+        android:visibility="gone"
+        android:text="@string/message_auto_backup_disabled_after_failure"
+        app:theme_textColor="colorAccent"
+        tools:visibility="visible" />
+
     <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialTextView
         android:id="@+id/auto_backup_folder_text_view"
         android:layout_width="match_parent"

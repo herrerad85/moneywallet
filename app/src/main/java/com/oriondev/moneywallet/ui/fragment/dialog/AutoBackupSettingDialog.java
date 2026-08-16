@@ -31,6 +31,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.appcompat.widget.SwitchCompat;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -72,6 +73,7 @@ public class AutoBackupSettingDialog extends DialogFragment {
     private TextView mOffsetTextView;
     private SeekBar mOffsetSeekBar;
     private TextView mFolderTextView;
+    private TextView mFailureTextView;
     private EditText mPasswordEditText;
 
     private IFile mFolder;
@@ -123,6 +125,7 @@ public class AutoBackupSettingDialog extends DialogFragment {
             mOffsetTextView = view.findViewById(R.id.auto_backup_offset_text_view);
             mOffsetSeekBar = view.findViewById(R.id.auto_backup_offset_seek_bar);
             mFolderTextView = view.findViewById(R.id.auto_backup_folder_text_view);
+            mFailureTextView = view.findViewById(R.id.auto_backup_failure_text_view);
             mPasswordEditText = view.findViewById(R.id.auto_backup_password_edit_text);
             // set listeners
             mOffsetSeekBar.setMax((OFFSET_MAX_HOURS - OFFSET_MIN_HOURS) / OFFSET_BETWEEN_HOURS);
@@ -141,6 +144,14 @@ public class AutoBackupSettingDialog extends DialogFragment {
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {
                     // not used
+                }
+
+            });
+            mServiceEnabledSwitchCompat.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    AutoBackupSettingDialog.this.onServiceEnabledChanged();
                 }
 
             });
@@ -168,6 +179,7 @@ public class AutoBackupSettingDialog extends DialogFragment {
             }
             onProgressChanged(mOffsetSeekBar.getProgress());
             onFolderChanged();
+            onServiceEnabledChanged();
         }
         return dialog;
     }
@@ -190,6 +202,17 @@ public class AutoBackupSettingDialog extends DialogFragment {
     }
 
     /**
+     * Shows the message about a failure having turned the service off when the switch reads off
+     * and a failure is on record for this backend. The switch on screen decides it and not the
+     * stored setting, so the message is never shown while the switch reads on.
+     */
+    private void onServiceEnabledChanged() {
+        boolean show = !mServiceEnabledSwitchCompat.isChecked()
+                && BackendManager.isAutoBackupDisabledByFailure(mBackendId);
+        mFailureTextView.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    /**
      * A folder that is stored but cannot be read comes back from
      * {@link BackendServiceFactory#getFile} as null, and so does one that is not stored when the
      * backend has no default folder. The two do not get the same line. The notification the sweep
@@ -207,9 +230,10 @@ public class AutoBackupSettingDialog extends DialogFragment {
     }
 
     /**
-     * Saves the settings, or refuses and returns false. Nowhere else writes a backup folder. The
-     * two callers of {@link BackendManager#setAutoBackupEnabled} outside this screen only ever
-     * pass false, so neither can leave a backend enabled with no folder.
+     * Saves the settings, or refuses and returns false. Nowhere else writes a backup folder, and
+     * the only other way a backend's enabled state changes is
+     * {@link BackendManager#disableAutoBackupAfterFailure}, which turns it off, so nothing outside
+     * this screen can leave a backend enabled with no folder.
      *
      * A backend with no usable folder is what the refusal is about. Some backends offer a default
      * one and {@link BackendServiceFactory#getFile} hands it back for a folder that is not stored,
