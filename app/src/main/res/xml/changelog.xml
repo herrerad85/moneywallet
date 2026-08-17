@@ -20,6 +20,51 @@
 
 <changelog>
 
+    <version versionName="1.4.0" versionDate="Aug 15, 2026">
+        <change>[b]New![/b] Open a transaction and duplicate it.</change>
+        <change>[b]New![/b] Hide a category's child categories behind an arrow on its row.</change>
+        <change>The calculator divides correctly. 10 divided by 4 is 2.50.</change>
+        <change>The calculator will not hand back a negative amount, except for a wallet's Initial amount.</change>
+        <change>A Deposit or Withdraw on a saving opens with the wallet already filled in.</change>
+        <change>Save a transaction or transfer dated in the future and the app says the balance does not count it yet.</change>
+        <change>A list that looks empty now says when its rows are in other wallets or dated in the future.</change>
+        <change>A CSV import reads the whole file before writing any of it, so a bad row no longer leaves a half done import.</change>
+        <change>A CSV date with no time of day is accepted.</change>
+        <change>Transfers are left out of a CSV export, because a CSV cannot record them in a way the app can read back.</change>
+        <change>Deleting a transaction, a transfer or a wallet deletes the attachments that belonged to it, so they stop being carried in every backup.</change>
+        <change>A Local folder backup is written to the folder you picked, and a failed backup or restore no longer erases the folder and password you set.</change>
+    </version>
+
+    <version versionName="1.3.0" versionDate="Aug 10, 2026">
+        <change>[b]New![/b] Point the map at a tile server of your choosing.</change>
+        <change>[b]New![/b] Edit a recurrence after saving it.</change>
+        <change>[b]New![/b] Filter the debt lists down to the finished ones.</change>
+        <change>[b]New![/b] Tap a person to open their transactions.</change>
+        <change>A screen showing only one wallet names that wallet under its title.</change>
+        <change>Deleting the wallet you had selected no longer leaves every list empty. The app falls back to the total.</change>
+        <change>Automatic backup runs again, and no longer takes the app down at startup.</change>
+        <change>Automatic backup no longer keeps a notification on screen while it runs.</change>
+        <change>Calendar day and month labels no longer collapse to the same letters in several languages.</change>
+        <change>System category names follow the app language.</change>
+        <change>A transfer between currencies with different decimal counts keeps the rate you set.</change>
+    </version>
+
+    <version versionName="1.2.0" versionDate="Aug 07, 2026">
+        <change>[b]New![/b] Set the app language separately from the device, through Android's per app language setting.</change>
+        <change>In the dark themes the overview chart and the debt cards no longer show up white.</change>
+        <change>Percentages on the pie chart are centered and rounded correctly.</change>
+        <change>The Categories screen opens on Expenses.</change>
+        <change>The app no longer crashes on some language choices.</change>
+        <change>Debts paid off in full group with the finished ones and no longer inflate the amount still to pay.</change>
+        <change>Wallet notes are kept in backups.</change>
+        <change>Times follow the device 12 or 24 hour setting.</change>
+        <change>Recurring transfers open the right record.</change>
+    </version>
+
+    <version versionName="1.1.0" versionDate="Aug 01, 2026">
+        <change>[b]New![/b] Back up to your own WebDAV server, such as Nextcloud, ownCloud or a NAS, with no third party account and nothing sent to anyone else.</change>
+    </version>
+
     <version versionName="1.0.2" versionDate="Jul 01, 2026">
         <change>Build-system update for F-Droid binary transparency checks. No user-facing feature changes.</change>
     </version>
