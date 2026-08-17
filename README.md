@@ -20,9 +20,9 @@ This fork is independent and is not endorsed by or affiliated with the original 
 ![Showcase](pictures/showcase.png)
 
 ## Status
-Tallybook is published on F-Droid and actively maintained. The current release is **1.2.0**. Builds are reproducible and carry the developer signature, so the F-Droid binary matches the one built from this repository.
+Tallybook is published on F-Droid and actively maintained. The current version in this repository is **1.4.0**, so F-Droid may show an older one.
 
-Since the first release: backups to your own WebDAV server, such as Nextcloud, ownCloud or a NAS, with no third-party account (1.1.0); and a per-app language setting, a run of localization and date and time fixes, and a batch of smaller UI and backup fixes (1.2.0).
+1.4.0 adds duplicating a transaction and hiding a category's child categories, plus a run of money and backup fixes. Before that: WebDAV backup (1.1.0), a per-app language setting (1.2.0), and a map you can point at any tile server (1.3.0).
 
 Earlier work, all shipped: Android 14/15 compatibility on a modernized FOSS/OpenStreetMap build, the Android 12+ manifest and PendingIntent updates, a fix for the startup crash caused by a legacy auto-backup path (reported upstream as [#177](https://github.com/AndreAle94/moneywallet/issues/177) and [#286](https://github.com/AndreAle94/moneywallet/issues/286)), the rebrand to a new name and application id, a verified backup and restore migration path (see [MIGRATION.md](MIGRATION.md)), export and import under scoped storage, a local-folder backup option that works with file sync tools, and Android 15 edge-to-edge UI polish.
 
