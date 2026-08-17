@@ -1,57 +1,53 @@
-## Privacy Policy
+# Privacy Policy
 
-This Privacy Policy governs the manner in which MoneyWallet collects, uses, maintains and discloses information collected from the users.
+Tallybook is an offline first expense manager. Your records live on your device, this project runs no server, and the app collects nothing about you.
 
-This application has been build as an open source software and it is provided by the developer at no cost and is intended for use as is. The user may donate to the project but is not obliged for the usage of the service.
+This policy covers the open source build, the `floss` and `osm` flavor combination in this repository, which is what F-Droid and the GitHub releases both ship.
 
-If you choose to use MoneyWallet, then you agree to the collection and use of information in relation to this policy. The Personal Information that we collect is used for providing and improving the Service. We will not use or share your information with anyone except as described in this Privacy Policy.
+Last updated: August 17, 2026.
 
-**Information Collection and Use**
+## What Tallybook collects
 
-The application collects personal user information that is provided by the user during the daily usage of the service. This information is stored inside the main database and is never sent outside the device until explicitly requested by the user, when a backup file is created. We do not collect any personal user information on our servers.
+Nothing. There is no account, no sign up, no analytics, no crash reporting, and no advertising. The build carries no library that reports usage or errors anywhere.
 
-MoneyWallet uses third party services that may collect information used to identify you.
+## Every way your data leaves the app
 
-Link to privacy policy of third party service providers used by the app
+**Map tiles.** Every screen with a map draws tiles from the OpenStreetMap tile servers by default, and nothing has to be turned on first. The tiles fetched are the ones around whatever place is on screen, so the tile operator sees your IP address and roughly where that place is, and the requests carry the app's package name as their user agent. The app asks for no location permission, so the place on screen is always one you picked, never where you are. Since version 1.3.0 you can point the map at a different tile server under Settings, Utilities, Map, Tile server. The address has to be https, and if your provider wants a key inside the address, that key goes out with every tile request. What the OpenStreetMap servers log is covered by their own policy: https://osmfoundation.org/wiki/Privacy_Policy
 
-*   [Fabric](https://fabric.io/privacy)
-*   [Crashlytics](http://try.crashlytics.com/terms/privacy-policy.pdf)
-*   [Google Play Services](https://www.google.com/policies/privacy/)
-*   [Dropbox](https://www.dropbox.com/it/privacy)
-*   [Google Drive](https://www.google.com/drive/terms-of-service)
-*   [OpenExchangeRates](https://openexchangerates.org/privacy)
+**Backup to your own WebDAV server.** The app uploads and downloads backup files at the address you gave it, which also has to be https, so the upload and the password travel encrypted. With automatic backup on, that upload runs on a schedule with nobody present, survives a reboot, and sends your whole database and every attachment each time. That traffic never passes through this project.
 
-**Log Data (Google Play edition only)**
+**Exchange rates.** Downloading exchange rates uses openexchangerates.org. No key ships with the app, so the feature does nothing until you register there and enter your own under Settings, Utilities, Exchange rates, Custom api-key. The key travels inside the address of the request, so it lands in their logs.
 
-The application collects anonymous information about the device such as the model, the android version, the version of the application and the stack trace of the process every time an error occurs. We may also collects some statistics about the usage. It allow us to improve the user experience without compromising the privacy of the users. This information is anonymous and does not allow us to profile and track our users.
+**Android's own cloud backup.** The app is declared eligible for Android's backup, but a rules file inside the app narrows what the system is allowed to take to the app's root folder, and your database, your settings and your attachments all sit outside it. Tested on Android 16: the backup captured nothing and the system declined it. Older Android versions were not tested.
 
-**Service Providers**
+**Other apps on your phone.** Several buttons hand something to whatever app the device has for it, with no network request from Tallybook: Open on a saved place and the drawer's ATM and bank search pass coordinates or your typed text to a maps app, usually Google Maps; opening an attachment passes that file to whatever opens its file type; and the chooser offered after an export passes the exported file the same way. Once a file is in another app, that app's own policy governs it.
 
-We may employ third-party companies and individuals due to the following reasons:
+## What is stored on your device
 
-*   To facilitate our service;
-*   To provide the service on our behalf;
-*   To perform service-related services; or
-*   To assist us in analyzing how our application is used.
+Your records are in a SQLite database in the app's private storage. Attachments are separate files, under `Android/data/io.github.herrerad85.tallybook` on shared storage, which is outside that private storage. In the same shared storage the map caches the tiles it has drawn, which leaves a record of where your places are. Every export also leaves a copy of itself in the app's cache, and every import leaves a copy of the file you imported. The app deletes neither.
 
-We want to inform users that these third parties have access to your Personal Information according to their Privacy Policy. The reason is to perform the tasks assigned to them on our behalf. However, they are obligated not to disclose or use the information for any other purpose.
+The database, the attachments, the tile cache and those cached copies are not encrypted at rest. Neither are the secrets the app keeps in its settings: the WebDAV username and password, the exchange rate key, the tile server address if you put a key in it, and the PIN or pattern you set, which is stored exactly as you typed it. Anyone who can read the app's storage, which means root or an unlocked bootloader, can read the database and every one of those secrets, and the WebDAV password is the one to your own server.
 
-**Security**
+You can lock the app with a PIN, a pattern, or your fingerprint. That locks the screen, not the files.
 
-We value your trust in providing us your Personal Information, thus we are striving to use commercially acceptable means of protecting it. But remember that no method of transmission over the internet, or method of electronic storage is 100% secure and reliable, and we cannot guarantee its absolute security.
+## Backups and exports
 
-**Links to Other Sites**
+A backup is a zip file holding your database and your attachments, and you choose the destination: External Memory, a Local folder you pick, or your own WebDAV server. There is no backup password by default. Set one and the contents are encrypted with AES 256. Leave it empty and the zip carries your database and attachments in the clear.
 
-This application may contain links to other sites. If you click on a third-party link, you will be directed to that site. Note that these external sites are not operated by us. Therefore, we strongly advise you to review the Privacy Policy of these websites. We have no control over it and assume no responsibility for the content, privacy policies, or practices of any third-party sites or services.
+Exports to CSV, XLS and PDF are never encrypted.
 
-**Children’s Privacy**
+## What these builds leave out
 
-These Services do not address anyone under the age of 13\. We do not knowingly collect personally identifiable information from children under 13\. In the case we discover that a child under 13 has provided us with personal information, we immediately delete this from our servers. If you are a parent or guardian and you are aware that your child has provided us with personal information, please contact us so that I will be able to do necessary actions.
+This repository can also build flavors that include Dropbox, Google Drive and Google Maps. The releases this policy covers contain none of those SDKs.
 
-**Changes to This Privacy Policy**
+## Children
 
-We may update our Privacy Policy from time to time. Thus, you are advised to review this page periodically for any changes. We will notify you of any changes by posting the new Privacy Policy on this page. These changes are effective immediately after they are posted on this page.
+Tallybook collects nothing from anyone, which includes children.
 
-**Contact Us**
+## Changes to this policy
 
-If you have any questions or suggestions about this Privacy Policy, do not hesitate to contact us at 'orionteamx@gmail.com'.
+Changes are commits in this repository, so the history is public and dated.
+
+## Contact
+
+Open an issue: https://github.com/herrerad85/moneywallet/issues
