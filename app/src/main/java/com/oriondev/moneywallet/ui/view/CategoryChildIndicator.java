@@ -79,6 +79,20 @@ public class CategoryChildIndicator extends View {
         if (width == 0 || height == 0) {
             return;
         }
+        // The row around this view is mirrored in a right to left layout and this canvas is not,
+        // so the child's icon ends up on the left while the arm below still runs to the right
+        // edge. Mirroring the canvas puts the arm on the side the icon is on.
+        //
+        // The pivot is the integer width / 2, which is what the strokes below are built around,
+        // not width / 2f. At an odd width those differ by half a pixel and the mirror would move
+        // the vertical stroke a pixel instead of mapping it onto itself.
+        //
+        // Saved and restored because onDrawForeground runs after this on the same canvas, so a
+        // foreground or a ripple added to this view later would otherwise be mirrored too.
+        int savedCanvas = c.save();
+        if (getLayoutDirection() == LAYOUT_DIRECTION_RTL) {
+            c.scale(-1f, 1f, width / 2, 0f);
+        }
         int startX = (width / 2) - (lineSize / 2);
         int endX = startX + lineSize;
         int startY = 0;
@@ -88,5 +102,6 @@ public class CategoryChildIndicator extends View {
         startY = (height / 2) + (lineSize / 2);
         endY = startY + lineSize;
         c.drawRect(startX, startY, endX, endY, mPaint);
+        c.restoreToCount(savedCanvas);
     }
 }
