@@ -384,6 +384,8 @@
     <string name="title_success">"Success"</string>
     <string name="title_failed">"Failed"</string>
     <string name="title_error">"Error"</string>
+    <string name="error_saving_withdraw_over_balance">"You cannot withdraw more than %1$s from this saving."</string>
+    <string name="error_saving_withdraw_nothing_to_take">"There is nothing in this saving to withdraw."</string>
     <string name="title_atm_search">"Search ATM"</string>
     <string name="title_bank_search">"Search bank"</string>
     <string name="title_changelog">"Changelog"</string>

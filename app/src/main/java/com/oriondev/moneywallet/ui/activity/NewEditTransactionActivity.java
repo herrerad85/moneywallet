@@ -60,6 +60,7 @@ import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.view.AttachmentView;
 import com.oriondev.moneywallet.ui.view.text.MaterialEditText;
 import com.oriondev.moneywallet.ui.view.text.Validator;
+import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.DateFormatter;
 import com.oriondev.moneywallet.utils.DateUtils;
@@ -121,6 +122,8 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     private static final String SS_DEBT_ID = "NewEditTransactionActivity::SavedState::DebtId";
     private static final String SS_SAVING_ID = "NewEditTransactionActivity::SavedState::SavingId";
     private static final String SS_SAVING_COMPLETED = "NewEditTransactionActivity::SavedState::SavingCompleted";
+    private static final String SS_SAVING_WITHDRAW_LIMIT = "NewEditTransactionActivity::SavedState::SavingWithdrawLimit";
+    private static final String SS_SAVING_WITHDRAW_CURRENCY = "NewEditTransactionActivity::SavedState::SavingWithdrawCurrency";
 
     private TextView mCurrencyTextView;
     private TextView mMoneyTextView;
@@ -150,6 +153,8 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     private Long mDebtId = null;
     private Long mSavingId = null;
     private boolean mSavingCompleted = false;
+    private Long mSavingWithdrawLimit = null;
+    private String mSavingWithdrawCurrency = null;
 
     private MoneyFormatter mMoneyFormatter = MoneyFormatter.getInstance();
 
@@ -454,6 +459,22 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                         }
                         mConfirmedCheckBox.setChecked(cursor.getInt(cursor.getColumnIndex(Contract.Transaction.CONFIRMED)) == 1);
                         mCountInTotalCheckBox.setChecked(cursor.getInt(cursor.getColumnIndex(Contract.Transaction.COUNT_IN_TOTAL)) == 1);
+                        // A withdraw already in the database is being opened. Without a limit
+                        // here it can simply be edited upwards, which is the same bug by another
+                        // route. What it can grow to is what the saving holds plus what this row
+                        // is already taking out, because the saving's progress counts this row.
+                        //
+                        // It only counts it while the row is confirmed and not dated ahead, which
+                        // is the same pair getSavings filters on, so the amount is added back only
+                        // when the stored row is one of those. Adding it back for a row the
+                        // progress never counted would hand out a ceiling too high by exactly that
+                        // amount.
+                        if (mSavingId != null && category != null
+                                && Contract.CategoryTag.SAVING_WITHDRAW.equals(category.getTag())) {
+                            boolean storedRowCounts = cursor.getInt(cursor.getColumnIndex(Contract.Transaction.CONFIRMED)) == 1
+                                    && !DateUtils.getDateFromSQLDateTimeString(cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE))).after(new Date());
+                            loadSavingWithdrawLimit(contentResolver, mSavingId, storedRowCounts ? money : 0L);
+                        }
                     }
                     cursor.close();
                 }
@@ -744,6 +765,12 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                             // crashes the editor as it opens: the bind value at index 1 is null.
                         case SAVING_WITHDRAW:
                             selectionArgs[0] = Contract.CategoryTag.SAVING_WITHDRAW;
+                            // The figure is already in hand from the query above, so this sets the
+                            // ceiling from it instead of reading the same row again. Nothing is
+                            // added back: this row does not exist yet, so the saving's progress
+                            // cannot already be counting it.
+                            setSavingWithdrawLimit(savingMoney, 0L,
+                                    wallet != null && wallet.getCurrency() != null ? wallet.getCurrency().getIso() : null);
                             break;
                     }
                     cursor = contentResolver.query(uri, projection, selection, selectionArgs, null);
@@ -841,6 +868,8 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
             mDebtId = savedInstanceState.containsKey(SS_DEBT_ID) ? savedInstanceState.getLong(SS_DEBT_ID) : null;
             mSavingId = savedInstanceState.containsKey(SS_SAVING_ID) ? savedInstanceState.getLong(SS_SAVING_ID) : null;
             mSavingCompleted = savedInstanceState.getBoolean(SS_SAVING_COMPLETED, false);
+            mSavingWithdrawLimit = savedInstanceState.containsKey(SS_SAVING_WITHDRAW_LIMIT) ? savedInstanceState.getLong(SS_SAVING_WITHDRAW_LIMIT) : null;
+            mSavingWithdrawCurrency = savedInstanceState.getString(SS_SAVING_WITHDRAW_CURRENCY);
         }
         // depending on the type we must hide pickers that are now allowed to be changed
         switch (mType) {
@@ -918,6 +947,10 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
             outState.putLong(SS_SAVING_ID, mSavingId);
         }
         outState.putBoolean(SS_SAVING_COMPLETED, mSavingCompleted);
+        if (mSavingWithdrawLimit != null) {
+            outState.putLong(SS_SAVING_WITHDRAW_LIMIT, mSavingWithdrawLimit);
+            outState.putString(SS_SAVING_WITHDRAW_CURRENCY, mSavingWithdrawCurrency);
+        }
     }
 
     @Override
@@ -958,11 +991,93 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     private boolean validate() {
         if (mDateEditText.validate() && mCategoryEditText.validate() && mWalletEditText.validate()) {
             if (mAttachmentPicker.areAllAttachmentsReady()) {
-                return true;
+                return validateSavingWithdraw();
             } else {
                 // TODO show error: wait for attachment load competition
             }
         }
+        return false;
+    }
+
+    /**
+     * Reads what a saving holds, its start money plus its progress, which is the same sum the
+     * savings list draws its current amount from, and remembers the currency that figure is in.
+     *
+     * alreadyTaken is what the row being edited is itself withdrawing. The progress counts that
+     * row, so adding it back gives what the row is allowed to grow to. It is zero for a new row.
+     */
+    private void loadSavingWithdrawLimit(ContentResolver contentResolver, long savingId, long alreadyTaken) {
+        Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, savingId);
+        String[] projection = new String[] {
+                Contract.Saving.START_MONEY,
+                Contract.Saving.PROGRESS,
+                Contract.Saving.WALLET_CURRENCY
+        };
+        Cursor cursor = contentResolver.query(uri, projection, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                setSavingWithdrawLimit(
+                        cursor.getLong(cursor.getColumnIndex(Contract.Saving.START_MONEY))
+                                + cursor.getLong(cursor.getColumnIndex(Contract.Saving.PROGRESS)),
+                        alreadyTaken,
+                        cursor.getString(cursor.getColumnIndex(Contract.Saving.WALLET_CURRENCY)));
+            }
+            cursor.close();
+        }
+    }
+
+    /**
+     * Never below what the row already takes. A saving that is under zero gives a negative
+     * ceiling, and the amount field cannot go negative, so that would refuse every save of the
+     * row, including lowering the amount or correcting the note. Holding it at what the row
+     * already takes lets the row be kept or reduced and still refuses raising it. For a new row
+     * that term is zero, so the floor is zero and a saving holding nothing allows no withdraw.
+     */
+    private void setSavingWithdrawLimit(long held, long alreadyTaken, String currencyIso) {
+        mSavingWithdrawLimit = Math.max(held + alreadyTaken, alreadyTaken);
+        mSavingWithdrawCurrency = currencyIso;
+    }
+
+    /**
+     * A withdraw cannot take out more than the saving holds. The ceiling is loaded whenever the
+     * editor opens on a withdraw, whether that is a new one from the savings list or one already
+     * in the database, and stays null everywhere else, so a deposit and an ordinary transaction
+     * are unaffected.
+     *
+     * The check applies only to a row that will count once saved. getSavings sums confirmed rows
+     * that are not dated ahead, so a row saved unconfirmed or into the future moves nothing and
+     * has nothing to be refused for. That is read from the fields as they stand now and not from
+     * the stored row, because it is the row about to be written that matters. What such a row does
+     * when it is later confirmed is the gap issue 175 covers.
+     */
+    private boolean validateSavingWithdraw() {
+        if (mSavingWithdrawLimit == null) {
+            return true;
+        }
+        if (!mConfirmedCheckBox.isChecked() || mDateTimePicker.getCurrentDateTime().after(new Date())) {
+            return true;
+        }
+        CurrencyUnit currency = mSavingWithdrawCurrency != null ? CurrencyManager.getCurrency(mSavingWithdrawCurrency) : null;
+        // The limit is in the saving's own currency. If the wallet on screen has been changed to
+        // another one the two are not comparable as they stand, and this screen converts nowhere
+        // else, so the check steps aside instead of comparing amounts that do not mean the same
+        // thing.
+        CurrencyUnit walletCurrency = mWalletPicker.getCurrentWallet().getCurrency();
+        if (currency == null || walletCurrency == null || !currency.getIso().equals(walletCurrency.getIso())) {
+            return true;
+        }
+        if (mMoneyPicker.getCurrentMoney() <= mSavingWithdrawLimit) {
+            return true;
+        }
+        String message = mSavingWithdrawLimit <= 0
+                ? getString(R.string.error_saving_withdraw_nothing_to_take)
+                : getString(R.string.error_saving_withdraw_over_balance,
+                        mMoneyFormatter.getNotTintedString(currency, mSavingWithdrawLimit));
+        ThemedDialog.buildMaterialDialog(this)
+                .title(R.string.title_error)
+                .content(message)
+                .positiveText(android.R.string.ok)
+                .show();
         return false;
     }
 
