@@ -48,6 +48,7 @@ import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.ui.activity.NewEditItemActivity;
 import com.oriondev.moneywallet.ui.activity.NewEditPersonActivity;
+import com.oriondev.moneywallet.ui.activity.NewEditTransactionActivity;
 import com.oriondev.moneywallet.ui.activity.TransactionListActivity;
 import com.oriondev.moneywallet.ui.fragment.base.SecondaryPanelFragment;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
@@ -89,13 +90,18 @@ public class PersonItemFragment extends SecondaryPanelFragment implements Loader
 
     @Override
     protected int onInflateMenu() {
-        return R.menu.menu_list_edit_delete_item;
+        return R.menu.menu_person_item;
     }
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         int itemId = item.getItemId();
-        if (itemId == R.id.action_show_transaction_list) {
+        if (itemId == R.id.action_new_transaction_for_person) {
+            Intent intent = new Intent(getActivity(), NewEditTransactionActivity.class);
+            intent.putExtra(NewEditItemActivity.MODE, NewEditItemActivity.Mode.NEW_ITEM);
+            intent.putExtra(NewEditTransactionActivity.PERSON_ID, getItemId());
+            startActivity(intent);
+        } else if (itemId == R.id.action_show_transaction_list) {
             Intent intent = new Intent(getActivity(), TransactionListActivity.class);
             intent.putExtra(TransactionListActivity.PERSON_ID, getItemId());
             startActivity(intent);

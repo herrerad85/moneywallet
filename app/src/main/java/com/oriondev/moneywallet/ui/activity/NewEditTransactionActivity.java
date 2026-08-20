@@ -88,6 +88,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     public static final String DEBT_ACTION = "NewEditTransactionActivity::DebtAction";
     public static final String SAVING_ID = "NewEditTransactionActivity::SavingId";
     public static final String SAVING_ACTION = "NewEditTransactionActivity::SavingAction";
+    public static final String PERSON_ID = "NewEditTransactionActivity::PersonId";
     public static final String MODEL_ID = "NewEditTransactionActivity::ModelId";
 
     /**
@@ -588,6 +589,34 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                             );
                         }
                         cursor.close();
+                    }
+                    // opened from a person, so that person is already attached and the user only
+                    // has to pick a category, which is what decides income or expense.
+                    //
+                    // Read here and nowhere else on purpose. An existing transaction must not have
+                    // its people rewritten by an intent, and the debt and saving branches load
+                    // people of their own that this would overwrite. Adding the extra to one of
+                    // those launches would be silently ignored, not wrong.
+                    if (intent.hasExtra(PERSON_ID)) {
+                        Uri personUri = ContentUris.withAppendedId(DataContentProvider.CONTENT_PEOPLE, intent.getLongExtra(PERSON_ID, 0L));
+                        String[] personProjection = new String[] {
+                                Contract.Person.ID,
+                                Contract.Person.NAME,
+                                Contract.Person.ICON
+                        };
+                        Cursor personCursor = contentResolver.query(personUri, personProjection, null, null, null);
+                        if (personCursor != null) {
+                            if (personCursor.moveToFirst()) {
+                                people = new Person[] {
+                                        new Person(
+                                                personCursor.getLong(personCursor.getColumnIndex(Contract.Person.ID)),
+                                                personCursor.getString(personCursor.getColumnIndex(Contract.Person.NAME)),
+                                                IconLoader.parse(personCursor.getString(personCursor.getColumnIndex(Contract.Person.ICON)))
+                                        )
+                                };
+                            }
+                            personCursor.close();
+                        }
                     }
                 } else if (mType == TYPE_TRANSFER) {
                     // In this case the activity has been launched to insert a new transfer so we

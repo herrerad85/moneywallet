@@ -238,6 +238,7 @@
     <string name="menu_action_save_changes">"Save changes"</string>
     <string name="menu_refresh_currency_rate">"Refresh currency rate"</string>
     <string name="menu_advanced_settings">"Advanced settings"</string>
+    <string name="menu_action_new_transaction_for_person">"New transaction"</string>
     <string name="menu_action_edit_item">"Edit"</string>
     <string name="menu_action_duplicate_item">"Duplicate"</string>
     <string name="menu_action_delete_item">"Delete"</string>

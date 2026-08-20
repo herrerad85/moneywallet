@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2018.
+  ~
+  ~ This file is part of MoneyWallet.
+  ~
+  ~ MoneyWallet is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ MoneyWallet is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!--
+      never, not ifRoom. On a narrow toolbar the three actions below fit as icons only while there
+      is no overflow button; adding any fourth action brings one in and costs a slot, so one of
+      them moves into the overflow whatever this attribute says. Checked on a 1080 wide emulator:
+      with ifRoom the two that move are Edit and Delete, with never it is Delete alone. Keeping the
+      create action out of the running is what buys Edit its icon back.
+    -->
+    <item
+        android:id="@+id/action_new_transaction_for_person"
+        android:icon="@drawable/ic_add_24dp"
+        android:title="@string/menu_action_new_transaction_for_person"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_show_transaction_list"
+        android:icon="@drawable/ic_receipt_black_24dp"
+        android:title="@string/menu_action_show_transaction_list"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_edit_item"
+        android:icon="@drawable/ic_mode_edit_black_24dp"
+        android:title="@string/menu_action_edit_item"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_delete_item"
+        android:icon="@drawable/ic_delete_black_24dp"
+        android:title="@string/menu_action_delete_item"
+        app:showAsAction="ifRoom" />
+
+</menu>
