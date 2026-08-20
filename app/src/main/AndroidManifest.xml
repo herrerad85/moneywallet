@@ -41,6 +41,7 @@
         android:theme="@style/MoneyWalletAppTheme"
         android:requestLegacyExternalStorage="true"
         android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".ui.activity.LauncherActivity"
             android:exported="true">

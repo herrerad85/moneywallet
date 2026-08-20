@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  See backup_rules.xml for why shared_prefs is absent.
+
+  The two blocks differ on attachments, on purpose. A cloud backup has a size quota and going
+  over it fails the whole package, so attachments stay out. A device transfer has no quota and
+  hands the data straight to the user's next phone, so it carries them there.
+
+  disableIfNoEncryptionCapabilities carries forward the requireFlags="clientSideEncryption" that
+  backup_rules.xml has had since 2021, so a cloud backup of the ledger only leaves the device on
+  a transport that can encrypt it there. The attribute is not valid on device-transfer, so a
+  direct handoff carries the data with no encryption gate of its own.
+-->
+<data-extraction-rules>
+    <cloud-backup disableIfNoEncryptionCapabilities="true">
+        <include domain="database" path="database.db" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="database.db" />
+        <include domain="external" path="attachments" />
+    </device-transfer>
+</data-extraction-rules>

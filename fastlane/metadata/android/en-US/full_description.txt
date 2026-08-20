@@ -25,7 +25,7 @@ Privacy and offline first:
 
 * Optional app lock with a PIN, a pattern, or your fingerprint
 * No account, no sign-up, and no ads
-* Your data stays on your device unless you choose to back it up or export it
+* Your data stays on your device unless you back it up, export it, or leave Android's own backup on
 * The open-source build uses OpenStreetMap and no Google services
 
 Tallybook is free software under the GNU General Public License v3.0.
