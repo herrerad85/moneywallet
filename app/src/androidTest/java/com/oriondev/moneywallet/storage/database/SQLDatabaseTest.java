@@ -1253,6 +1253,32 @@ public class SQLDatabaseTest {
     }
 
     @Test
+    public void debtMasterTransactionTakesTheDebtDate() throws Exception {
+        long walletId = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        // A past date, so a failure reads as a wrong month, not a wrong time of day. What
+        // actually left the existing insertDebt and updateDebt tests blind to this is that they
+        // never assert the transaction's date at all, only how many rows came back.
+        Date picked = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", picked, null, walletId, "note-1", null, 2000L, false, null, "tag-1", true);
+        assertEquals(DateUtils.getSQLDateTimeString(picked), masterTransactionDate(debtId));
+        // and it follows the debt when the date is edited
+        Date moved = DateUtils.getDateFromSQLDateString("2026-06-15");
+        assertEquals(1, updateDebt(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", moved, null, walletId, "note-1", null, 2000L, false, null, "tag-1"));
+        assertEquals(DateUtils.getSQLDateTimeString(moved), masterTransactionDate(debtId));
+    }
+
+    private String masterTransactionDate(long debtId) {
+        Cursor cursor = mDatabase.getTransactions(new String[] {Contract.Transaction.DATE},
+                Contract.Transaction.DEBT_ID + " = ?", new String[] {String.valueOf(debtId)}, null);
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        cursor.moveToFirst();
+        String date = cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE));
+        cursor.close();
+        return date;
+    }
+
+    @Test
     public void deleteDebt() throws Exception {
         long id1 = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
         long id2 = insertPlace("place-2", "encoded-icon-2", "fake-address-2", 7.3467, 8.364, "tag-2");

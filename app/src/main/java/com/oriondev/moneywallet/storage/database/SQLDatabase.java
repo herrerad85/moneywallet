@@ -2198,6 +2198,25 @@ import java.util.UUID;
     }
 
     /**
+     * A debt and its master transaction are the same event, so the transaction takes the debt's
+     * own date at the start of that day. The debt editor writes the date with no time of day, so
+     * the value cannot be carried across as it stands. Debt.DATE is NOT NULL in the schema, so
+     * the null branch cannot fire today and is only there to keep a schema change from becoming
+     * a crash here.
+     *
+     * The parse is lenient, like every other getDateFromSQLDateString call in this app: a day
+     * past the end of its month rolls forward and a trailing time is dropped without complaint.
+     * NewEditDebtActivity is the only caller that writes this key and it always writes a plain
+     * valid date, so nothing here has to refuse those the way CSVDataImporter.parseDatetime does.
+     */
+    private static String masterTransactionDateFor(String debtDate) {
+        if (debtDate == null) {
+            return DateUtils.getSQLDateTimeString(System.currentTimeMillis());
+        }
+        return DateUtils.getSQLDateTimeString(DateUtils.getDateFromSQLDateString(debtDate));
+    }
+
+    /**
      * This method is called by the content provider when the user is inserting a new debt.
      *
      * contentValues bundle that contains the data from the content provider.
@@ -2240,7 +2259,7 @@ import java.util.UUID;
                 cv = new ContentValues();
                 Contract.DebtType type = Contract.DebtType.fromValue(contentValues.getAsInteger(Contract.Debt.TYPE));
                 cv.put(Contract.Transaction.MONEY, contentValues.getAsLong(Contract.Debt.MONEY));
-                cv.put(Contract.Transaction.DATE, DateUtils.getSQLDateTimeString(System.currentTimeMillis()));
+                cv.put(Contract.Transaction.DATE, masterTransactionDateFor(contentValues.getAsString(Contract.Debt.DATE)));
                 cv.put(Contract.Transaction.DESCRIPTION, contentValues.getAsString(Contract.Debt.DESCRIPTION));
                 cv.put(Contract.Transaction.CATEGORY_ID, getSystemCategoryId((type == Contract.DebtType.DEBT) ? Schema.CategoryTag.DEBT : Schema.CategoryTag.CREDIT));
                 cv.put(Contract.Transaction.DIRECTION, (type == Contract.DebtType.CREDIT) ? Contract.Direction.EXPENSE : Contract.Direction.INCOME);
@@ -2376,6 +2395,9 @@ import java.util.UUID;
                     }
                     if (contentValues.containsKey(Contract.Debt.DESCRIPTION)) {
                         cv.put(Contract.Transaction.DESCRIPTION, contentValues.getAsString(Contract.Debt.DESCRIPTION));
+                    }
+                    if (contentValues.containsKey(Contract.Debt.DATE)) {
+                        cv.put(Contract.Transaction.DATE, masterTransactionDateFor(contentValues.getAsString(Contract.Debt.DATE)));
                     }
                     if (contentValues.containsKey(Contract.Debt.TYPE)) {
                         Contract.DebtType type = Contract.DebtType.fromValue(contentValues.getAsInteger(Contract.Debt.TYPE));
