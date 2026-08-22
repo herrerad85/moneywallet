@@ -38,7 +38,7 @@ End-to-end restore was verified on 2026-06-29. A backup produced by the genuine 
 ## Notes and current limitations
 
 - **Backup/Restore is the recommended path** for a complete copy of your data. CSV, Excel, and PDF export are meant for use in other tools, not as a full round-trip migration.
-- **On Android 15, restore through the Storage Access Framework.** Under scoped storage, the legacy "External Memory" file browser may not list a backup that another app wrote (for example a MoneyWallet `.mwbx` in `Download`). If you do not see your file, use the Storage Access Framework option in Tallybook and keep the backup in a normal, non-restricted folder such as `Download/mwbackup/`. Broader export/import work under scoped storage is tracked in the project issues; if a backup is hard to locate or restore, please open an issue and include your Android version.
+- **On Android 15, restore through the Local folder option.** Under scoped storage, the legacy "External Memory" file browser may not list a backup that another app wrote (for example a MoneyWallet `.mwbx` in `Download`). If you do not see your file, use the Local folder option in Tallybook and keep the backup in a normal, non-restricted folder such as `Download/mwbackup/`. Broader export/import work under scoped storage is tracked in the project issues; if a backup is hard to locate or restore, please open an issue and include your Android version.
 - Coming from a very old (pre-4.0) MoneyWallet? The app also includes a legacy importer for the old database; prefer Backup/Restore where possible and use the legacy import only as a fallback.
 
 ## Why Tallybook is a separate app

@@ -20,6 +20,17 @@
 
 <changelog>
 
+    <version versionName="1.5.0" versionDate="Aug 22, 2026">
+        <change>[b]New![/b] Start a transaction from a person's screen with that person already attached.</change>
+        <change>Android's own backup stored nothing, so a restore brought back an empty app. It now carries the ledger.</change>
+        <change>Automatic backup says when a failure is what turned it off.</change>
+        <change>An income or expense color that would vanish into the page is drawn readable instead.</change>
+        <change>A debt's master transaction takes the debt's date, not the day it was typed.</change>
+        <change>A saving refuses a withdraw larger than it holds.</change>
+        <change>The child category arrow points at the child in a right to left layout.</change>
+        <change>CSV import reads a file that starts with a byte order mark.</change>
+    </version>
+
     <version versionName="1.4.0" versionDate="Aug 15, 2026">
         <change>[b]New![/b] Open a transaction and duplicate it.</change>
         <change>[b]New![/b] Hide a category's child categories behind an arrow on its row.</change>
