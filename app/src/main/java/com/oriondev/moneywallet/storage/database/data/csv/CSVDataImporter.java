@@ -12,11 +12,15 @@ import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.DateUtils;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PushbackReader;
+import java.io.Reader;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
+import java.util.TreeSet;
 
 /**
  * Created by andrea on 23/12/18.
@@ -25,6 +29,9 @@ public class CSVDataImporter extends AbstractDataImporter {
 
     /** The length of yyyy-MM-dd, which the date parse itself does not bound. */
     private static final int SQL_DATE_LENGTH = 10;
+
+    /** What a file saved as Unicode text can carry in front of its first character. */
+    private static final char BYTE_ORDER_MARK = '\uFEFF';
 
     private final File mFile;
 
@@ -35,7 +42,77 @@ public class CSVDataImporter extends AbstractDataImporter {
     public CSVDataImporter(Context context, File file) throws IOException {
         super(context, file);
         mFile = file;
-        mReader = new CSVReaderHeaderAware(new FileReader(file));
+        mReader = openReader();
+    }
+
+    /**
+     * The one place in this class that opens the file. What was reported was not a fault in the
+     * reader on its own, it was a file reaching a reader that had not dropped the byte order mark
+     * the file starts with, and this class opens the file twice. Opening it in one place is what
+     * keeps the second pass from drifting away from the first.
+     */
+    private CSVReaderHeaderAware openReader() throws IOException {
+        Reader reader = openFile(mFile);
+        try {
+            return new CSVReaderHeaderAware(reader);
+        } catch (IOException | RuntimeException failed) {
+            closeQuietly(reader);
+            throw failed;
+        }
+    }
+
+    /**
+     * The file, with any byte order mark it starts with dropped. Some tools write one in front of
+     * the first character of a file they save as UTF-8, and the character has no width, so
+     * anything that decodes the file as UTF-8 shows a header that reads correctly. It is a
+     * character like any other to the reader, so it joins the first header cell: the file names a
+     * column nobody will ever look up, and every row is then refused for having no wallet column.
+     *
+     * More than one can pile up when a file that already carries one goes back through a tool
+     * that adds one, and every one of them has to come off for the same reason the first does.
+     *
+     * The charset is named here so the mark decodes to the same character on a desktop as it does
+     * on a device. Android's default is already UTF-8, so nothing about an import changes. A test
+     * running on a host whose default is something else would otherwise read the mark as
+     * characters of its own and fail for a reason that has nothing to do with the file.
+     *
+     * A file with nothing left after the mark is refused here, with a message a person can read.
+     * The reader this hands the file to asks the header for its length without checking whether
+     * there was a header at all, so a file with nothing in it has always reached the failure
+     * dialog as a null pointer message. Dropping the mark put the file that holds only a mark
+     * into that same case, which is why the check belongs here. It is a check for no characters
+     * and not for no header line: a file holding one line ending and nothing else still reports a
+     * successful import of nothing, exactly as it did before.
+     */
+    /*package-local*/ static Reader openFile(File file) throws IOException {
+        PushbackReader reader = new PushbackReader(
+                new InputStreamReader(new FileInputStream(file), "UTF-8"));
+        try {
+            int first = reader.read();
+            while (first == BYTE_ORDER_MARK) {
+                first = reader.read();
+            }
+            if (first == -1) {
+                throw new RuntimeException("the file has no header line in it");
+            }
+            reader.unread(first);
+            return reader;
+        } catch (IOException | RuntimeException failed) {
+            closeQuietly(reader);
+            throw failed;
+        }
+    }
+
+    /**
+     * Closes a reader that is being abandoned. A failure closing it would otherwise replace the
+     * failure that made it worth abandoning, which is the one the person needs to read.
+     */
+    private static void closeQuietly(Reader reader) {
+        try {
+            reader.close();
+        } catch (IOException closing) {
+            // nothing useful to do with it, and it is not the failure being reported
+        }
     }
 
     /**
@@ -47,7 +124,7 @@ public class CSVDataImporter extends AbstractDataImporter {
      */
     @Override
     public void importData() throws IOException {
-        try (CSVReaderHeaderAware check = new CSVReaderHeaderAware(new FileReader(mFile))) {
+        try (CSVReaderHeaderAware check = openReader()) {
             readRows(check, false);
         }
         readRows(mReader, true);
@@ -149,11 +226,24 @@ public class CSVDataImporter extends AbstractDataImporter {
     /**
      * The value of a column every row needs. A column the header does not have and a cell left
      * empty are mistakes in different places, so they do not get the same message.
+     *
+     * The refusal lists the columns the row was read into, because the header a person is looking
+     * at and the columns the reader built out of it are not always the same thing. A file
+     * separated by semicolons reads as one column named after the whole line, and without the
+     * list there is nothing on screen a person could use to see that.
+     *
+     * Sorted, and the message says so. The reader keeps these in a hash table, so their own order
+     * has nothing to do with the file, and a list that looks like an order invites a person to
+     * compare it against their header and conclude the app moved their columns around. Sorted by
+     * character and not by any language's alphabet, which is why the message does not call it
+     * alphabetical: a capital letter sorts before every lowercase one, and an accented letter
+     * sorts after all of them.
      */
     /*package-local*/ static String required(Map<String, String> lineMap, String column) {
         String value = lineMap.get(column);
         if (value == null) {
-            throw new RuntimeException("no " + column + " column was found. Check the header line");
+            throw new RuntimeException("no " + column + " column was found. The columns read out "
+                    + "of the header line, sorted, are " + new TreeSet<>(lineMap.keySet()));
         }
         value = value.trim();
         if (value.isEmpty()) {
