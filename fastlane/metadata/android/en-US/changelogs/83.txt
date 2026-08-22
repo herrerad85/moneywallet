@@ -1,0 +1,3 @@
+New: start a transaction from a person's screen with that person already attached.
+
+Fixes: Android's own backup stored nothing, so a restore brought back an empty app. An income or expense color that would vanish into the page is drawn readable instead. Automatic backup says when a failure turned it off. A debt's master transaction takes the debt's date, not the day it was typed. A saving refuses a withdraw larger than it holds. CSV import reads a file that starts with a byte order mark.
