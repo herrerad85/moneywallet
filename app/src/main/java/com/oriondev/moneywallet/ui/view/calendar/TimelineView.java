@@ -20,6 +20,7 @@
 package com.oriondev.moneywallet.ui.view.calendar;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.os.Build;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -405,8 +406,12 @@ public class TimelineView extends RecyclerView {
             this.day = day;
             lblDay.setText(dayLabel(dayOfWeek));
             lblDate.setText(String.valueOf(day));
+            // The line below has never run here and neither drawable it names is in this project,
+            // so the accent color is the only mark on a cell and it marks today and the shown day
+            // alike. Weight is what separates them: the shown day is the bold one.
             // lblDate.setBackgroundResource(selected ? R.drawable.mti_bg_lbl_date_selected : (isToday ? R.drawable.mti_bg_lbl_date_today : 0));
             lblDate.setTextColor(selected || isToday ? lblDateSelectedColor : lblDateColor);
+            lblDate.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
         }
     }
 }
