@@ -66,6 +66,10 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
     private static final String ARG_SELECTED_MONTH = "CalendarMultiPanelFragment::Arguments::Month";
     private static final String ARG_SELECTED_DAY = "CalendarMultiPanelFragment::Arguments::Day";
 
+    private static final String STATE_SELECTED_YEAR = "CalendarMultiPanelFragment::State::Year";
+    private static final String STATE_SELECTED_MONTH = "CalendarMultiPanelFragment::State::Month";
+    private static final String STATE_SELECTED_DAY = "CalendarMultiPanelFragment::State::Day";
+
     private static final int DEFAULT_LOADER_ID = 4834;
 
     private BroadcastReceiver mCurrentWalletObserver;
@@ -95,19 +99,42 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
         mAdvancedRecyclerView = view.findViewById(R.id.advanced_recycler_view);
         mTimelineView.setFirstDate(1900, Calendar.JANUARY, 1);
         mTimelineView.setLastDate(2100, Calendar.DECEMBER, 31);
-        mTimelineView.setOnDateSelectedListener(this);
         mAbstractCursorAdapter = new TransactionCursorAdapter(this);
         mAdvancedRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mAdvancedRecyclerView.setEmptyText(R.string.message_no_transaction_found);
         mAdvancedRecyclerView.setAdapter(mAbstractCursorAdapter);
         mAdvancedRecyclerView.setOnRefreshListener(this);
-        mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.LOADING);
         Calendar calendar = Calendar.getInstance();
-        mTimelineView.setSelectedDate(
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-        );
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        if (savedInstanceState != null && savedInstanceState.containsKey(STATE_SELECTED_YEAR)) {
+            year = savedInstanceState.getInt(STATE_SELECTED_YEAR);
+            month = savedInstanceState.getInt(STATE_SELECTED_MONTH);
+            day = savedInstanceState.getInt(STATE_SELECTED_DAY);
+        }
+        // The listener is attached after the first selection, and the first load is made here,
+        // because the strip reports nothing when the day selected is the one it already holds.
+        // After setFirstDate above that day is 1 January 1900, which a restored date can equal.
+        mTimelineView.setSelectedDate(year, month, day);
+        mTimelineView.setOnDateSelectedListener(this);
+        onDateSelected(year, month, day, mTimelineView.getSelectedPosition());
+    }
+
+    /**
+     * The day is saved as a date and not as the strip position that also identifies it. A position
+     * is a running day count the strip adjusts by a difference on every selection, and that count
+     * can drift from the date it is meant to name, so restoring one can load a day the user never
+     * picked. The date cannot drift.
+     */
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mTimelineView != null) {
+            outState.putInt(STATE_SELECTED_YEAR, mTimelineView.getSelectedYear());
+            outState.putInt(STATE_SELECTED_MONTH, mTimelineView.getSelectedMonth());
+            outState.putInt(STATE_SELECTED_DAY, mTimelineView.getSelectedDay());
+        }
     }
 
     @Override
@@ -180,7 +207,6 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
                 arguments = new String[] {String.valueOf(currentWallet)};
             }
             selection += " AND DATE(" + Contract.Transaction.DATE + ") == DATE('" + DateUtils.getSQLDateString(date) + "')";
-            System.out.println(selection);
             String sortOrder = Contract.Transaction.DATE + " DESC";
             return new CursorLoader(activity, uri, null, selection, arguments, sortOrder);
         }
