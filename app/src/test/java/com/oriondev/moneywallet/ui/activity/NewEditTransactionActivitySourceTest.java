@@ -24,18 +24,19 @@ import static org.junit.Assert.fail;
  * spacing exactly as written, including the lines a region is found by, so a reformat or a line
  * wrap anywhere in that text fails the assertion with no defect present.
  *
- * What these assertions check is which token sequences the source does and does not carry:
- * that getItemId appears nowhere in the intent branch, that the saving uri is built from
- * mSavingId, that the statement assigning landedMoney reads START_MONEY and PROGRESS once each
- * and adds them, that the statement assigning projectedMoney does the same with
- * PROJECTED_PROGRESS, that all three columns are in the projection, that the prefill takes the
- * smaller of the two and sits in the withdraw everything case, that the case falls through, and
- * that the statement assigning wallet builds a Wallet from the saving's wallet columns. That
- * makes them a tripwire against a revert or a careless rewrite. It does not make them a proof of
- * behaviour, and they cannot show the value the keypad ends up with. A rewrite that keeps those
- * tokens and still breaks the editor goes through. One example, not a list: a second assignment
- * written with += or -= is invisible here, because "landedMoney -=" does not contain the
- * "landedMoney =" the statement is found by.
+ * What these assertions check is which token sequences the source does and does not carry: that
+ * getItemId appears nowhere in the intent branch, that the saving uri is built from mSavingId,
+ * that the statement assigning landedMoney reads START_MONEY and PROGRESS once each and adds them,
+ * that the statement assigning projectedMoney does the same with PROJECTED_PROGRESS, that all
+ * three columns are in the projection, that the prefill takes the smaller of the two and sits in
+ * the withdraw everything case, that the case falls through, that the statement assigning wallet
+ * builds a Wallet from the saving's wallet columns, that the saving case of the visibility switch
+ * hides the wallet field, and that between the debt label and the saving label the source names no
+ * wallet field and does carry a break. That makes them a tripwire against a revert or a careless
+ * rewrite. It does not make them a proof of behavior, and they cannot show the value the keypad
+ * ends up with. A rewrite that keeps those tokens and still breaks the editor goes through. One
+ * example, not a list: a second assignment written with += or -= is invisible here, because
+ * "landedMoney -=" does not contain the "landedMoney =" the statement is found by.
  *
  * Invariant one: inside the branch that fills a new transaction from its intent, getItemId is
  * always -1, the value NewEditItemActivity assigns whenever it was not launched to edit an
@@ -78,6 +79,15 @@ import static org.junit.Assert.fail;
  * everything else here it is token matching, and it is loose in both directions. A return written
  * around some other test is invisible to it, and a second reading of this one fails it whether or
  * not a return came with it.
+ *
+ * Invariant five: a saving transaction does not offer its wallet field. A saving's progress is
+ * summed over its transactions with no currency anywhere in that sum, so a row moved onto a wallet
+ * held in another currency is added at face value, and 500 euros count as 500 dollars. The debt
+ * label sits beside the saving one in the same switch and the two shared a body until the hide was
+ * added. A debt payment is deliberately left offering its wallet field, since a debt's progress is
+ * summed the same way and answering that is a separate change. Three things are read: the saving
+ * case must hide the wallet field, and between the two labels the field's name must be absent and
+ * a break must be present.
  */
 public class NewEditTransactionActivitySourceTest {
 
@@ -104,6 +114,10 @@ public class NewEditTransactionActivitySourceTest {
             {"landedMoney =", "Contract.Saving.PROGRESS"},
             {"projectedMoney =", "Contract.Saving.PROJECTED_PROGRESS"}
     };
+
+    private static final String DEBT_CASE = "case TYPE_DEBT:";
+    private static final String SAVING_CASE = "case TYPE_SAVING:";
+    private static final String CASE_BREAK = "break;";
 
     @Test
     public void newItemBranchDoesNotReadTheItemId() throws IOException {
@@ -198,6 +212,28 @@ public class NewEditTransactionActivitySourceTest {
                 + "nothing to scale a typed amount against, but the assignment is: " + built,
                 built.contains("Contract.Saving.WALLET_ID")
                         && built.contains("Contract.Saving.WALLET_CURRENCY"));
+    }
+
+    @Test
+    public void aSavingTransactionDoesNotOfferItsWalletField() throws IOException {
+        assertTrue("a saving's progress is summed with no currency in it, so the wallet a saving "
+                + "transaction sits in must not be changeable from the editor",
+                region(SAVING_CASE, CASE_BREAK)
+                        .contains("mWalletEditText.setVisibility(View.GONE)"));
+    }
+
+    @Test
+    public void theDebtCaseDoesNotNameTheWalletField() throws IOException {
+        assertEquals("a debt payment is deliberately left offering its wallet field, so that field "
+                + "must not be named between the debt label and the saving one", -1,
+                region(DEBT_CASE, SAVING_CASE).indexOf("mWalletEditText"));
+    }
+
+    @Test
+    public void theDebtCaseCarriesABreak() throws IOException {
+        assertTrue("a debt payment is deliberately left offering its wallet field, and the two "
+                + "labels shared a body until the wallet hide was added, so a break has to appear "
+                + "between them", region(DEBT_CASE, SAVING_CASE).contains(CASE_BREAK));
     }
 
     /**

@@ -943,8 +943,11 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
         // depending on the type we must hide pickers that are now allowed to be changed
         switch (mType) {
             case TYPE_DEBT:
+                mCategoryEditText.setVisibility(View.GONE);
+                break;
             case TYPE_SAVING:
                 mCategoryEditText.setVisibility(View.GONE);
+                mWalletEditText.setVisibility(View.GONE);
                 break;
         }
         // now we can create pickers with default values or existing item parameters
@@ -1174,10 +1177,9 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
             limit = Math.min(limit, mSavingWithdrawLandedLimit);
         }
         CurrencyUnit currency = mSavingWithdrawCurrency != null ? CurrencyManager.getCurrency(mSavingWithdrawCurrency) : null;
-        // The limit is in the saving's own currency. If the wallet on screen has been changed to
-        // another one the two are not comparable as they stand, and this screen converts nowhere
-        // else, so the check steps aside instead of comparing amounts that do not mean the same
-        // thing.
+        // The limit is in the saving's own currency. If the row sits in a wallet held in another
+        // one the two are not comparable as they stand, and this screen converts nowhere else, so
+        // the check steps aside instead of comparing amounts that do not mean the same thing.
         CurrencyUnit walletCurrency = mWalletPicker.getCurrentWallet().getCurrency();
         if (currency == null || walletCurrency == null || !currency.getIso().equals(walletCurrency.getIso())) {
             return true;
