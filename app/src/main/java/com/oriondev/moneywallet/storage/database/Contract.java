@@ -245,6 +245,7 @@ public class Contract {
         public static final String COMPLETE = Schema.Saving.COMPLETE;
         public static final String NOTE = Schema.Saving.NOTE;
         public static final String PROGRESS = "saving_" + Schema.Alias.PROGRESS;
+        public static final String PROJECTED_PROGRESS = "saving_" + Schema.Alias.PROJECTED_PROGRESS;
         public static final String TAG = Schema.Saving.TAG;
     }
 
