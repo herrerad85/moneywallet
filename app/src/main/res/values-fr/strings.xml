@@ -377,8 +377,8 @@
     <string name="message_backup_status_uploading">"Envoi du fichier de sauvegarde en cours…"</string>
     <string name="message_backup_status_downloading">"Téléchargement du fichier de sauvegarde en cours…"</string>
     <string name="message_backup_status_restoring">"Restauration du fichier de sauvegarde en cours…"</string>
-    <string name="message_backup_creation_success">"La sauvegarde c\'est terminé avec succès."</string>
-    <string name="message_backup_restoring_success">"La restauration c\'est terminé avec succès."</string>
+    <string name="message_backup_creation_success">"La sauvegarde s\'est terminée avec succès."</string>
+    <string name="message_backup_restoring_success">"La restauration s\'est terminée avec succès."</string>
     <string name="message_backup_creation_failed">"Échec lors de la création de la sauvegarde. Erreur : %s"</string>
     <string name="message_backup_restoring_failed">"Échec lors de la restauration de la sauvegarde. Erreur : %s"</string>
     <string name="message_backup_service_dropbox_disconnect">"Êtes-vous sûr de vouloir vous déconnecter votre compte Dropbox?"</string>
