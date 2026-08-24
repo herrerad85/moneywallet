@@ -65,7 +65,7 @@ import java.util.UUID;
 /*package-local*/ class SQLDatabase extends SQLiteOpenHelper {
 
     /*package-local*/ static final String DATABASE_NAME = "database.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
     private static final String ENABLE_FOREIGN_KEYS = "PRAGMA foreign_keys=ON";
 
@@ -150,6 +150,45 @@ import java.util.UUID;
             db.execSQL(Schema.CREATE_WALLET_INDEX_COLUMN);
             db.execSQL(Schema.CREATE_CATEGORY_INDEX_COLUMN);
         }
+        if (oldVersion < 4) {
+            // a budget can now repeat: the column holds the recurrence rule of the budget that is
+            // currently running, and is null on every budget that does not repeat.
+            if (!hasColumn(db, Schema.Budget.TABLE, Schema.Budget.RULE)) {
+                db.execSQL(Schema.CREATE_BUDGET_RULE_COLUMN);
+            }
+            if (!hasColumn(db, Schema.Budget.TABLE, Schema.Budget.RULE_START)) {
+                db.execSQL(Schema.CREATE_BUDGET_RULE_START_COLUMN);
+            }
+        }
+    }
+
+    /**
+     * Whether a table already carries a column. An upgrade has to ask, because a downgrade leaves
+     * the schema alone and only stamps the version back: installing an older release over a newer
+     * database and then upgrading again brings the upgrade back to a column that is already there,
+     * and the ALTER that adds it would throw out of {@link #onUpgrade} and take every read of the
+     * database with it.
+     *
+     * @param db database being upgraded.
+     * @param table table to look in.
+     * @param column column to look for.
+     * @return true when the column is already present.
+     */
+    private boolean hasColumn(SQLiteDatabase db, String table, String column) {
+        Cursor cursor = db.rawQuery("PRAGMA table_info(" + table + ")", null);
+        if (cursor != null) {
+            try {
+                int nameIndex = cursor.getColumnIndex("name");
+                while (cursor.moveToNext()) {
+                    if (TextUtils.equals(column, cursor.getString(nameIndex))) {
+                        return true;
+                    }
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        return false;
     }
 
     @Override
@@ -2510,6 +2549,8 @@ import java.util.UUID;
                 "b." + Schema.Budget.END_DATE + " AS " + Contract.Budget.END_DATE + ", " +
                 "b." + Schema.Budget.MONEY + " AS " + Contract.Budget.MONEY + ", " +
                 "b." + Schema.Budget.CURRENCY + " AS " + Contract.Budget.CURRENCY + ", " +
+                "b." + Schema.Budget.RULE + " AS " + Contract.Budget.RULE + ", " +
+                "b." + Schema.Budget.RULE_START + " AS " + Contract.Budget.RULE_START + ", " +
                 "b." + Schema.Budget.TAG + " AS " + Contract.Budget.TAG + ", " +
                 "SUM(_progress) AS " + Contract.Budget.PROGRESS + "," +
                 "GROUP_CONCAT('<' || _wallet_id || '>') AS " + Contract.Budget.WALLET_IDS + "," +
@@ -2805,8 +2846,10 @@ import java.util.UUID;
         cv.put(Schema.Budget.END_DATE, contentValues.getAsString(Contract.Budget.END_DATE));
         cv.put(Schema.Budget.MONEY, contentValues.getAsLong(Contract.Budget.MONEY));
         cv.put(Schema.Budget.CURRENCY, contentValues.getAsString(Contract.Budget.CURRENCY));
+        cv.put(Schema.Budget.RULE, contentValues.getAsString(Contract.Budget.RULE));
+        cv.put(Schema.Budget.RULE_START, contentValues.getAsString(Contract.Budget.RULE_START));
         cv.put(Schema.Budget.TAG, contentValues.getAsString(Contract.Budget.TAG));
-        cv.put(Schema.Budget.UUID, UUID.randomUUID().toString());
+        cv.put(Schema.Budget.UUID, budgetUUID(contentValues));
         cv.put(Schema.Budget.LAST_EDIT, System.currentTimeMillis());
         cv.put(Schema.Budget.DELETED, false);
         long budgetId = getWritableDatabase().insert(Schema.Budget.TABLE, null, cv);
@@ -2823,6 +2866,58 @@ import java.util.UUID;
             }
         }
         return budgetId;
+    }
+
+    /**
+     * The uuid to store on a budget being inserted. A period opened by rolling a repeating budget
+     * forward names the period it came from, and its uuid is built from the uuid of the budget its
+     * chain started from and its own start date, the same scheme
+     * {@link #getRecurrentItemUUID(String, Date)} gives an occurrence of a recurring transaction.
+     * Three things follow from that. A roll that is killed part way through is safe to run again,
+     * because the periods it already wrote come back with the uuid they already have and the
+     * unique index refuses them. Two devices that open the same period agree on its identity
+     * instead of each inventing one. And the name says which chain the period belongs to, which is
+     * how {@link #budgetChainUUID(String)} and the editor recover it, so a period must never be
+     * given a name of any other shape. Every other budget gets a random uuid.
+     *
+     * @param contentValues bundle handed to {@link #insertBudget(ContentValues)}.
+     * @return the uuid to store.
+     */
+    private String budgetUUID(ContentValues contentValues) {
+        if (contentValues.containsKey(Contract.Budget.ROLLED_FROM_ID)) {
+            String[] projection = new String[] {Schema.Budget.UUID};
+            String selection = Schema.Budget.ID + " = ?";
+            String[] selectionArgs = new String[] {contentValues.getAsString(Contract.Budget.ROLLED_FROM_ID)};
+            Cursor cursor = getReadableDatabase().query(Schema.Budget.TABLE, projection, selection, selectionArgs, null, null, null);
+            if (cursor != null) {
+                try {
+                    if (cursor.moveToFirst()) {
+                        String parentUUID = cursor.getString(cursor.getColumnIndex(Schema.Budget.UUID));
+                        Date startDate = DateUtils.getDateFromSQLDateString(contentValues.getAsString(Contract.Budget.START_DATE));
+                        if (parentUUID != null && startDate != null) {
+                            return getRecurrentItemUUID(budgetChainUUID(parentUUID), startDate);
+                        }
+                    }
+                } finally {
+                    cursor.close();
+                }
+            }
+        }
+        return UUID.randomUUID().toString();
+    }
+
+    /**
+     * The uuid of the chain a budget period belongs to: the uuid of the budget the chain started
+     * from, which is what is left once the date every roll appends is taken off again. Naming a
+     * period after its chain rather than after the period before it keeps that name the same
+     * whichever run opens it, and keeps it from growing by a date on every roll.
+     *
+     * @param budgetUUID uuid of a budget in the chain.
+     * @return the uuid of the budget the chain started from.
+     */
+    private String budgetChainUUID(String budgetUUID) {
+        int separator = budgetUUID.indexOf(':');
+        return separator >= 0 ? budgetUUID.substring(0, separator) : budgetUUID;
     }
 
     /**
@@ -2845,6 +2940,12 @@ import java.util.UUID;
         cv.put(Schema.Budget.END_DATE, contentValues.getAsString(Contract.Budget.END_DATE));
         cv.put(Schema.Budget.MONEY, contentValues.getAsLong(Contract.Budget.MONEY));
         cv.put(Schema.Budget.CURRENCY, contentValues.getAsString(Contract.Budget.CURRENCY));
+        if (contentValues.containsKey(Contract.Budget.RULE)) {
+            cv.put(Schema.Budget.RULE, contentValues.getAsString(Contract.Budget.RULE));
+        }
+        if (contentValues.containsKey(Contract.Budget.RULE_START)) {
+            cv.put(Schema.Budget.RULE_START, contentValues.getAsString(Contract.Budget.RULE_START));
+        }
         if (contentValues.containsKey(Contract.Budget.TAG)) {
             cv.put(Schema.Budget.TAG, contentValues.getAsString(Contract.Budget.TAG));
         }

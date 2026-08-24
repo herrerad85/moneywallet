@@ -68,10 +68,14 @@ public class DateTimePicker extends Fragment implements DatePickerDialog.OnDateS
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof Controller) {
-            mController = (Controller) context;
-        } else if (getParentFragment() instanceof Controller) {
+        // the fragment that created this picker is asked first. A child fragment is attached to
+        // the activity, not to its parent, so a dialog that owns date pickers of its own would
+        // otherwise lose them to an activity that happens to be a Controller too, and the dialog
+        // would never hear the date it asked for.
+        if (getParentFragment() instanceof Controller) {
             mController = (Controller) getParentFragment();
+        } else if (context instanceof Controller) {
+            mController = (Controller) context;
         }
     }
 

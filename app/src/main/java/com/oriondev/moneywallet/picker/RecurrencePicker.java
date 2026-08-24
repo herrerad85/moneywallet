@@ -36,20 +36,42 @@ import com.oriondev.moneywallet.ui.fragment.dialog.RecurrencePickerDialog;
 public class RecurrencePicker extends Fragment implements RecurrencePickerDialog.Callback {
 
     private static final String SS_RECURRENCE_SETTING = "RecurrencePicker::SavedState::RecurrenceSetting";
+    private static final String SS_CHOSEN = "RecurrencePicker::SavedState::Chosen";
 
     private static final String ARG_RECURRENCE_SETTING = "RecurrencePicker::Argument::RecurrenceSetting";
+    private static final String ARG_END_TYPE_ENABLED = "RecurrencePicker::Argument::EndTypeEnabled";
+    private static final String ARG_ONCE_A_PERIOD = "RecurrencePicker::Argument::OnceAPeriod";
 
     private Controller mController;
 
     private RecurrenceSetting mRecurrenceSetting;
 
+    private boolean mChosen;
+
+    private boolean mEndTypeEnabled;
+
+    private boolean mOnceAPeriod;
+
     private RecurrencePickerDialog mRecurrencePickerDialog;
 
     public static RecurrencePicker createPicker(FragmentManager fragmentManager, String tag, RecurrenceSetting recurrenceSetting) {
+        return createPicker(fragmentManager, tag, recurrenceSetting, true, false);
+    }
+
+    /**
+     * @param endTypeEnabled false to hide the control that stops the recurrence after a date or a
+     *                       number of times, for a caller whose recurrence can only run forever.
+     * @param onceAPeriod    true to hide the weekday multi select, for a caller that reads the
+     *                       stretch between one occurrence and the next as a length and so needs
+     *                       every stretch to be the same.
+     */
+    public static RecurrencePicker createPicker(FragmentManager fragmentManager, String tag, RecurrenceSetting recurrenceSetting, boolean endTypeEnabled, boolean onceAPeriod) {
         RecurrencePicker recurrencePicker = (RecurrencePicker) fragmentManager.findFragmentByTag(tag);
         if (recurrencePicker == null) {
             Bundle arguments = new Bundle();
             arguments.putParcelable(ARG_RECURRENCE_SETTING, recurrenceSetting);
+            arguments.putBoolean(ARG_END_TYPE_ENABLED, endTypeEnabled);
+            arguments.putBoolean(ARG_ONCE_A_PERIOD, onceAPeriod);
             recurrencePicker = new RecurrencePicker();
             recurrencePicker.setArguments(arguments);
             fragmentManager.beginTransaction().add(recurrencePicker, tag).commit();
@@ -70,10 +92,13 @@ public class RecurrencePicker extends Fragment implements RecurrencePickerDialog
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Bundle arguments = getArguments();
+        mEndTypeEnabled = arguments == null || arguments.getBoolean(ARG_END_TYPE_ENABLED, true);
+        mOnceAPeriod = arguments != null && arguments.getBoolean(ARG_ONCE_A_PERIOD, false);
         if (savedInstanceState != null) {
             mRecurrenceSetting = savedInstanceState.getParcelable(SS_RECURRENCE_SETTING);
+            mChosen = savedInstanceState.getBoolean(SS_CHOSEN, false);
         } else {
-            Bundle arguments = getArguments();
             if (arguments != null && arguments.containsKey(ARG_RECURRENCE_SETTING)) {
                 mRecurrenceSetting = arguments.getParcelable(ARG_RECURRENCE_SETTING);
             } else {
@@ -97,6 +122,16 @@ public class RecurrencePicker extends Fragment implements RecurrencePickerDialog
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(SS_RECURRENCE_SETTING, mRecurrenceSetting);
+        outState.putBoolean(SS_CHOSEN, mChosen);
+    }
+
+    /**
+     * Whether the schedule the picker holds was chosen in its dialog, as opposed to the one it
+     * was created with. A caller that would otherwise anchor the schedule somewhere of its own
+     * asks this first, so that a choice already made is not quietly undone.
+     */
+    public boolean isChosen() {
+        return mChosen;
     }
 
     private void fireCallbackSafely() {
@@ -109,12 +144,23 @@ public class RecurrencePicker extends Fragment implements RecurrencePickerDialog
         return mRecurrenceSetting;
     }
 
+    /**
+     * Replace the schedule the picker holds, as if it had been chosen in the dialog.
+     */
+    public void setCurrentSettings(RecurrenceSetting recurrenceSetting) {
+        // this is the caller putting a schedule in, not a person choosing one, so it leaves the
+        // picker as unchosen: a caller that asks whether a schedule was chosen is asking about
+        // the dialog, and answering yes here would stop it seeding the picker ever again
+        mRecurrenceSetting = recurrenceSetting;
+        fireCallbackSafely();
+    }
+
     private String getDialogTag() {
         return getTag() + "::DialogFragment";
     }
 
     public void showPicker() {
-        mRecurrencePickerDialog.showPicker(getChildFragmentManager(), getDialogTag(), mRecurrenceSetting);
+        mRecurrencePickerDialog.showPicker(getChildFragmentManager(), getDialogTag(), mRecurrenceSetting, mEndTypeEnabled, mOnceAPeriod);
     }
 
     @Override
@@ -126,6 +172,7 @@ public class RecurrencePicker extends Fragment implements RecurrencePickerDialog
     @Override
     public void onRecurrenceSettingChanged(RecurrenceSetting recurrenceSetting) {
         mRecurrenceSetting = recurrenceSetting;
+        mChosen = true;
         fireCallbackSafely();
     }
 

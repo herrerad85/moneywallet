@@ -53,6 +53,8 @@ public class RecurrencePickerDialog extends DialogFragment implements DateTimePi
     private static final String TAG_END_DATE_PICKER = "RecurrencePickerDialog::Tag::EndDatePicker";
 
     private static final String SS_RECURRENCE_SETTING = "RecurrencePickerDialog::SavedState::RecurrenceSetting";
+    private static final String SS_END_TYPE_ENABLED = "RecurrencePickerDialog::SavedState::EndTypeEnabled";
+    private static final String SS_ONCE_A_PERIOD = "RecurrencePickerDialog::SavedState::OnceAPeriod";
 
     public static RecurrencePickerDialog newInstance() {
         return new RecurrencePickerDialog();
@@ -61,6 +63,10 @@ public class RecurrencePickerDialog extends DialogFragment implements DateTimePi
     private Callback mCallback;
 
     private RecurrenceSetting mRecurrenceSetting;
+
+    private boolean mEndTypeEnabled = true;
+
+    private boolean mOnceAPeriod = false;
 
     private MaterialSpinner mRecurrenceTypeSpinner;
     private MaterialSpinner mRecurrenceStartDateSpinner;
@@ -93,6 +99,8 @@ public class RecurrencePickerDialog extends DialogFragment implements DateTimePi
         }
         if (savedInstanceState != null) {
             mRecurrenceSetting = savedInstanceState.getParcelable(SS_RECURRENCE_SETTING);
+            mEndTypeEnabled = savedInstanceState.getBoolean(SS_END_TYPE_ENABLED, true);
+            mOnceAPeriod = savedInstanceState.getBoolean(SS_ONCE_A_PERIOD, false);
         }
         // create the dialog
         MaterialDialog dialog = ThemedDialog.buildMaterialDialog(activity)
@@ -225,6 +233,12 @@ public class RecurrencePickerDialog extends DialogFragment implements DateTimePi
         updateRecurrenceMonthDay(mRecurrenceSetting.getMonthDay());
         updateRecurrenceEndType(mRecurrenceSetting.getEndType(), false);
         updateRecurrenceOccurrenceValue(mRecurrenceSetting.getOccurrenceValue());
+        if (view != null && !mEndTypeEnabled) {
+            view.findViewById(R.id.end_layout).setVisibility(View.GONE);
+        }
+        if (mOnceAPeriod) {
+            mRecurrenceTypeWeeklyLayout.setVisibility(View.GONE);
+        }
         return dialog;
     }
 
@@ -232,6 +246,8 @@ public class RecurrencePickerDialog extends DialogFragment implements DateTimePi
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelable(SS_RECURRENCE_SETTING, getCurrentRecurrenceSetting());
+        outState.putBoolean(SS_END_TYPE_ENABLED, mEndTypeEnabled);
+        outState.putBoolean(SS_ONCE_A_PERIOD, mOnceAPeriod);
     }
 
     private void updateRecurrenceType(int type, boolean self) {
@@ -249,7 +265,7 @@ public class RecurrencePickerDialog extends DialogFragment implements DateTimePi
                 mRecurrenceEveryItemTextView.setText(R.string.recurrence_hint_years);
                 break;
         }
-        mRecurrenceTypeWeeklyLayout.setVisibility(type == RecurrenceSetting.TYPE_WEEKLY ? View.VISIBLE : View.GONE);
+        mRecurrenceTypeWeeklyLayout.setVisibility(type == RecurrenceSetting.TYPE_WEEKLY && !mOnceAPeriod ? View.VISIBLE : View.GONE);
         mRecurrenceTypeMonthlyLayout.setVisibility(type == RecurrenceSetting.TYPE_MONTHLY ? View.VISIBLE : View.GONE);
         if (!self) {
             switch (type) {
@@ -366,10 +382,12 @@ public class RecurrencePickerDialog extends DialogFragment implements DateTimePi
         int type = getCurrentRecurrenceType();
         RecurrenceSetting.Builder builder = new RecurrenceSetting.Builder(startDate, type);
         builder.setOffset(getCurrentRecurrenceOffset());
-        if (type == RecurrenceSetting.TYPE_WEEKLY) {
+        if (type == RecurrenceSetting.TYPE_WEEKLY && !mOnceAPeriod) {
             builder.setRepeatWeekDay(getCurrentRecurrenceWeekDays());
         } else if (type == RecurrenceSetting.TYPE_MONTHLY) {
             builder.setRepeatSameMonthDay();
+        } else if (type == RecurrenceSetting.TYPE_YEARLY) {
+            builder.setRepeatSameYearDay();
         }
         switch (getCurrentRecurrenceEndType()) {
             case RecurrenceSetting.END_UNTIL:
@@ -386,8 +404,10 @@ public class RecurrencePickerDialog extends DialogFragment implements DateTimePi
         mCallback = callback;
     }
 
-    public void showPicker(FragmentManager fragmentManager, String tag, RecurrenceSetting recurrenceSetting) {
+    public void showPicker(FragmentManager fragmentManager, String tag, RecurrenceSetting recurrenceSetting, boolean endTypeEnabled, boolean onceAPeriod) {
         mRecurrenceSetting = recurrenceSetting;
+        mEndTypeEnabled = endTypeEnabled;
+        mOnceAPeriod = onceAPeriod;
         show(fragmentManager, tag);
     }
 

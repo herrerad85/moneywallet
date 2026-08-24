@@ -52,6 +52,9 @@ public class RecurrenceSetting implements Parcelable {
 
     public static final int FLAG_MONTHLY_SAME_DAY = 1;
 
+    /** February is the shortest month, so the 28th is the last day every month is sure to have. */
+    private static final int LAST_DAY_EVERY_MONTH_HAS = 28;
+
     public static final int END_FOREVER = 1;
     public static final int END_UNTIL = 2;
     public static final int END_FOR = 3;
@@ -405,6 +408,86 @@ public class RecurrenceSetting implements Parcelable {
         return nextOccurrence != null ? DateUtils.getSQLDateString(nextOccurrence) : null;
     }
 
+    /**
+     * The first instance of {@code rule} strictly after {@code after}, counted from
+     * {@code anchor}.
+     *
+     * The anchor is where the schedule was set to begin, and it has to be the seed: a rule only
+     * carries the day it repeats on when that day is written into the rule itself, which is true
+     * of a monthly rule and of nothing else. Seeding a weekly rule at the day a budget's current
+     * period happens to start would repeat it on that weekday, and seeding one that repeats every
+     * second month would put it on the wrong months, whatever the schedule says it does.
+     *
+     * @param rule   the RFC 5545 recurrence rule string stored on the row.
+     * @param anchor the day the schedule is anchored to.
+     * @param after  the day to find the first instance beyond.
+     * @return the next instance, or null when the rule is exhausted or fails to parse.
+     */
+    public static Date nextInstanceAfter(String rule, Date anchor, Date after) {
+        DateTime afterDateTime = DateUtils.getFixedDateTime(after);
+        try {
+            RecurrenceRuleIterator iterator = new RecurrenceRule(rule).iterator(DateUtils.getFixedDateTime(anchor));
+            while (iterator.hasNext()) {
+                DateTime instance = iterator.nextDateTime();
+                if (instance.after(afterDateTime)) {
+                    return DateUtils.getFixedDate(instance);
+                }
+            }
+        } catch (InvalidRecurrenceRuleException ignore) {
+            // an unparseable rule has no further instance, so the caller stops repeating
+        }
+        return null;
+    }
+
+    /**
+     * The last day covered by a period that begins on {@code start}: the day before the next
+     * instance of {@code rule} counted from {@code anchor}. A monthly schedule anchored to the
+     * 15th therefore runs the 15th to the 14th, which is what makes the period follow the
+     * schedule instead of a fixed day count.
+     *
+     * @param rule   the RFC 5545 recurrence rule string stored on the row.
+     * @param anchor the day the schedule is anchored to.
+     * @param start  the first day of the period.
+     * @return the last day of the period, or null when the rule produces no further instance.
+     */
+    public static Date periodEnd(String rule, Date anchor, Date start) {
+        Date next = nextInstanceAfter(rule, anchor, start);
+        return next != null ? DateUtils.addDays(DateUtils.getCalendar(next), -1) : null;
+    }
+
+    /**
+     * The first period of {@code rule} whose last day is not already behind {@code now}, as the
+     * pair {start, end}. A schedule anchored in the past therefore lands on the period it is in
+     * today instead of on the one it began with, which is what stops an editor writing a period
+     * that finished long ago and leaving the roll forward to open every period since.
+     *
+     * @param rule  the RFC 5545 recurrence rule string.
+     * @param start the day the schedule is anchored to.
+     * @param now   the day to land on.
+     * @return the pair {start, end}, or null when the rule produces no period at all.
+     */
+    public static Date[] periodOn(String rule, Date start, Date now) {
+        DateTime nowDateTime = DateUtils.getFixedDateTime(now);
+        try {
+            RecurrenceRuleIterator iterator = new RecurrenceRule(rule).iterator(DateUtils.getFixedDateTime(start));
+            if (!iterator.hasNext()) {
+                return null;
+            }
+            DateTime periodStart = iterator.nextDateTime();
+            while (iterator.hasNext()) {
+                DateTime nextStart = iterator.nextDateTime();
+                if (nextStart.after(nowDateTime)) {
+                    Date end = DateUtils.addDays(DateUtils.getCalendar(DateUtils.getFixedDate(nextStart)), -1);
+                    return new Date[] {DateUtils.getFixedDate(periodStart), end};
+                }
+                periodStart = nextStart;
+            }
+        } catch (InvalidRecurrenceRuleException ignore) {
+            // a rule that does not parse has no period, and the caller refuses it
+        }
+        return null;
+    }
+
     public static class Builder {
 
         private Date mStartDate;
@@ -431,12 +514,52 @@ public class RecurrenceSetting implements Parcelable {
             mRecurrenceRule.setByDayPart(weekdayNumList);
         }
 
+        /**
+         * Repeat on the same day of the month as the start date, or on the last day of the month
+         * when that month is too short to have it. The last day is offered alongside the day
+         * itself and BYSETPOS takes whichever of the two comes first, so a schedule starting on
+         * the 31st reads 31 January, 28 February, 31 March. Asking for the day alone leaves a
+         * month that does not have it with no occurrence at all: the 31st then skips February,
+         * April, June, September and November, which for a budget means one period covering two
+         * months. Every day from the 1st to the 28th is unaffected, since the day it names always
+         * comes before the last day of the month or is the last day of the month.
+         */
         public void setRepeatSameMonthDay() {
             try {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(mStartDate);
                 int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-                mRecurrenceRule.setByPart(RecurrenceRule.Part.BYMONTHDAY, dayOfMonth);
+                if (dayOfMonth > LAST_DAY_EVERY_MONTH_HAS) {
+                    mRecurrenceRule.setByPart(RecurrenceRule.Part.BYMONTHDAY, dayOfMonth, -1);
+                    mRecurrenceRule.setByPart(RecurrenceRule.Part.BYSETPOS, 1);
+                } else {
+                    mRecurrenceRule.setByPart(RecurrenceRule.Part.BYMONTHDAY, dayOfMonth);
+                }
+            } catch (InvalidRecurrenceRuleException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        /**
+         * Repeat on the same day of the year as the start date, falling back to the last day of
+         * that month when the year is too short to have it. Only 29 February needs it, and only
+         * that anchor builds a different rule than it built before: asking for it alone skips
+         * every year that is not a leap year, so a budget anchored to it covers four years with
+         * one year of money.
+         */
+        public void setRepeatSameYearDay() {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(mStartDate);
+            if (calendar.get(Calendar.MONTH) != Calendar.FEBRUARY
+                    || calendar.get(Calendar.DAY_OF_MONTH) <= LAST_DAY_EVERY_MONTH_HAS) {
+                return;
+            }
+            try {
+                // the library counts months from zero here and writes them from one, so passing
+                // Calendar.FEBRUARY is what puts BYMONTH=2 in the rule
+                mRecurrenceRule.setByPart(RecurrenceRule.Part.BYMONTH, Calendar.FEBRUARY);
+                mRecurrenceRule.setByPart(RecurrenceRule.Part.BYMONTHDAY, calendar.get(Calendar.DAY_OF_MONTH), -1);
+                mRecurrenceRule.setByPart(RecurrenceRule.Part.BYSETPOS, 1);
             } catch (InvalidRecurrenceRuleException e) {
                 throw new RuntimeException(e);
             }

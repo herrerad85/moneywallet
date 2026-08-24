@@ -204,6 +204,8 @@ import java.util.HashMap;
         object.put(JSONDatabase.Budget.END_DATE, budget.mEndDate);
         object.put(JSONDatabase.Budget.MONEY, budget.mMoney);
         object.put(JSONDatabase.Budget.CURRENCY, budget.mCurrency);
+        object.put(JSONDatabase.Budget.RULE, budget.mRule);
+        object.put(JSONDatabase.Budget.RULE_START, budget.mRuleStart);
         object.put(JSONDatabase.Budget.TAG, budget.mTag);
         object.put(JSONDatabase.Budget.ID, budget.mUUID);
         object.put(JSONDatabase.Budget.LAST_EDIT, budget.mLastEdit);

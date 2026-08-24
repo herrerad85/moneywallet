@@ -46,6 +46,28 @@
         app:met_mode="floatingLabel"
         app:met_leftIcon="@drawable/ic_table_large_24dp" />
 
+    <com.oriondev.moneywallet.ui.view.theme.ThemedCheckBox
+        android:id="@+id/repeat_checkbox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/material_activity_body_check_box_top_bottom_margin"
+        android:layout_marginLeft="@dimen/material_activity_body_check_box_start_end_margin"
+        android:layout_marginRight="@dimen/material_activity_body_check_box_start_end_margin"
+        android:paddingLeft="@dimen/material_activity_body_check_box_start_padding"
+        android:paddingStart="@dimen/material_activity_body_check_box_start_padding"
+        android:text="@string/hint_budget_repeat"
+        tools:ignore="RtlSymmetry" />
+
+    <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialEditText
+        android:id="@+id/recurrence_edit_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:hint="@string/hint_recurrence"
+        android:inputType="textMultiLine"
+        app:met_mode="floatingLabel"
+        app:met_leftIcon="@drawable/ic_restore_24dp" />
+
     <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialEditText
         android:id="@+id/start_date_edit_text"
         android:layout_width="match_parent"

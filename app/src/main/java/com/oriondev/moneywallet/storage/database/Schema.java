@@ -149,6 +149,8 @@ package com.oriondev.moneywallet.storage.database;
         /*package-local*/ static final String END_DATE = "budget_end_date";
         /*package-local*/ static final String MONEY = "budget_money";
         /*package-local*/ static final String CURRENCY = "budget_currency";
+        /*package-local*/ static final String RULE = "budget_rule";
+        /*package-local*/ static final String RULE_START = "budget_rule_start";
         /*package-local*/ static final String TAG = "budget_tag";
     }
 
@@ -483,6 +485,8 @@ package com.oriondev.moneywallet.storage.database;
             Budget.END_DATE + " DATETIME NOT NULL, " +
             Budget.MONEY + " INTEGER NOT NULL, " +
             Budget.CURRENCY + " TEXT NOT NULL, " +
+            Budget.RULE + " TEXT, " +
+            Budget.RULE_START + " DATETIME, " +
             Budget.TAG + " TEXT, " +
             Budget.UUID + " TEXT NOT NULL UNIQUE, " +
             Budget.LAST_EDIT + " INTEGER NOT NULL, " +
@@ -773,4 +777,10 @@ package com.oriondev.moneywallet.storage.database;
 
     /*package-local*/ static final String CREATE_WALLET_INDEX_COLUMN = "ALTER TABLE " +
             Wallet.TABLE + " ADD COLUMN " + Wallet.INDEX + " INTEGER NOT NULL DEFAULT 0";
+
+    /*package-local*/ static final String CREATE_BUDGET_RULE_COLUMN = "ALTER TABLE " +
+            Budget.TABLE + " ADD COLUMN " + Budget.RULE + " TEXT";
+
+    /*package-local*/ static final String CREATE_BUDGET_RULE_START_COLUMN = "ALTER TABLE " +
+            Budget.TABLE + " ADD COLUMN " + Budget.RULE_START + " DATETIME";
 }

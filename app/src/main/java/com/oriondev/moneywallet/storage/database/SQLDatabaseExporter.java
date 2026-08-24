@@ -196,6 +196,8 @@ public class SQLDatabaseExporter {
         object.mEndDate = cursor.getString(cursor.getColumnIndex(Schema.Budget.END_DATE));
         object.mMoney = cursor.getLong(cursor.getColumnIndex(Schema.Budget.MONEY));
         object.mCurrency = cursor.getString(cursor.getColumnIndex(Schema.Budget.CURRENCY));
+        object.mRule = cursor.getString(cursor.getColumnIndex(Schema.Budget.RULE));
+        object.mRuleStart = cursor.getString(cursor.getColumnIndex(Schema.Budget.RULE_START));
         object.mTag = cursor.getString(cursor.getColumnIndex(Schema.Budget.TAG));
         object.mUUID = cursor.getString(cursor.getColumnIndex(Schema.Budget.UUID));
         object.mLastEdit = cursor.getLong(cursor.getColumnIndex(Schema.Budget.LAST_EDIT));

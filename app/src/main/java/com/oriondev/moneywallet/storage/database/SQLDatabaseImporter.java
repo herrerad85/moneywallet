@@ -183,6 +183,8 @@ public class SQLDatabaseImporter {
         contentValues.put(Schema.Budget.END_DATE, budget.mEndDate);
         contentValues.put(Schema.Budget.MONEY, budget.mMoney);
         contentValues.put(Schema.Budget.CURRENCY, budget.mCurrency);
+        contentValues.put(Schema.Budget.RULE, budget.mRule);
+        contentValues.put(Schema.Budget.RULE_START, budget.mRuleStart);
         contentValues.put(Schema.Budget.TAG, budget.mTag);
         contentValues.put(Schema.Budget.UUID, budget.mUUID);
         contentValues.put(Schema.Budget.LAST_EDIT, budget.mLastEdit);

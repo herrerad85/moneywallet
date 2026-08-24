@@ -157,6 +157,8 @@ package com.oriondev.moneywallet.storage.database.json;
         /*package-local*/ static final String END_DATE = "end_date";
         /*package-local*/ static final String MONEY = "money";
         /*package-local*/ static final String CURRENCY = "currency";
+        /*package-local*/ static final String RULE = "rule";
+        /*package-local*/ static final String RULE_START = "rule_start";
         /*package-local*/ static final String TAG = "tag";
         /*package-local*/ static final String LAST_EDIT = "last_edit";
         /*package-local*/ static final String DELETED = "deleted";

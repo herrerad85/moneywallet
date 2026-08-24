@@ -42,6 +42,7 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.CurrencyUnit;
+import com.oriondev.moneywallet.model.RecurrenceSetting;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.ui.activity.NewEditBudgetActivity;
@@ -76,6 +77,8 @@ public class BudgetItemFragment extends SecondaryPanelFragment implements Loader
     private TextView mEndDateTextView;
     private TextView mWalletsTextView;
 
+    private TextView mRecurrenceTextView;
+
     private MoneyFormatter mMoneyFormatter = MoneyFormatter.getInstance();
 
     @Override
@@ -92,6 +95,7 @@ public class BudgetItemFragment extends SecondaryPanelFragment implements Loader
         mMainLayout = view.findViewById(R.id.secondary_panel_layout);
         mTypeTextView = view.findViewById(R.id.type_text_view);
         mCategoryTextView = view.findViewById(R.id.category_text_view);
+        mRecurrenceTextView = view.findViewById(R.id.recurrence_text_view);
         mStartDateTextView = view.findViewById(R.id.start_date_text_view);
         mEndDateTextView = view.findViewById(R.id.end_date_text_view);
         mWalletsTextView = view.findViewById(R.id.wallets_text_view);
@@ -186,7 +190,9 @@ public class BudgetItemFragment extends SecondaryPanelFragment implements Loader
                         Contract.Budget.TYPE,
                         Contract.Budget.CATEGORY_NAME,
                         Contract.Budget.START_DATE,
-                        Contract.Budget.END_DATE
+                        Contract.Budget.END_DATE,
+                        Contract.Budget.RULE,
+                        Contract.Budget.RULE_START
                 };
                 return new CursorLoader(activity, uri, projection, null, null, null);
             } else if (id == WALLETS_LOADER_ID) {
@@ -234,6 +240,15 @@ public class BudgetItemFragment extends SecondaryPanelFragment implements Loader
                 Date endDate = DateUtils.getDateFromSQLDateString(cursor.getString(cursor.getColumnIndex(Contract.Budget.END_DATE)));
                 DateFormatter.applyDate(mStartDateTextView, startDate);
                 DateFormatter.applyDate(mEndDateTextView, endDate);
+                String rule = cursor.getString(cursor.getColumnIndex(Contract.Budget.RULE));
+                String ruleStartString = cursor.getString(cursor.getColumnIndex(Contract.Budget.RULE_START));
+                Date anchor = ruleStartString != null ? DateUtils.getDateFromSQLDateString(ruleStartString) : startDate;
+                if (rule != null && RecurrenceSetting.periodEnd(rule, anchor, anchor) != null) {
+                    mRecurrenceTextView.setText(new RecurrenceSetting(anchor, rule).getUserReadableString(getActivity()));
+                    mRecurrenceTextView.setVisibility(View.VISIBLE);
+                } else {
+                    mRecurrenceTextView.setVisibility(View.GONE);
+                }
             } else {
                 showItemId(0L);
             }

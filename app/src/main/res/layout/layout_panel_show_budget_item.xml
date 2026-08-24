@@ -61,6 +61,19 @@
             tools:text="Category name here" />
 
         <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialTextView
+            android:id="@+id/recurrence_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/material_activity_body_edit_text_margin_top"
+            android:layout_marginBottom="@dimen/material_activity_body_edit_text_margin_bottom"
+            android:visibility="gone"
+            app:mtv_mode="floatingLabel"
+            app:mtv_floatingLabelText="@string/hint_recurrence"
+            app:mtv_leftIcon="@drawable/ic_restore_24dp"
+            app:mtv_bottomLineEnabled="true"
+            tools:text="Recurrence here" />
+
+        <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialTextView
             android:id="@+id/start_date_text_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -31,5 +31,7 @@ public class Budget extends BaseItem {
     public String mEndDate;
     public long mMoney;
     public String mCurrency;
+    public String mRule;
+    public String mRuleStart;
     public String mTag;
 }

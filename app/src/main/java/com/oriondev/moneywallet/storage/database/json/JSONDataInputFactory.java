@@ -232,6 +232,8 @@ import java.util.Map;
         budget.mEndDate = object.optString(JSONDatabase.Budget.END_DATE, null);
         budget.mMoney = object.optLong(JSONDatabase.Budget.MONEY, 0L);
         budget.mCurrency = object.optString(JSONDatabase.Budget.CURRENCY, null);
+        budget.mRule = object.optString(JSONDatabase.Budget.RULE, null);
+        budget.mRuleStart = object.optString(JSONDatabase.Budget.RULE_START, null);
         budget.mTag = object.optString(JSONDatabase.Budget.TAG, null);
         budget.mUUID = object.optString(JSONDatabase.Budget.ID, null);
         budget.mLastEdit = object.optLong(JSONDatabase.Budget.LAST_EDIT, 0L);

@@ -222,11 +222,63 @@ public class Contract {
         public static final String END_DATE = Schema.Budget.END_DATE;
         public static final String MONEY = Schema.Budget.MONEY;
         public static final String CURRENCY = Schema.Budget.CURRENCY;
+        public static final String RULE = Schema.Budget.RULE;
+        public static final String RULE_START = Schema.Budget.RULE_START;
+        // insert only, never a column: the id of the period this one was rolled forward from
+        public static final String ROLLED_FROM_ID = "budget_rolled_from_id";
         public static final String PROGRESS = "budget_" + Schema.Alias.PROGRESS;
         public static final String WALLET_IDS = "budget_wallet_ids";
         public static final String HAS_WALLET_IN_TOTAL = "budget_has_wallet_in_total";
         public static final String TAG = Schema.Budget.TAG;
     }
+
+    /**
+     * Selection over the raw budgets table naming the budgets a roll forward can open a period
+     * for: repeating, not deleted, and left with wallets that still exist and still agree on one
+     * currency. Each of the last two stops a roll on its own, for its own reason. A budget with
+     * no wallet left is absent from the rows this class describes, which come from a join over
+     * those wallets, so the roll never sees it. A budget whose wallets disagree is handed out,
+     * but refuses every write, because both the insert and the update check that before writing
+     * anything. Waking the roll for either leaves it with nothing to do and the same reason to
+     * wake again, and the two go round for as long as the budget stays in that state.
+     */
+    public static final String ROLLABLE_BUDGET_SELECTION =
+            Schema.Budget.RULE + " IS NOT NULL AND " + Schema.Budget.DELETED + " = 0 AND (SELECT COUNT(DISTINCT w." +
+            Schema.Wallet.CURRENCY + ") FROM " + Schema.BudgetWallet.TABLE + " AS bw JOIN " + Schema.Wallet.TABLE +
+            " AS w ON bw." + Schema.BudgetWallet.WALLET + " = w." + Schema.Wallet.ID + " WHERE bw." +
+            Schema.BudgetWallet.BUDGET + " = " + Schema.Budget.TABLE + "." + Schema.Budget.ID + " AND bw." +
+            Schema.BudgetWallet.DELETED + " = 0 AND w." + Schema.Wallet.DELETED + " = 0) = 1";
+
+    /**
+     * Selection over the raw budgets table naming the budgets of one chain that begin after a
+     * given day. Takes four arguments: the id of the budget asking, the uuid of the budget the
+     * chain started from, that same uuid escaped for LIKE and followed by ":%", and the day the
+     * budget asking begins on.
+     *
+     * Every period a roll opens is named after the budget its chain started from, so the chain is
+     * what the two uuid arguments match; the day a schedule is anchored to is not an identity,
+     * since two budgets set up on the same afternoon are anchored to the same day.
+     *
+     * A row flagged deleted is counted too, because it still holds the name of the period it
+     * covered and a chain restarted from behind it would ask the roll for a name already spoken
+     * for. Deleting a budget in the app does not produce such a row: DataContentProvider turns the
+     * deleted flag off at startup, so a delete there takes the row away. This is for rows that
+     * arrive already flagged.
+     *
+     * The caller escapes the third argument because a uuid is only plain hexadecimal while it is
+     * minted here. One restored from a backup is whatever that file held, and an underscore in
+     * it would stand for any character and match a chain it has nothing to do with.
+     */
+    public static final String LATER_PERIOD_OF_CHAIN_SELECTION =
+            Schema.Budget.ID + " <> ? AND (" + Schema.Budget.UUID + " = ? OR " +
+            Schema.Budget.UUID + " LIKE ? ESCAPE '\\') AND DATE(" +
+            Schema.Budget.START_DATE + ") > DATE(?)";
+
+    /**
+     * The raw uuid column of the budgets table. It is not part of the rows this class otherwise
+     * describes; a caller reading it has to go to the table itself.
+     */
+    public static final String BUDGET_UUID = Schema.Budget.UUID;
 
     public static final class Saving {
         public static final String ID = Schema.Saving.ID;

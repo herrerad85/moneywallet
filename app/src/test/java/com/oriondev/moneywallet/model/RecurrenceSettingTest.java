@@ -292,6 +292,233 @@ public class RecurrenceSettingTest {
         assertEquals(sql(day(2020, 5, 10)), resumed);
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // the period a repeating budget covers
+    // ---------------------------------------------------------------------------------------------
+
+    @Test
+    public void aMonthlyPeriodRunsFromItsAnchorDayToTheDayBeforeTheNextOne() {
+        assertDay(RecurrenceSetting.periodEnd("FREQ=MONTHLY;BYMONTHDAY=15", day(2026, 0, 15), day(2026, 0, 15)), 2026, 1, 14);
+    }
+
+    @Test
+    public void aMonthlyPeriodFollowsTheCalendarInsteadOfAFixedDayCount() {
+        // february is three days shorter than january, so a fixed length would land on 17 march
+        assertDay(RecurrenceSetting.periodEnd("FREQ=MONTHLY;BYMONTHDAY=15", day(2026, 1, 15), day(2026, 1, 15)), 2026, 2, 14);
+    }
+
+    @Test
+    public void aWeeklyPeriodIsSevenDaysLong() {
+        assertDay(RecurrenceSetting.periodEnd("FREQ=WEEKLY;BYDAY=MO", day(2026, 0, 5), day(2026, 0, 5)), 2026, 0, 11);
+    }
+
+    @Test
+    public void anIntervalIsPartOfThePeriodLength() {
+        assertDay(RecurrenceSetting.periodEnd("FREQ=MONTHLY;INTERVAL=3;BYMONTHDAY=1", day(2026, 0, 1), day(2026, 0, 1)), 2026, 2, 31);
+    }
+
+    @Test
+    public void aPeriodEndsTheDayBeforeTheNextInstanceEvenAcrossAYear() {
+        assertDay(RecurrenceSetting.periodEnd("FREQ=YEARLY", day(2026, 5, 30), day(2026, 5, 30)), 2027, 5, 29);
+    }
+
+    @Test
+    public void aRuleThatNeverRepeatsSetsNoPeriodLength() {
+        assertNull(RecurrenceSetting.periodEnd("FREQ=MONTHLY;COUNT=1", day(2026, 0, 15), day(2026, 0, 15)));
+    }
+
+    @Test
+    public void anUnparseableRuleSetsNoPeriodLength() {
+        assertNull(RecurrenceSetting.periodEnd("this is not a rule", day(2026, 0, 15), day(2026, 0, 15)));
+    }
+
+    @Test
+    public void theNextInstanceIsStrictlyAfterTheOneItIsWalkedFrom() {
+        assertDay(RecurrenceSetting.nextInstanceAfter("FREQ=MONTHLY;BYMONTHDAY=15", day(2026, 0, 15), day(2026, 0, 15)), 2026, 1, 15);
+    }
+
+    @Test
+    public void aMonthDayThatSomeMonthsDoNotHaveFallsBackToTheLastDayOfTheMonth() {
+        String rule = monthlyOn(day(2026, 0, 31));
+        assertDay(RecurrenceSetting.nextInstanceAfter(rule, day(2026, 0, 31), day(2026, 0, 31)), 2026, 1, 28);
+        assertDay(RecurrenceSetting.periodEnd(rule, day(2026, 0, 31), day(2026, 0, 31)), 2026, 1, 27);
+    }
+
+    @Test
+    public void everyMonthOfAYearIsCoveredWhenTheAnchorIsTheThirtyFirst() {
+        // asking for the 31st alone leaves february, april, june, september and november with no
+        // occurrence, and each of those turns two months into one budget period
+        String rule = monthlyOn(day(2026, 0, 31));
+        Date instance = day(2026, 0, 31);
+        int[] months = new int[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+        for (int month : months) {
+            instance = RecurrenceSetting.nextInstanceAfter(rule, day(2026, 0, 31), instance);
+            assertNotNull(instance);
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(instance);
+            assertEquals(month, calendar.get(Calendar.MONTH));
+        }
+    }
+
+    @Test
+    public void anAnchorTheMonthAlwaysHasIsUnchanged() {
+        String rule = monthlyOn(day(2026, 0, 15));
+        assertDay(RecurrenceSetting.nextInstanceAfter(rule, day(2026, 0, 15), day(2026, 0, 15)), 2026, 1, 15);
+        assertDay(RecurrenceSetting.periodEnd(rule, day(2026, 0, 15), day(2026, 0, 15)), 2026, 1, 14);
+    }
+
+    @Test
+    public void theFirstAndTheTwentyEighthAreUnchangedToo() {
+        assertDay(RecurrenceSetting.nextInstanceAfter(monthlyOn(day(2026, 0, 1)), day(2026, 0, 1), day(2026, 0, 1)), 2026, 1, 1);
+        assertDay(RecurrenceSetting.nextInstanceAfter(monthlyOn(day(2026, 0, 28)), day(2026, 0, 28), day(2026, 0, 28)), 2026, 1, 28);
+        assertDay(RecurrenceSetting.nextInstanceAfter(monthlyOn(day(2026, 1, 28)), day(2026, 1, 28), day(2026, 1, 28)), 2026, 2, 28);
+    }
+
+    @Test
+    public void anAnchorEveryMonthHasBuildsTheRuleItAlwaysBuilt() {
+        // the string matters and not only the dates it produces: a recurring transaction keeps a
+        // pointer at the occurrence it is owed, and the editor keeps that pointer only while the
+        // rule it saves is the one already stored, compared as text
+        assertEquals("FREQ=MONTHLY;BYMONTHDAY=1", monthlyOn(day(2026, 0, 1)));
+        assertEquals("FREQ=MONTHLY;BYMONTHDAY=15", monthlyOn(day(2026, 0, 15)));
+        assertEquals("FREQ=MONTHLY;BYMONTHDAY=28", monthlyOn(day(2026, 0, 28)));
+    }
+
+    @Test
+    public void anAnchorSomeMonthsLackAsksForTheLastDayAsWell() {
+        assertEquals("FREQ=MONTHLY;BYMONTHDAY=29,-1;BYSETPOS=1", monthlyOn(day(2026, 0, 29)));
+        assertEquals("FREQ=MONTHLY;BYMONTHDAY=30,-1;BYSETPOS=1", monthlyOn(day(2026, 0, 30)));
+        assertEquals("FREQ=MONTHLY;BYMONTHDAY=31,-1;BYSETPOS=1", monthlyOn(day(2026, 0, 31)));
+    }
+
+    @Test
+    public void aYearlyScheduleAnchoredToALeapDayComesRoundEveryYear() {
+        String rule = yearlyOn(day(2024, 1, 29));
+        assertEquals("FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=29,-1;BYSETPOS=1", rule);
+        assertDay(RecurrenceSetting.nextInstanceAfter(rule, day(2024, 1, 29), day(2024, 1, 29)), 2025, 1, 28);
+        assertDay(RecurrenceSetting.periodEnd(rule, day(2024, 1, 29), day(2024, 1, 29)), 2025, 1, 27);
+    }
+
+    @Test
+    public void aYearlyScheduleAnchoredAnywhereElseBuildsTheRuleItAlwaysBuilt() {
+        assertEquals("FREQ=YEARLY", yearlyOn(day(2026, 5, 30)));
+        assertEquals("FREQ=YEARLY", yearlyOn(day(2026, 1, 28)));
+        assertEquals("FREQ=YEARLY", yearlyOn(day(2026, 0, 31)));
+    }
+
+    @Test
+    public void aYearlyPeriodIsAYearEvenAcrossALeapDay() {
+        assertDay(RecurrenceSetting.periodEnd(yearlyOn(day(2027, 1, 28)), day(2027, 1, 28), day(2027, 1, 28)), 2028, 1, 27);
+    }
+
+    /** The rule the recurrence picker builds for a yearly schedule anchored to the given day. */
+    private static String yearlyOn(Date startDate) {
+        RecurrenceSetting.Builder builder = new RecurrenceSetting.Builder(startDate, RecurrenceSetting.TYPE_YEARLY);
+        builder.setRepeatSameYearDay();
+        return builder.build().getRule();
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // the day a schedule is anchored to is what it counts from
+    // ---------------------------------------------------------------------------------------------
+
+    @Test
+    public void aWeeklyScheduleKeepsItsWeekdayWhateverDayThePeriodStartsOn() {
+        // wednesday 26 august 2026 is the anchor; the row starts on monday 3 august
+        String rule = "FREQ=WEEKLY";
+        assertDay(RecurrenceSetting.nextInstanceAfter(rule, day(2026, 7, 26), day(2026, 7, 3)), 2026, 7, 26);
+        assertDay(RecurrenceSetting.nextInstanceAfter(rule, day(2026, 7, 26), day(2026, 7, 26)), 2026, 8, 2);
+        assertDay(RecurrenceSetting.nextInstanceAfter(rule, day(2026, 7, 26), day(2026, 8, 2)), 2026, 8, 9);
+    }
+
+    @Test
+    public void aScheduleThatRepeatsEveryOtherMonthKeepsItsMonths() {
+        // anchored to 15 january, so march, may, july: never february, april, june
+        String rule = "FREQ=MONTHLY;INTERVAL=2;BYMONTHDAY=15";
+        assertDay(RecurrenceSetting.nextInstanceAfter(rule, day(2026, 0, 15), day(2026, 5, 3)), 2026, 6, 15);
+        assertDay(RecurrenceSetting.nextInstanceAfter(rule, day(2026, 0, 15), day(2026, 6, 15)), 2026, 8, 15);
+    }
+
+    @Test
+    public void aYearlyScheduleKeepsItsDayWhateverDayThePeriodStartsOn() {
+        String rule = "FREQ=YEARLY";
+        assertDay(RecurrenceSetting.nextInstanceAfter(rule, day(2027, 0, 1), day(2026, 7, 3)), 2027, 0, 1);
+        assertDay(RecurrenceSetting.nextInstanceAfter(rule, day(2027, 0, 1), day(2027, 0, 1)), 2028, 0, 1);
+    }
+
+    @Test
+    public void aPeriodStartingOffTheScheduleStillEndsWhereTheScheduleSays() {
+        // the period a budget is in when its schedule is changed starts where it already started
+        // and ends the day before the schedule next comes round
+        assertDay(RecurrenceSetting.periodEnd("FREQ=MONTHLY;BYMONTHDAY=15", day(2026, 0, 15), day(2026, 7, 3)), 2026, 7, 14);
+    }
+
+    /** The rule the recurrence picker builds for a monthly schedule anchored to the given day. */
+    private static String monthlyOn(Date startDate) {
+        RecurrenceSetting.Builder builder = new RecurrenceSetting.Builder(startDate, RecurrenceSetting.TYPE_MONTHLY);
+        builder.setRepeatSameMonthDay();
+        return builder.build().getRule();
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // the period a repeating budget is in today
+    // ---------------------------------------------------------------------------------------------
+
+    @Test
+    public void aScheduleAnchoredInThePastLandsOnThePeriodItIsInToday() {
+        Date[] period = RecurrenceSetting.periodOn("FREQ=MONTHLY;BYMONTHDAY=15", day(2025, 5, 15), day(2026, 7, 24));
+        assertNotNull(period);
+        assertDay(period[0], 2026, 7, 15);
+        assertDay(period[1], 2026, 8, 14);
+    }
+
+    @Test
+    public void aScheduleAnchoredTodayStaysOnItsFirstPeriod() {
+        Date[] period = RecurrenceSetting.periodOn("FREQ=MONTHLY;BYMONTHDAY=24", day(2026, 7, 24), day(2026, 7, 24));
+        assertNotNull(period);
+        assertDay(period[0], 2026, 7, 24);
+        assertDay(period[1], 2026, 8, 23);
+    }
+
+    @Test
+    public void aScheduleAnchoredInTheFutureIsNotDraggedForward() {
+        Date[] period = RecurrenceSetting.periodOn("FREQ=MONTHLY;BYMONTHDAY=1", day(2026, 11, 1), day(2026, 7, 24));
+        assertNotNull(period);
+        assertDay(period[0], 2026, 11, 1);
+        assertDay(period[1], 2026, 11, 31);
+    }
+
+    @Test
+    public void thePeriodEndingTodayIsStillTheCurrentOne() {
+        Date[] period = RecurrenceSetting.periodOn("FREQ=MONTHLY;BYMONTHDAY=25", day(2026, 6, 25), day(2026, 7, 24));
+        assertNotNull(period);
+        assertDay(period[0], 2026, 6, 25);
+        assertDay(period[1], 2026, 7, 24);
+    }
+
+    @Test
+    public void thePeriodThatEndedYesterdayIsNotTheCurrentOne() {
+        Date[] period = RecurrenceSetting.periodOn("FREQ=MONTHLY;BYMONTHDAY=24", day(2026, 6, 24), day(2026, 7, 24));
+        assertNotNull(period);
+        assertDay(period[0], 2026, 7, 24);
+        assertDay(period[1], 2026, 8, 23);
+    }
+
+    @Test
+    public void aRuleThatRunsOutBeforeTodayHasNoCurrentPeriod() {
+        assertNull(RecurrenceSetting.periodOn("FREQ=MONTHLY;COUNT=2", day(2025, 0, 15), day(2026, 7, 24)));
+    }
+
+    @Test
+    public void aRuleThatNeverRepeatsHasNoCurrentPeriod() {
+        assertNull(RecurrenceSetting.periodOn("FREQ=MONTHLY;COUNT=1", day(2026, 7, 24), day(2026, 7, 24)));
+    }
+
+    @Test
+    public void anUnparseableRuleHasNoCurrentPeriod() {
+        assertNull(RecurrenceSetting.periodOn("this is not a rule", day(2026, 7, 24), day(2026, 7, 24)));
+    }
+
     private static String sql(Date date) {
         return DateUtils.getSQLDateString(date);
     }
