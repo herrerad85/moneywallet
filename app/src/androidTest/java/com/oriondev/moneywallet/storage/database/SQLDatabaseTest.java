@@ -1679,6 +1679,60 @@ public class SQLDatabaseTest {
         checkSavingId(id3, "desc-2-edited", "encoded-icon-edited", 50L, 73000L, id1, null, false, "note-2-edited", "tag-2-edited");
     }
 
+    /**
+     * A saving's progress counts only the rows that have landed, which is what the savings list
+     * adds to its start money to show. Its projected progress counts every withdrawal it has and
+     * only the deposits that are confirmed, whatever their dates. An unconfirmed deposit is in
+     * neither, because landing takes being confirmed and it never does.
+     *
+     * The saving here carries a deposit and a withdrawal of each kind the two rules can tell
+     * apart, which separates the two sums from the rules they are most likely to be rewritten
+     * into: counting the unconfirmed deposit, dropping the unconfirmed withdrawal, putting a date
+     * test on the projected rule, on either half of it or on the whole, narrowing the landed test
+     * to deposits, dropping either half of it, or copying one sum onto the other all give
+     * something else. It is those cases and not every rule that could be written: a rewrite that
+     * lands on the same two figures for this saving goes through.
+     *
+     * This pins the two sums apart. It says nothing about the ceilings the editor works out of
+     * them, and neither sum carries any date order, so it is not a check that the saving stays
+     * above zero at every moment in between.
+     */
+    @Test
+    public void savingProjectedProgressCountsRowsTheProgressLeavesOut() throws Exception {
+        long wallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 0L, false, "tag-wallet-1");
+        long saving = insertSaving("desc-1", "encoded-icon", 0L, 10000L, wallet, null, false, "note-1", "tag-1");
+        long deposit = getSystemCategory(Contract.CategoryTag.SAVING_DEPOSIT);
+        long withdraw = getSystemCategory(Contract.CategoryTag.SAVING_WITHDRAW);
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, 1);
+        Date nextMonth = calendar.getTime();
+        // Landed, so both sums count them: a confirmed deposit of 1000 and a confirmed
+        // withdrawal of 100, both dated now. The withdrawal is the only row either sum counts
+        // negatively while it is landed, so without it the progress cannot tell a rule that
+        // counts every landed row from one that counts only landed deposits.
+        insertTransaction(1000, new Date(), null, deposit, Contract.Direction.EXPENSE, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, true, true, null, null, "tag");
+        insertTransaction(100, new Date(), null, withdraw, Contract.Direction.INCOME, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, true, true, null, null, "tag");
+        // Only the projected sum: a confirmed deposit of 400 dated next month, the row that
+        // stops a date test on the projected rule reading the same as the rule itself.
+        insertTransaction(400, nextMonth, null, deposit, Contract.Direction.EXPENSE, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, true, true, null, null, "tag");
+        // Only the projected sum again: a confirmed withdrawal of 300 dated next month, an
+        // unconfirmed withdrawal of 200 dated now, and an unconfirmed withdrawal of 50 dated next
+        // month. The last one is the drain the projected sum is most pessimistic about, and it is
+        // the only row that separates the rule from one that counts withdrawals only once they
+        // have landed.
+        insertTransaction(300, nextMonth, null, withdraw, Contract.Direction.INCOME, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, true, true, null, null, "tag");
+        insertTransaction(200, new Date(), null, withdraw, Contract.Direction.INCOME, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, false, true, null, null, "tag");
+        insertTransaction(50, nextMonth, null, withdraw, Contract.Direction.INCOME, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, false, true, null, null, "tag");
+        // In neither: an unconfirmed deposit of 500, which never lands.
+        insertTransaction(500, new Date(), null, deposit, Contract.Direction.EXPENSE, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, false, true, null, null, "tag");
+
+        Cursor cursor = mDatabase.getSavings(null, null, null, null);
+        assertEquals(true, cursor.moveToFirst());
+        assertEquals(900L, cursor.getLong(cursor.getColumnIndex(Contract.Saving.PROGRESS)));
+        assertEquals(750L, cursor.getLong(cursor.getColumnIndex(Contract.Saving.PROJECTED_PROGRESS)));
+        cursor.close();
+    }
+
     @Test
     public void deleteSaving() throws Exception {
         long id1 = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
