@@ -23,6 +23,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.core.content.pm.ShortcutInfoCompat;
@@ -37,6 +38,8 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.service.UpgradeLegacyEditionIntentService;
+import com.oriondev.moneywallet.storage.database.Contract;
+import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.base.ThemedActivity;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
@@ -78,7 +81,7 @@ public class LauncherActivity extends ThemedActivity {
                 showUpgradeLegacyEditionErrorMessage();
             }
         } else {
-            if (!PreferenceManager.isFirstStartDone()) {
+            if (isFirstStart()) {
                 setContentView(R.layout.activity_launcher_first_start);
                 Button firstStartButton = findViewById(R.id.first_start_button);
                 Button restoreBackupButton = findViewById(R.id.restore_backup_button);
@@ -117,6 +120,46 @@ public class LauncherActivity extends ThemedActivity {
     protected void onDestroy() {
         super.onDestroy();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
+    }
+
+    /**
+     * Whether the welcome screen is the right thing to show.
+     *
+     * The preference cannot answer on its own. shared_prefs is deliberately outside the backup
+     * rules because four of the files there hold a secret in the clear, so an Android restore
+     * brings the ledger back with the preference missing and the welcome screen has no safe
+     * exit: the tutorial inserts a second copy of every default category, and a backup import
+     * cleans the attachment folder and renames the restored database away.
+     *
+     * A wallet is the signal, because a fresh install has none: the database seeds the system
+     * categories when it is created and never a wallet. The preference is read first, so the
+     * wallets are counted only on a launch that still believes the setup is unfinished.
+     *
+     * A provider that cannot be reached answers no and records nothing, since
+     * {@link MainActivity} is recoverable and the two exits from the welcome screen are not.
+     */
+    private boolean isFirstStart() {
+        if (PreferenceManager.isFirstStartDone()) {
+            return false;
+        }
+        int wallets = walletCount();
+        if (wallets == 0) {
+            return true;
+        }
+        if (wallets > 0) {
+            PreferenceManager.setIsFirstStartDone(true);
+        }
+        return false;
+    }
+
+    /**
+     * The number of wallets, or -1 when the provider could not be reached at all.
+     */
+    private int walletCount() {
+        try (Cursor cursor = getContentResolver().query(DataContentProvider.CONTENT_WALLETS,
+                new String[]{Contract.Wallet.ID}, null, null, null)) {
+            return cursor != null ? cursor.getCount() : -1;
+        }
     }
 
     private void startMainActivity() {
