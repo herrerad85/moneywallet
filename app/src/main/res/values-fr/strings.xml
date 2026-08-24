@@ -422,7 +422,7 @@
     <string name="message_data_export_running">"Exportation…"</string>
     <string name="message_data_import_failed">"Echec lors de la procédure d'importation. Message: %s"</string>
     <string name="message_data_export_failed">"Échec lors de la procédure d'exportation. Message: %s"</string>
-    <string name="message_data_import_success">"Données exportées correctement."</string>
+    <string name="message_data_import_success">"Données importées correctement."</string>
     <string name="message_data_export_success">"Données exportées correctement. Voulez-vous ouvrir le fichier créé?"</string>
 
     <string name="message_async_init">"Initialisation …"</string>
