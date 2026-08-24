@@ -20,7 +20,6 @@
 package com.oriondev.moneywallet.ui.view.text;
 
 import android.content.Context;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -40,7 +39,7 @@ import android.view.View;
     }
 
     /*package-local*/ static boolean isRtl(Resources resources) {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && resources.getConfiguration().getLayoutDirection() == Configuration.SCREENLAYOUT_LAYOUTDIR_RTL;
+        return resources.getConfiguration().getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;
     }
 
     /*package-local*/ static void setBackgroundCompat(@NonNull View view, Drawable drawable) {

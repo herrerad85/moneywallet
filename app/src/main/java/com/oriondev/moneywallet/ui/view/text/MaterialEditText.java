@@ -283,7 +283,9 @@ public class MaterialEditText extends androidx.appcompat.widget.AppCompatEditTex
         }
         int lineHeight = hasFocus() ? mFocusedBottomLineSize : mDefaultBottomLineSize;
         int top = getMeasuredHeight() - getPaddingBottom() + getPixels(BOTTOM_LINE_PADDING_DP) - lineHeight;
-        int left = getPaddingLeft() + getScrollX() + (mShowCancelButton && isRtl() ? getPixels(CANCEL_BUTTON_PADDING_DP) : 0);
+        // the cancel button reserves CANCEL_BUTTON_PADDING_DP inside the padding on the side it is
+        // drawn, and the line reaches back over that to keep the width it has with no button shown
+        int left = getPaddingLeft() + getScrollX() - (mShowCancelButton && isRtl() ? getPixels(CANCEL_BUTTON_PADDING_DP) : 0);
         int right = getScrollX() + getMeasuredWidth() - getPaddingRight() + (mShowCancelButton  && !isRtl()? getPixels(CANCEL_BUTTON_PADDING_DP) : 0);
         canvas.drawRect(
                 left,
