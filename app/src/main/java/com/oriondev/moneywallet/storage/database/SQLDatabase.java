@@ -27,13 +27,18 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.SparseLongArray;
 
 import com.oriondev.moneywallet.model.Attachment;
+import com.oriondev.moneywallet.model.ColorIcon;
 import com.oriondev.moneywallet.model.CurrencyUnit;
+import com.oriondev.moneywallet.model.Icon;
 import com.oriondev.moneywallet.model.RecurrenceSetting;
+import com.oriondev.moneywallet.picker.IconPicker;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.DateUtils;
+import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
 
 import org.dmfs.rfc5545.DateTime;
@@ -63,6 +68,8 @@ import java.util.UUID;
  * Here are handled all the raw operation with the database.
  */
 /*package-local*/ class SQLDatabase extends SQLiteOpenHelper {
+
+    private static final String TAG = "SQLDatabase";
 
     /*package-local*/ static final String DATABASE_NAME = "database.db";
     private static final int DATABASE_VERSION = 4;
@@ -890,6 +897,27 @@ import java.util.UUID;
      * @throws SQLiteDataException if the transaction is part of a transfer.
      */
     /*package-local*/ int updateTransaction(long transactionId, ContentValues contentValues) {
+        int rows = updateTransactionRow(transactionId, contentValues);
+        if (rows > 0) {
+            syncDebtOfMasterTransaction(transactionId, contentValues);
+        }
+        return rows;
+    }
+
+    /**
+     * The columns of one transaction, and its people and attachment links, with no debt sync.
+     *
+     * updateDebt calls this one. It writes the debt row and then pushes the same values onto the
+     * debt's master transaction, and going through updateTransaction from there would turn
+     * around and write the debt a second time. Splitting the two is what makes that impossible
+     * to reach, instead of a flag that has to be right every time.
+     *
+     * @param transactionId id of the transaction to update.
+     * @param contentValues set of column values to update.
+     * @return the number of rows affected by the update.
+     * @throws SQLiteDataException if the transaction is part of a transfer.
+     */
+    private int updateTransactionRow(long transactionId, ContentValues contentValues) {
         // we must checks that the transaction is not part of a transfer
         String[] projection = new String[]{Schema.Transfer.ID};
         String where = Schema.Transfer.TRANSACTION_FROM + " = ? OR " + Schema.Transfer.TRANSACTION_TO +
@@ -2256,6 +2284,238 @@ import java.util.UUID;
     }
 
     /**
+     * The id of the debt this transaction is the master transaction of, or null when it is not
+     * one. A debt's payments carry the same type and the same debt id, so the category is what
+     * tells them apart, a master transaction is filed on the debt or credit system category and
+     * a payment on the paid debt or paid credit one. Same test updateDebt uses to find the master
+     * transaction from the other side.
+     *
+     * Asked of the stored row, which by this point carries the update, so an update naming none
+     * of these three columns is still judged on what the row holds.
+     *
+     * Straight off the table, the way the transfer check at the top of updateTransactionRow reads
+     * its own. getTransaction would answer this too, and it builds the joined view every reader
+     * of a transaction gets: seven tables, a GROUP_CONCAT of the people and a GROUP BY over
+     * every row in the table. This runs on the save of every transaction, so it asks the three columns
+     * it needs of one row by its id.
+     */
+    private Long masterTransactionDebtId(long transactionId) {
+        String[] projection = new String[] {
+                Schema.Transaction.TYPE,
+                Schema.Transaction.DEBT,
+                Schema.Transaction.CATEGORY
+        };
+        String selection = Schema.Transaction.ID + " = ?";
+        String[] selectionArgs = new String[] {String.valueOf(transactionId)};
+        Cursor cursor = getReadableDatabase().query(Schema.Transaction.TABLE, projection, selection,
+                selectionArgs, null, null, null);
+        Long debtId = null;
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()
+                        && cursor.getInt(cursor.getColumnIndex(Schema.Transaction.TYPE)) == Contract.TransactionType.DEBT
+                        && !cursor.isNull(cursor.getColumnIndex(Schema.Transaction.DEBT))) {
+                    long categoryId = cursor.getLong(cursor.getColumnIndex(Schema.Transaction.CATEGORY));
+                    Long debtCategoryId = getSystemCategoryId(Schema.CategoryTag.DEBT);
+                    Long creditCategoryId = getSystemCategoryId(Schema.CategoryTag.CREDIT);
+                    if ((debtCategoryId != null && debtCategoryId == categoryId)
+                            || (creditCategoryId != null && creditCategoryId == categoryId)) {
+                        debtId = cursor.getLong(cursor.getColumnIndex(Schema.Transaction.DEBT));
+                    }
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        return debtId;
+    }
+
+    /**
+     * A debt and its master transaction are the same event, so an edit to that transaction has to
+     * move the debt with it. updateDebt has done this in the other direction since the app was
+     * written and nothing did it in this one, so the transaction list could move or re price a
+     * debt's own transaction and leave the debt claiming the old day and the old amount.
+     *
+     * Only the columns a debt owns, and only the ones that were named, the way updateDebt
+     * writes its own half. Category and direction are not among them, because the transaction
+     * editor hides the category picker on a debt row so neither can move from this side. The
+     * debt's expiration date and its archived flag have no column on a transaction and are left
+     * alone. Its tag has one on both tables and is left alone anyway, since updateDebt does not
+     * carry a debt's tag onto its master transaction either. Its icon has no column and is
+     * written regardless, because the letters on a generated one are the initials of the
+     * description this method just moved. renamedDebtIcon below carries them and says what it
+     * leaves alone.
+     *
+     * The debt row is written here instead of through updateDebt, which would push these same
+     * values straight back onto the transaction. The date is the one that would not survive the
+     * round trip, since a debt carries a day and a transaction a moment, so the way back would
+     * replace the time of day the user had just typed with the start of that day.
+     *
+     * That is only this direction. Saving a debt from its own editor still puts its master
+     * transaction at the start of the day through masterTransactionDateFor, whether or not the
+     * date was touched, so a time entered here survives until the next save of the debt.
+     */
+    private void syncDebtOfMasterTransaction(long transactionId, ContentValues contentValues) {
+        Long debtId = masterTransactionDebtId(transactionId);
+        if (debtId == null) {
+            return;
+        }
+        ContentValues cv = new ContentValues();
+        if (contentValues.containsKey(Contract.Transaction.MONEY)) {
+            cv.put(Schema.Debt.MONEY, contentValues.getAsLong(Contract.Transaction.MONEY));
+        }
+        // The day the transaction lands on. getAsString reports a key that is absent as null,
+        // so this is the containsKey test the columns around it use, written the short way
+        // because the value has to be read either way. A date that is present cannot be null,
+        // since Schema.Transaction.DATE is NOT NULL and updateTransactionRow would have been
+        // refused before reaching this.
+        String date = contentValues.getAsString(Contract.Transaction.DATE);
+        if (date != null) {
+            cv.put(Schema.Debt.DATE, DateUtils.getSQLDateString(DateUtils.getDateFromSQLDateTimeString(date)));
+        }
+        // A description is optional on a transaction and required on a debt, which is not a
+        // difference this sync gets to erase. Schema.Debt.DESCRIPTION is NOT NULL and
+        // NewEditDebtActivity holds it non empty, while the transaction editor validates the date,
+        // the category and the wallet and never the description. Clearing it there and carrying
+        // the blank across would leave a debt its own editor refuses to save, so the debt keeps
+        // the description it has.
+        //
+        // Blank is what NonEmptyTextValidator calls blank, which is empty after a trim. Nothing
+        // trims on the way in, since MaterialEditText.getTextAsString hands back the field as
+        // typed, so a description of one space is a value TextUtils.isEmpty accepts and that
+        // validator refuses. Testing it any other way leaves a debt whose description looks empty
+        // on every screen and whose own editor will not save it until something is typed back.
+        // The value itself is written as it was typed, which is what the debt editor stores.
+        String description = contentValues.getAsString(Contract.Transaction.DESCRIPTION);
+        if (description != null && !description.trim().isEmpty()) {
+            cv.put(Schema.Debt.DESCRIPTION, description);
+            String icon = renamedDebtIcon(debtId, description);
+            if (icon != null) {
+                cv.put(Schema.Debt.ICON, icon);
+            }
+        }
+        if (contentValues.containsKey(Contract.Transaction.WALLET_ID)) {
+            cv.put(Schema.Debt.WALLET, contentValues.getAsLong(Contract.Transaction.WALLET_ID));
+        }
+        if (contentValues.containsKey(Contract.Transaction.PLACE_ID)) {
+            cv.put(Schema.Debt.PLACE, contentValues.getAsLong(Contract.Transaction.PLACE_ID));
+        }
+        if (contentValues.containsKey(Contract.Transaction.NOTE)) {
+            cv.put(Schema.Debt.NOTE, contentValues.getAsString(Contract.Transaction.NOTE));
+        }
+        if (cv.size() > 0) {
+            cv.put(Schema.Debt.LAST_EDIT, System.currentTimeMillis());
+            String where = Schema.Debt.ID + " = ?";
+            String[] whereArgs = new String[] {String.valueOf(debtId)};
+            getWritableDatabase().update(Schema.Debt.TABLE, cv, where, whereArgs);
+        }
+        if (contentValues.containsKey(Contract.Transaction.PEOPLE_IDS)) {
+            updateDebtPeople(debtId, contentValues.getAsString(Contract.Transaction.PEOPLE_IDS));
+        }
+    }
+
+    /**
+     * The letters on a debt's default icon are the initials of its description, and
+     * IconPicker.listenOn regenerates them on every keystroke in the debt editor's description
+     * field, so a debt renamed from this side has to do the same or its list row reads one name
+     * beside another name's letters. Only the letters move, since nothing derives the color from
+     * the description and the stored one is the only place it exists.
+     *
+     * On a rename and nothing else. The editor sends the description on every save, so an edit
+     * that only moved the amount arrives here looking the same as a rename, and rewriting the
+     * letters on one of those would change an icon the user had not touched. Not every stored
+     * pair agrees to begin with: IconPicker.restoreColorIcon writes the first character as it
+     * was typed, so a debt named rent payment can be sitting on the letter r, and without this
+     * test the next edit of any kind would turn it into RP.
+     *
+     * SystemCategoryLocalizer.relocalizedIcon does this same thing for a renamed system category
+     * and this follows it, including what it leaves alone. An icon the user picked out of the
+     * gallery is a VectorIcon with no letters in it and is untouched, and so is anything
+     * IconLoader cannot read.
+     *
+     * @return the icon to store, or null to leave the stored one as it is.
+     */
+    private String renamedDebtIcon(long debtId, String description) {
+        String stored = null;
+        String storedDescription = null;
+        Cursor cursor = getReadableDatabase().query(Schema.Debt.TABLE,
+                new String[] {Schema.Debt.ICON, Schema.Debt.DESCRIPTION}, Schema.Debt.ID + " = ?",
+                new String[] {String.valueOf(debtId)}, null, null, null);
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    stored = cursor.getString(cursor.getColumnIndex(Schema.Debt.ICON));
+                    storedDescription = cursor.getString(cursor.getColumnIndex(Schema.Debt.DESCRIPTION));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        // Read before the debt row is written, so this is the name the debt is being renamed
+        // from. TextUtils.equals because the stored side is null when there is no debt row.
+        if (TextUtils.equals(description, storedDescription)) {
+            return null;
+        }
+        try {
+            Icon icon = IconLoader.parse(stored);
+            if (!(icon instanceof ColorIcon)) {
+                return null;
+            }
+            return new ColorIcon((ColorIcon) icon, IconPicker.getColorIconString(description)).toString();
+        } catch (Exception e) {
+            // IconLoader returns null on malformed json and throws on a type it does not know,
+            // which is the case this catches. The rename still lands, the icon keeps its letters.
+            Log.e(TAG, "unreadable icon on a renamed debt, keeping the old one", e);
+            return null;
+        }
+    }
+
+    /**
+     * We have to check if the new provided people ids is changed. We could query the current
+     * list, compute two sets containing the items to flag as deleted and the items to add
+     * but it is not enough fast. We can flag all the current items as deleted and then add all the
+     * ids as new items but checking for conflict. In case of conflict (same debtId, personId
+     * tuple) we update the deleted flag only.
+     */
+    private void updateDebtPeople(long debtId, String peopleIdList) {
+        ContentValues cv = new ContentValues();
+        cv.put(Schema.DebtPeople.DELETED, true);
+        String where = Schema.DebtPeople.DEBT + " = ?";
+        String[] whereArgs = new String[]{String.valueOf(debtId)};
+        getWritableDatabase().update(Schema.DebtPeople.TABLE, cv, where, whereArgs);
+        // All the current people associated with this debt are flagged as deleted, now it's
+        // time to add (checking for conflicts) the new ids.
+        long[] peopleIds = parseIds(peopleIdList);
+        if (peopleIds != null) {
+            for (long personId : peopleIds) {
+                cv.clear();
+                cv.put(Schema.DebtPeople.DEBT, debtId);
+                cv.put(Schema.DebtPeople.PERSON, personId);
+                cv.put(Schema.DebtPeople.UUID, UUID.randomUUID().toString());
+                cv.put(Schema.DebtPeople.LAST_EDIT, System.currentTimeMillis());
+                cv.put(Schema.DebtPeople.DELETED, false);
+                long newId = getWritableDatabase().insertWithOnConflict(Schema.DebtPeople.TABLE, null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+                if (newId == -1L) {
+                    // In this case the tuple <debtId,personId> already exists inside the table!
+                    // We have to simply update the deleted flag and the update timestamp.
+                    cv.clear();
+                    cv.put(Schema.DebtPeople.LAST_EDIT, System.currentTimeMillis());
+                    cv.put(Schema.DebtPeople.DELETED, false);
+                    where = Schema.DebtPeople.DEBT + " = ? AND " + Schema.DebtPeople.PERSON + " = ?";
+                    whereArgs = new String[]{String.valueOf(debtId), String.valueOf(personId)};
+                    getWritableDatabase().update(Schema.DebtPeople.TABLE, cv, where, whereArgs);
+                }
+            }
+        }
+        if (!mCacheDeletedObjects) {
+            // remove all deleted DebtPeople
+            where = Schema.DebtPeople.DEBT + " = ? AND " + Schema.DebtPeople.DELETED + " = 1";
+            whereArgs = new String[]{String.valueOf(debtId)};
+            getWritableDatabase().delete(Schema.DebtPeople.TABLE, where, whereArgs);
+        }
+    }
+
+    /**
      * This method is called by the content provider when the user is inserting a new debt.
      *
      * contentValues bundle that contains the data from the content provider.
@@ -2366,47 +2626,8 @@ import java.util.UUID;
         String[] whereArgs = new String[]{String.valueOf(debtId)};
         int rows = getWritableDatabase().update(Schema.Debt.TABLE, cv, where, whereArgs);
         if (rows > 0) {
-            // In this case we have to check if the new provided people ids is changed. We could
-            // query the current list, compute two sets containing the items to flag as deleted and
-            // and the items to add but it is not enough fast. We can flag all the current items as
-            // deleted and then add all the ids as new items but checking for conflict. In case of
-            // conflict (same <debtId,personId> tuple) we update the deleted flag only.
             if (contentValues.containsKey(Contract.Debt.PEOPLE_IDS)) {
-                cv = new ContentValues();
-                cv.put(Schema.DebtPeople.DELETED, true);
-                where = Schema.DebtPeople.DEBT + " = ?";
-                whereArgs = new String[]{String.valueOf(debtId)};
-                getWritableDatabase().update(Schema.DebtPeople.TABLE, cv, where, whereArgs);
-                // All the current people associated with this debt are flagged as deleted, now it's
-                // time to add (checking for conflicts) the new ids.
-                long[] peopleIds = parseIds(contentValues.getAsString(Contract.Debt.PEOPLE_IDS));
-                if (peopleIds != null) {
-                    for (long personId : peopleIds) {
-                        cv.clear();
-                        cv.put(Schema.DebtPeople.DEBT, debtId);
-                        cv.put(Schema.DebtPeople.PERSON, personId);
-                        cv.put(Schema.DebtPeople.UUID, UUID.randomUUID().toString());
-                        cv.put(Schema.DebtPeople.LAST_EDIT, System.currentTimeMillis());
-                        cv.put(Schema.DebtPeople.DELETED, false);
-                        long newId = getWritableDatabase().insertWithOnConflict(Schema.DebtPeople.TABLE, null, cv, SQLiteDatabase.CONFLICT_IGNORE);
-                        if (newId == -1L) {
-                            // In this case the tuple <debtId,personId> already exists inside the table!
-                            // We have to simply update the deleted flag and the update timestamp.
-                            cv.clear();
-                            cv.put(Schema.DebtPeople.LAST_EDIT, System.currentTimeMillis());
-                            cv.put(Schema.DebtPeople.DELETED, false);
-                            where = Schema.DebtPeople.DEBT + " = ? AND " + Schema.DebtPeople.PERSON + " = ?";
-                            whereArgs = new String[]{String.valueOf(debtId), String.valueOf(personId)};
-                            getWritableDatabase().update(Schema.DebtPeople.TABLE, cv, where, whereArgs);
-                        }
-                    }
-                }
-                if (!mCacheDeletedObjects) {
-                    // remove all deleted DebtPeople
-                    where = Schema.DebtPeople.DEBT + " = ? AND " + Schema.DebtPeople.DELETED + " = 1";
-                    whereArgs = new String[]{String.valueOf(debtId)};
-                    getWritableDatabase().delete(Schema.DebtPeople.TABLE, where, whereArgs);
-                }
+                updateDebtPeople(debtId, contentValues.getAsString(Contract.Debt.PEOPLE_IDS));
             }
             // check if exists a master transaction for this debt and update it
             Long debtCategoryId = getSystemCategoryId(Schema.CategoryTag.DEBT);
@@ -2460,7 +2681,7 @@ import java.util.UUID;
                     if (contentValues.containsKey(Contract.Debt.PEOPLE_IDS)) {
                         cv.put(Contract.Transaction.PEOPLE_IDS, contentValues.getAsString(Contract.Debt.PEOPLE_IDS));
                     }
-                    updateTransaction(transactionId, cv);
+                    updateTransactionRow(transactionId, cv);
                 }
                 cursor.close();
             }

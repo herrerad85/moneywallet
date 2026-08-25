@@ -301,6 +301,9 @@ public class DataContentProvider extends ContentProvider {
                 cursor = new MultiUriCursorWrapper(mDatabase.getDebtPeople(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
                 cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
                 cursor.setNotificationUri(getContentResolver(), CONTENT_PEOPLE);
+                // Saving a debt's master transaction now writes the debt's people, so a write
+                // to a transaction can change what this cursor holds.
+                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
                 break;
             case DEBT_TRANSACTION_LIST:
                 cursor = new MultiUriCursorWrapper(mDatabase.getDebtTransactions(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));

@@ -31,6 +31,7 @@ import android.text.TextUtils;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.model.ColorIcon;
 import com.oriondev.moneywallet.model.Money;
 import com.oriondev.moneywallet.utils.DateUtils;
 
@@ -1276,6 +1277,129 @@ public class SQLDatabaseTest {
         String date = cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE));
         cursor.close();
         return date;
+    }
+
+    @Test
+    public void editingTheMasterTransactionMovesTheDebt() throws Exception {
+        long walletId = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long otherWalletId = insertWallet("Test wallet 2", "encoded-icon-2", "EUR", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        long placeId = insertPlace("place-1", "encoded-icon-1", "fake-address-1", 7.3467, 8.364, "tag-1");
+        long otherPlaceId = insertPlace("place-2", "encoded-icon-2", "fake-address-2", 9.1234, 3.567, "tag-2");
+        long personId1 = insertPerson("person-1", "encoded-icon-1", "note-1", "tag-1");
+        long personId2 = insertPerson("person-2", "encoded-icon-2", "note-2", "tag-2");
+        long personId3 = insertPerson("person-3", "encoded-icon-3", "note-3", "tag-3");
+        long categoryId = getSystemCategory(Contract.CategoryTag.DEBT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        Long[] peopleIds = new Long[] {personId1, personId2};
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, walletId, "note-1", placeId, 2000L, false, peopleIds, "tag-1", true);
+        long transactionId = masterTransactionId(debtId);
+        // Everything a debt owns, moved at once at the method the transaction editor's save
+        // reaches, which is where Edit on this row in the transaction list ends up. Without
+        // the sync the debt keeps 2000.00, 2026-07-01, the first wallet, the first place, the old
+        // description, the old note and the first two people.
+        Date moved = DateUtils.getDateFromSQLDateTimeString("2026-08-25 14:30:00");
+        Long[] editedPeopleIds = new Long[] {personId2, personId3};
+        assertEquals(1, updateTransaction(transactionId, 3000L, moved, "desc-edited", categoryId,
+                Contract.Direction.INCOME, Contract.TransactionType.DEBT, otherWalletId, otherPlaceId,
+                "note-edited", null, null, debtId, true, true, editedPeopleIds, null, "tag-transaction"));
+        // The expiration date and the archived flag have no column on a transaction, and the
+        // tag has one on both tables and is carried by neither direction, so all three are
+        // asserted at the values the debt was inserted with. The tag asserted here is the debt's
+        // own and the save above sends a different one to the transaction. The icon is asserted
+        // unchanged for its own reason, encoded-icon-1 is not readable json, so renamedDebtIcon
+        // leaves it alone. A debt whose icon does move is pinned by
+        // renamingTheMasterTransactionMovesTheDebtIconLetters below.
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-edited", moved, null, otherWalletId, "note-edited", otherPlaceId, 3000L, false, editedPeopleIds, "tag-1");
+        // And the transaction keeps the time of day it was given. The debt carries a day, so
+        // writing the debt's date back onto the transaction would drop it to 00:00:00.
+        assertEquals("2026-08-25 14:30:00", masterTransactionDate(debtId));
+    }
+
+    @Test
+    public void editingADebtPaymentLeavesTheDebtAlone() throws Exception {
+        long walletId = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long paidCategoryId = getSystemCategory(Contract.CategoryTag.PAID_DEBT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, walletId, "note-1", null, 2000L, false, null, "tag-1", false);
+        // A payment carries the same type and the same debt id as a master transaction and is
+        // told apart only by its category. Syncing one would drag the debt to the amount and the
+        // day of whichever payment was edited.
+        long paymentId = insertTransaction(500L, date, "payment", paidCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.DEBT, walletId, null, "payment-note", null, null, debtId, true, true, null, null, "tag-payment");
+        Date moved = DateUtils.getDateFromSQLDateTimeString("2026-08-25 14:30:00");
+        assertEquals(1, updateTransaction(paymentId, 800L, moved, "payment-edited", paidCategoryId,
+                Contract.Direction.EXPENSE, Contract.TransactionType.DEBT, walletId, null, "payment-note-edited",
+                null, null, debtId, true, true, null, null, "tag-payment"));
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, walletId, "note-1", null, 2000L, false, null, "tag-1");
+    }
+
+    @Test
+    public void aBlankDescriptionIsNotCarriedToTheDebt() throws Exception {
+        long walletId = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long categoryId = getSystemCategory(Contract.CategoryTag.DEBT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, walletId, "note-1", null, 2000L, false, null, "tag-1", true);
+        long transactionId = masterTransactionId(debtId);
+        // The transaction editor has no validator on the description, so it can be blanked there.
+        // Debt.DESCRIPTION is NOT NULL and the debt editor holds it non empty after a trim, so
+        // carrying a blank across would leave a debt that its own editor then refuses to save.
+        // One space and not the empty string, since one space is the blank a length test lets
+        // through and the guard's own trim does not.
+        //
+        // The money moves in the same save and is asserted below at its new amount. Without it
+        // this case passes just as well on a build that never syncs anything, which is the state
+        // it is meant to tell apart from a working guard.
+        assertEquals(1, updateTransaction(transactionId, 3000L, date, " ", categoryId,
+                Contract.Direction.INCOME, Contract.TransactionType.DEBT, walletId, null, "note-1",
+                null, null, debtId, true, true, null, null, "tag-transaction"));
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, walletId, "note-1", null, 3000L, false, null, "tag-1");
+    }
+
+    @Test
+    public void renamingTheMasterTransactionMovesTheDebtIconLetters() throws Exception {
+        long walletId = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long categoryId = getSystemCategory(Contract.CategoryTag.DEBT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        // The letters a debt of this name would have been given by its own editor.
+        String storedIcon = new ColorIcon("#FF0000", "RP").toString();
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), storedIcon, "Rent Payment", date, null, walletId, "note-1", null, 2000L, false, null, "tag-1", true);
+        long transactionId = masterTransactionId(debtId);
+        assertEquals(1, updateTransaction(transactionId, 2000L, date, "Car Loan", categoryId,
+                Contract.Direction.INCOME, Contract.TransactionType.DEBT, walletId, null, "note-1",
+                null, null, debtId, true, true, null, null, "tag-transaction"));
+        // Same color, new letters. Without this the list row reads Car Loan beside an RP icon.
+        String renamedIcon = new ColorIcon("#FF0000", "CL").toString();
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), renamedIcon, "Car Loan", date, null, walletId, "note-1", null, 2000L, false, null, "tag-1");
+    }
+
+    @Test
+    public void anEditThatIsNotARenameLeavesTheDebtIconAlone() throws Exception {
+        long walletId = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long categoryId = getSystemCategory(Contract.CategoryTag.DEBT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        // Letters that do not match the description, which IconPicker.restoreColorIcon can write.
+        // A debt whose letters already agree would pass this case whether the rename test is here
+        // or not, since the value written would be the value already stored.
+        String storedIcon = new ColorIcon("#FF0000", "r").toString();
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), storedIcon, "rent payment", date, null, walletId, "note-1", null, 2000L, false, null, "tag-1", true);
+        long transactionId = masterTransactionId(debtId);
+        // Same description, new amount. The editor sends the description on every save, so this
+        // reaches the sync looking exactly like a rename does.
+        assertEquals(1, updateTransaction(transactionId, 5000L, date, "rent payment", categoryId,
+                Contract.Direction.INCOME, Contract.TransactionType.DEBT, walletId, null, "note-1",
+                null, null, debtId, true, true, null, null, "tag-transaction"));
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), storedIcon, "rent payment", date, null, walletId, "note-1", null, 5000L, false, null, "tag-1");
+    }
+
+    private long masterTransactionId(long debtId) {
+        Cursor cursor = mDatabase.getTransactions(new String[] {Contract.Transaction.ID},
+                Contract.Transaction.DEBT_ID + " = ?", new String[] {String.valueOf(debtId)}, null);
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        cursor.moveToFirst();
+        long id = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.ID));
+        cursor.close();
+        return id;
     }
 
     @Test
