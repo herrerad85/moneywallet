@@ -122,10 +122,7 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
     }
 
     /**
-     * The day is saved as a date and not as the strip position that also identifies it. A position
-     * is a running day count the strip adjusts by a difference on every selection, and that count
-     * can drift from the date it is meant to name, so restoring one can load a day the user never
-     * picked. The date cannot drift.
+     * The day is saved as a date and not as the strip position that also identifies it.
      */
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {

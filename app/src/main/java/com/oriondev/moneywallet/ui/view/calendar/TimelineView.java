@@ -38,7 +38,8 @@ import com.oriondev.moneywallet.R;
 import android.icu.text.DateFormatSymbols;
 import java.util.Calendar;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
+
+import static com.oriondev.moneywallet.utils.DateUtils.getCalendarDaysBetween;
 
 public class TimelineView extends RecyclerView {
 
@@ -206,28 +207,11 @@ public class TimelineView extends RecyclerView {
         if (year == startYear && month == startMonth && day < startDay) {
             day = startDay;
         }
-
-        // Get new selected dayOfYear
-        calendar.set(year, month, day, 1, 0, 0);
-        final int newDayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
-        final long newTimestamp = calendar.getTimeInMillis();
-
-        // Get current selected dayOfYear
-        calendar.set(selectedYear, selectedMonth, selectedDay, 1, 0, 0);
-        final int oldDayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
-        final long oldTimestamp = calendar.getTimeInMillis();
-
-        int dayDifference;
-        if (year == selectedYear) {
-            dayDifference = newDayOfYear - oldDayOfYear;
-        } else {
-            // Lazy...
-            int dayDifferenceApprox = (int) ((newTimestamp - oldTimestamp) / TimeUnit.DAYS.toMillis(1));
-            calendar.add(Calendar.DAY_OF_YEAR, dayDifferenceApprox);
-            dayDifference = dayDifferenceApprox + (newDayOfYear - calendar.get(Calendar.DAY_OF_YEAR));
-        }
-
-        onDateSelected(selectedPosition + dayDifference, year, month, day);
+        // counted from the first date, which is how TimelineAdapter turns a position back into a
+        // date. What this replaced adjusted the previous position by a difference, so it needed
+        // that position to already be right
+        onDateSelected(getCalendarDaysBetween(startYear, startMonth, startDay, year, month, day),
+                year, month, day);
     }
 
     public int getSelectedYear() {
@@ -317,16 +301,8 @@ public class TimelineView extends RecyclerView {
     }
 
     public void setLastDate(int endYear, int endMonth, int endDay) {
-        Calendar firstDate = Calendar.getInstance();
-        firstDate.set(startYear, startMonth, startDay);
-        Calendar lastDate = Calendar.getInstance();
-        lastDate.set(endYear, endMonth, endDay);
-
-        // TODO: might now work for summer time...
-        int dayDiff = (int) TimeUnit.DAYS.convert(lastDate.getTimeInMillis() - firstDate.getTimeInMillis(),
-                TimeUnit.MILLISECONDS);
-
-        setDayCount(dayDiff + 1);
+        // the last date is a cell of its own, so the count is one more than the span
+        setDayCount(getCalendarDaysBetween(startYear, startMonth, startDay, endYear, endMonth, endDay) + 1);
     }
 
     void setDayCount(int dayCount) {

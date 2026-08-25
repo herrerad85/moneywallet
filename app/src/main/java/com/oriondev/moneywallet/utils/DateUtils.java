@@ -27,6 +27,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by andrea on 03/03/18.
@@ -192,6 +194,27 @@ public class DateUtils {
 
     public static int getDaysBetween(Date start, Date end) {
         return (int)( (Math.abs(end.getTime() - start.getTime())) / (1000 * 60 * 60 * 24));
+    }
+
+    /**
+     * The number of calendar days from one date to the other, negative when the second date is
+     * the earlier one. The months are zero based, the way {@link Calendar} numbers them.
+     *
+     * Counted in UTC, where every day is 24 hours long. Subtracting two local timestamps and
+     * dividing by 24 hours does not answer this, because a zone whose offset grew between the two
+     * dates leaves the span short of a whole number of days and the division truncates.
+     */
+    public static int getCalendarDaysBetween(int fromYear, int fromMonth, int fromDay,
+                                             int toYear, int toMonth, int toDay) {
+        long span = utcMidnight(toYear, toMonth, toDay) - utcMidnight(fromYear, fromMonth, fromDay);
+        return (int) (span / TimeUnit.DAYS.toMillis(1));
+    }
+
+    private static long utcMidnight(int year, int month, int day) {
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        calendar.clear();
+        calendar.set(year, month, day);
+        return calendar.getTimeInMillis();
     }
 
     public static Calendar getCalendar(Date date) {
