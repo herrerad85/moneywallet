@@ -150,7 +150,12 @@ public abstract class MultiPanelFragment extends Fragment implements MultiPanelC
     protected void onConfigureRootLayout(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         ViewGroup primaryContainer = mPrimaryPanelBodyContainer != null ? mPrimaryPanelBodyContainer : mPrimaryPanel;
         onCreatePrimaryPanel(inflater, primaryContainer, savedInstanceState);
-        onCreateSecondaryPanel(inflater, mSecondaryPanel, savedInstanceState);
+        // the secondary panel is not the same id in every width qualifier, and a restored child
+        // fragment keeps the container id it was added under. Nest one container that carries
+        // the same id and the same view type everywhere so that id always resolves
+        inflater.inflate(R.layout.layout_secondary_panel_container, mSecondaryPanel, true);
+        ViewGroup secondaryContainer = mSecondaryPanel.findViewById(R.id.secondary_panel_container);
+        onCreateSecondaryPanel(inflater, secondaryContainer, savedInstanceState);
     }
 
     protected abstract void onCreatePrimaryPanel(LayoutInflater inflater, @NonNull ViewGroup primaryPanel, @Nullable Bundle savedInstanceState);
