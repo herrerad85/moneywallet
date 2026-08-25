@@ -544,22 +544,26 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
 
     /**
      * Whether this budget is a period its chain has already moved past, meaning another budget of
-     * the same chain begins after it does. A row flagged deleted counts too, though deleting a
-     * budget in the app takes the row away rather than flagging it.
+     * the same chain comes after it. A row flagged deleted counts too, though deleting a budget in
+     * the app takes the row away rather than flagging it.
      *
-     * @return true when another budget of this chain begins later.
+     * Which period comes after which is read from the uuids, the order
+     * {@link Contract#LATER_PERIOD_OF_CHAIN_SELECTION} explains, and not from the dates the rows
+     * carry.
+     *
+     * @return true when another budget of this chain comes later.
      */
     private boolean isSupersededPeriod() {
         if (getMode() != Mode.EDIT_ITEM) {
             return false;
         }
-        String chain = chainUUID();
-        String startDate = storedStartDate();
-        if (chain == null || startDate == null) {
+        String uuid = storedColumn(Contract.BUDGET_UUID);
+        if (uuid == null) {
             return false;
         }
+        String chain = chainOf(uuid);
         String[] selectionArgs = new String[] {String.valueOf(getItemId()), chain,
-                likeLiteral(chain) + ":%", startDate};
+                likeLiteral(chain) + ":%", uuid};
         Cursor cursor = getContentResolver().query(SyncContentProvider.CONTENT_BUDGET,
                 new String[] {Contract.Budget.ID}, Contract.LATER_PERIOD_OF_CHAIN_SELECTION, selectionArgs, null);
         if (cursor != null) {
@@ -622,15 +626,6 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
     }
 
     /**
-     * The day this budget begins on, as stored right now. Read from the table rather than from
-     * the editor's own fields, because the roll may have moved this budget on since the editor
-     * opened it.
-     */
-    private String storedStartDate() {
-        return storedColumn(Contract.Budget.START_DATE);
-    }
-
-    /**
      * One column of this budget as stored right now, read from the table rather than from the
      * editor's own fields, because the roll may have moved this budget on since it opened.
      */
@@ -651,27 +646,12 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
     }
 
     /**
-     * The uuid of the budget this one's chain started from: this budget's own uuid up to the date
-     * a roll appends to name a period. Null when the row cannot be read.
+     * The uuid of the budget the given budget's chain started from: that uuid up to the date a
+     * roll appends to name a period.
      */
-    private String chainUUID() {
-        Cursor cursor = getContentResolver().query(SyncContentProvider.CONTENT_BUDGET,
-                new String[] {Contract.BUDGET_UUID}, Contract.Budget.ID + " = ?",
-                new String[] {String.valueOf(getItemId())}, null);
-        if (cursor != null) {
-            try {
-                if (cursor.moveToFirst()) {
-                    String uuid = cursor.getString(cursor.getColumnIndex(Contract.BUDGET_UUID));
-                    if (uuid != null) {
-                        int separator = uuid.indexOf(':');
-                        return separator >= 0 ? uuid.substring(0, separator) : uuid;
-                    }
-                }
-            } finally {
-                cursor.close();
-            }
-        }
-        return null;
+    private static String chainOf(String uuid) {
+        int separator = uuid.indexOf(':');
+        return separator >= 0 ? uuid.substring(0, separator) : uuid;
     }
 
     /**
@@ -717,12 +697,25 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
      * The dates a repeating budget is saved with. A new one takes the period its schedule is in
      * today, so a schedule anchored in the past does not open a period that finished long ago.
      *
-     * An existing one starts where its start date field says and ends where its schedule says.
-     * That field holds the day the row already starts on unless its owner changed it, so an
-     * existing budget only moves when it is moved deliberately, and an edit to its amount, or to
-     * how often it repeats, leaves it where it is. Both dates are kept exactly as stored when
-     * neither the schedule nor that field has changed, so a budget whose period has ended and has
-     * not been rolled yet does not lose a day to being saved.
+     * An existing one keeps both of its dates exactly as stored unless its schedule moves, so an
+     * edit to its amount, or to the wallets it covers, leaves it where it is, and a budget whose
+     * period has ended and has not been rolled yet does not lose a day to being saved. Only then
+     * does it start where its start date field says and end where its schedule says.
+     *
+     * The dates are held because they are half of the period's identity and the other half cannot
+     * follow them. A period is named after its chain and the day it begins on, and updateBudget
+     * never rewrites that name, so a period whose dates move under an unchanged schedule is left
+     * named after a day it no longer begins on. Move it back before the day in its own name and
+     * the next roll is worse than misleading: the first period it works out from the schedule is
+     * the one this row is still named after, the unique index refuses that insert, nothing reads
+     * the result, and the rule has already been taken off this row by then, so the chain stops
+     * with nothing shown. What made those dates movable was the start date field: it comes back
+     * on screen the moment repeat is unticked, and a day typed into it there was honored on the
+     * save that followed even when repeat was ticked again and the schedule was never touched.
+     *
+     * Re-anchoring a budget still moves it, because that is a schedule moving. Turning repeat off
+     * drops the anchor with the schedule, and the day the budget is left starting on is what its
+     * next schedule is anchored to, which is a schedule the row does not hold yet.
      *
      * Landing an existing budget on the period its schedule is in today would rewrite a budget
      * that has finished, and everything filed against it, onto another month: ticking repeat on
@@ -747,17 +740,15 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
                         String storedEnd = cursor.getString(cursor.getColumnIndex(Contract.Budget.END_DATE));
                         String storedRule = cursor.getString(cursor.getColumnIndex(Contract.Budget.RULE));
                         String storedRuleStart = cursor.getString(cursor.getColumnIndex(Contract.Budget.RULE_START));
-                        Date fieldStart = mStartDatePicker.getCurrentDateTime();
                         boolean scheduleHeld = TextUtils.equals(rule, storedRule)
                                 && TextUtils.equals(DateUtils.getSQLDateString(anchor), storedRuleStart);
-                        boolean startHeld = fieldStart == null
-                                || TextUtils.equals(DateUtils.getSQLDateString(fieldStart), storedStart);
-                        if (scheduleHeld && startHeld) {
+                        if (scheduleHeld) {
                             return new Date[] {
                                     DateUtils.getDateFromSQLDateString(storedStart),
                                     DateUtils.getDateFromSQLDateString(storedEnd)
                             };
                         }
+                        Date fieldStart = mStartDatePicker.getCurrentDateTime();
                         Date periodStart = fieldStart != null ? fieldStart : DateUtils.getDateFromSQLDateString(storedStart);
                         // Changing how often a budget repeats leaves one period between the old
                         // schedule and the new: it runs from the day the budget already starts on

@@ -250,14 +250,26 @@ public class Contract {
             Schema.BudgetWallet.DELETED + " = 0 AND w." + Schema.Wallet.DELETED + " = 0) = 1";
 
     /**
-     * Selection over the raw budgets table naming the budgets of one chain that begin after a
-     * given day. Takes four arguments: the id of the budget asking, the uuid of the budget the
-     * chain started from, that same uuid escaped for LIKE and followed by ":%", and the day the
-     * budget asking begins on.
+     * Selection over the raw budgets table naming the budgets of one chain that come after a given
+     * one. Takes four arguments: the id of the budget asking, the uuid of the budget the chain
+     * started from, that same uuid escaped for LIKE and followed by ":%", and the whole uuid of
+     * the budget asking.
      *
      * Every period a roll opens is named after the budget its chain started from, so the chain is
      * what the two uuid arguments match; the day a schedule is anchored to is not an identity,
      * since two budgets set up on the same afternoon are anchored to the same day.
+     *
+     * A chain is ordered by those names and not by the dates its rows carry. It holds the budget
+     * it started from, whose uuid carries no date, and one row per period after that, named after
+     * the chain then a colon then the day that period begins on. Schema declares the column TEXT
+     * with no collation of its own, so SQLite compares it byte for byte, and both halves of the
+     * order follow: the name of the budget the chain started from is a prefix of every other name
+     * in the chain, so it sorts before all of them, and the rest share that prefix and differ only
+     * in a date written the ISO way, so comparing those as text compares them as dates. That is
+     * the order the roll opened them in. A uuid is never rewritten once minted, so nothing an
+     * owner does can reorder a chain, while the dates on a row are freely editable: ordering a
+     * chain by its start dates let an old period be edited forward past the live one, which then
+     * reported the live period as history and refused every save it was offered.
      *
      * A row flagged deleted is counted too, because it still holds the name of the period it
      * covered and a chain restarted from behind it would ask the roll for a name already spoken
@@ -271,8 +283,8 @@ public class Contract {
      */
     public static final String LATER_PERIOD_OF_CHAIN_SELECTION =
             Schema.Budget.ID + " <> ? AND (" + Schema.Budget.UUID + " = ? OR " +
-            Schema.Budget.UUID + " LIKE ? ESCAPE '\\') AND DATE(" +
-            Schema.Budget.START_DATE + ") > DATE(?)";
+            Schema.Budget.UUID + " LIKE ? ESCAPE '\\') AND " +
+            Schema.Budget.UUID + " > ?";
 
     /**
      * The raw uuid column of the budgets table. It is not part of the rows this class otherwise
