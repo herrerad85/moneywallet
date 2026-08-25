@@ -251,25 +251,31 @@ public class Contract {
 
     /**
      * Selection over the raw budgets table naming the budgets of one chain that come after a given
-     * one. Takes four arguments: the id of the budget asking, the uuid of the budget the chain
-     * started from, that same uuid escaped for LIKE and followed by ":%", and the whole uuid of
-     * the budget asking.
+     * one. Takes three arguments: the id of the budget asking, the uuid of the budget its chain
+     * started from escaped for LIKE and followed by ":%", and the whole uuid of the budget asking.
      *
      * Every period a roll opens is named after the budget its chain started from, so the chain is
-     * what the two uuid arguments match; the day a schedule is anchored to is not an identity,
-     * since two budgets set up on the same afternoon are anchored to the same day.
+     * what the uuid argument matches; the day a schedule is anchored to is not an identity, since
+     * two budgets set up on the same afternoon are anchored to the same day.
      *
      * A chain is ordered by those names and not by the dates its rows carry. It holds the budget
-     * it started from, whose uuid carries no date, and one row per period after that, named after
-     * the chain then a colon then the day that period begins on. Schema declares the column TEXT
-     * with no collation of its own, so SQLite compares it byte for byte, and both halves of the
-     * order follow: the name of the budget the chain started from is a prefix of every other name
-     * in the chain, so it sorts before all of them, and the rest share that prefix and differ only
-     * in a date written the ISO way, so comparing those as text compares them as dates. That is
-     * the order the roll opened them in. A uuid is never rewritten once minted, so nothing an
-     * owner does can reorder a chain, while the dates on a row are freely editable: ordering a
-     * chain by its start dates let an old period be edited forward past the live one, which then
-     * reported the live period as history and refused every save it was offered.
+     * it started from, whose uuid carries no appended day, and one row per period after that,
+     * named after the chain then a colon then the day that period begins on. Schema declares the
+     * column TEXT with no collation of its own, so SQLite compares it byte for byte, and both
+     * halves of the order follow: the name of the budget the chain started from is a prefix of
+     * every other name in the chain, so it sorts before all of them, and the rest share that
+     * prefix and differ only in a date written the ISO way, so comparing those as text compares
+     * them as dates. That is the order the roll opened them in. A uuid is never rewritten once
+     * minted, so nothing an owner does can reorder a chain, while the dates on a row are freely
+     * editable: ordering a chain by its start dates let an old period be edited forward past the
+     * live one, which then reported the live period as history and refused every save it was
+     * offered.
+     *
+     * The chain argument is only ever matched with LIKE, and never for equality, because equality
+     * could not return a row. {@link #budgetChainOf(String)} hands back either the whole uuid it
+     * was given or the front of it, so the chain is always a prefix of the uuid of the budget
+     * asking and therefore never above it, while a row matched by equality would have to be above
+     * it to clear the last test. Nothing an owner has, restored or otherwise, satisfies both.
      *
      * A row flagged deleted is counted too, because it still holds the name of the period it
      * covered and a chain restarted from behind it would ask the roll for a name already spoken
@@ -277,13 +283,12 @@ public class Contract {
      * deleted flag off at startup, so a delete there takes the row away. This is for rows that
      * arrive already flagged.
      *
-     * The caller escapes the third argument because a uuid is only plain hexadecimal while it is
+     * The caller escapes the second argument because a uuid is only plain hexadecimal while it is
      * minted here. One restored from a backup is whatever that file held, and an underscore in
      * it would stand for any character and match a chain it has nothing to do with.
      */
     public static final String LATER_PERIOD_OF_CHAIN_SELECTION =
-            Schema.Budget.ID + " <> ? AND (" + Schema.Budget.UUID + " = ? OR " +
-            Schema.Budget.UUID + " LIKE ? ESCAPE '\\') AND " +
+            Schema.Budget.ID + " <> ? AND " + Schema.Budget.UUID + " LIKE ? ESCAPE '\\' AND " +
             Schema.Budget.UUID + " > ?";
 
     /**
@@ -291,6 +296,43 @@ public class Contract {
      * describes; a caller reading it has to go to the table itself.
      */
     public static final String BUDGET_UUID = Schema.Budget.UUID;
+
+    /** A day as a roll writes it into the name of the period it opens. */
+    private static final String APPENDED_DAY = "\\d{4}-\\d{2}-\\d{2}";
+
+    /**
+     * The uuid of the budget the given budget's chain started from. A roll names each period it
+     * opens after the chain, a colon, and the day that period begins on, so this takes such a day
+     * back off again and hands back whatever the chain started from. A budget that is itself the
+     * start of its chain is its own answer.
+     *
+     * The day is taken off the END and only when it really is a day. Both matter for a uuid that
+     * did not come from this app: the ones minted here are hexadecimal and hold no colon of their
+     * own, while one restored from a backup file is whatever that file held. Cutting at the first
+     * colon instead put a chain root that contained a colon after its own periods, since it then
+     * shared their prefix and carried something other than a date where they carry one, and every
+     * period of that chain read as history because a later member appeared to exist. The budget
+     * could then never be saved while it repeated.
+     *
+     * This stops such a chain being built that way, and does not put one right that already was.
+     * A chain whose periods were opened while the first colon was the cut is named for the part
+     * before that colon, its root still sorts after all of them, and it stays unsavable while it
+     * repeats. Turning repeat off does not give it back either: the budget then reads as a period
+     * its chain has moved past, which is what hides the box that would turn it on again. That was
+     * so before this method changed too.
+     *
+     * One reading stays ambiguous and cannot be recovered: a chain root whose own uuid ends in a
+     * colon and eight digits split by dashes is indistinguishable from a period, and is read as
+     * one. Nothing this app writes looks like that.
+     *
+     * @param budgetUUID uuid of a budget in the chain.
+     * @return the uuid of the budget the chain started from.
+     */
+    public static String budgetChainOf(String budgetUUID) {
+        int separator = budgetUUID.lastIndexOf(':');
+        return separator >= 0 && budgetUUID.substring(separator + 1).matches(APPENDED_DAY)
+                ? budgetUUID.substring(0, separator) : budgetUUID;
+    }
 
     public static final class Saving {
         public static final String ID = Schema.Saving.ID;

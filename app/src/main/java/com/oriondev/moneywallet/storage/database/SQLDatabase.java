@@ -2877,7 +2877,7 @@ import java.util.UUID;
      * because the periods it already wrote come back with the uuid they already have and the
      * unique index refuses them. Two devices that open the same period agree on its identity
      * instead of each inventing one. And the name says which chain the period belongs to, which is
-     * how {@link #budgetChainUUID(String)} and the editor recover it, so a period must never be
+     * how {@link Contract#budgetChainOf(String)} and the editor recover it, so a period must never be
      * given a name of any other shape. Every other budget gets a random uuid.
      *
      * @param contentValues bundle handed to {@link #insertBudget(ContentValues)}.
@@ -2895,7 +2895,7 @@ import java.util.UUID;
                         String parentUUID = cursor.getString(cursor.getColumnIndex(Schema.Budget.UUID));
                         Date startDate = DateUtils.getDateFromSQLDateString(contentValues.getAsString(Contract.Budget.START_DATE));
                         if (parentUUID != null && startDate != null) {
-                            return getRecurrentItemUUID(budgetChainUUID(parentUUID), startDate);
+                            return getRecurrentItemUUID(Contract.budgetChainOf(parentUUID), startDate);
                         }
                     }
                 } finally {
@@ -2904,20 +2904,6 @@ import java.util.UUID;
             }
         }
         return UUID.randomUUID().toString();
-    }
-
-    /**
-     * The uuid of the chain a budget period belongs to: the uuid of the budget the chain started
-     * from, which is what is left once the date every roll appends is taken off again. Naming a
-     * period after its chain rather than after the period before it keeps that name the same
-     * whichever run opens it, and keeps it from growing by a date on every roll.
-     *
-     * @param budgetUUID uuid of a budget in the chain.
-     * @return the uuid of the budget the chain started from.
-     */
-    private String budgetChainUUID(String budgetUUID) {
-        int separator = budgetUUID.indexOf(':');
-        return separator >= 0 ? budgetUUID.substring(0, separator) : budgetUUID;
     }
 
     /**

@@ -561,8 +561,8 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
         if (uuid == null) {
             return false;
         }
-        String chain = chainOf(uuid);
-        String[] selectionArgs = new String[] {String.valueOf(getItemId()), chain,
+        String chain = Contract.budgetChainOf(uuid);
+        String[] selectionArgs = new String[] {String.valueOf(getItemId()),
                 likeLiteral(chain) + ":%", uuid};
         Cursor cursor = getContentResolver().query(SyncContentProvider.CONTENT_BUDGET,
                 new String[] {Contract.Budget.ID}, Contract.LATER_PERIOD_OF_CHAIN_SELECTION, selectionArgs, null);
@@ -643,15 +643,6 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
             }
         }
         return null;
-    }
-
-    /**
-     * The uuid of the budget the given budget's chain started from: that uuid up to the date a
-     * roll appends to name a period.
-     */
-    private static String chainOf(String uuid) {
-        int separator = uuid.indexOf(':');
-        return separator >= 0 ? uuid.substring(0, separator) : uuid;
     }
 
     /**
