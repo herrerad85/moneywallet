@@ -67,7 +67,8 @@ public class TransactionListFragment extends CursorListFragment implements Trans
 
     @Override
     protected AbstractCursorAdapter onCreateAdapter() {
-        return new TransactionCursorAdapter(this);
+        // the only one of the four that opens the report from a header click
+        return new TransactionCursorAdapter(this, true);
     }
 
     @Override

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2026.
+  ~
+  ~ This file is part of MoneyWallet.
+  ~
+  ~ MoneyWallet is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ MoneyWallet is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="@dimen/material_component_lists_header_height"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    android:background="?attr/selectableItemBackground">
+
+    <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+        android:id="@+id/left_text_view"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/material_component_lists_header_start_margin"
+        android:layout_marginStart="@dimen/material_component_lists_header_start_margin"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textSize="@dimen/material_component_lists_header_text_size"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/right_text_view"
+        app:theme_textColor="textColorPrimary"
+        tools:text="August 1 - 31" />
+
+    <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+        android:id="@+id/right_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:textSize="@dimen/material_component_lists_header_text_size"
+        app:layout_constraintTop_toTopOf="@+id/left_text_view"
+        app:layout_constraintEnd_toStartOf="@+id/report_image_view"
+        app:layout_goneMarginEnd="@dimen/material_component_lists_header_end_margin"
+        app:layout_goneMarginRight="@dimen/material_component_lists_header_end_margin"
+        app:theme_textColor="textColorPrimary"
+        tools:text="$ 600.00" />
+
+    <!--
+      The summary sits under whichever of the two above is taller. A total in several currencies
+      is one string with the amounts joined together, long enough to wrap, so the amount on the
+      right can run to more than one line and anchoring to the date range alone would let it be
+      drawn over.
+    -->
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/header_line_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="left_text_view,right_text_view" />
+
+    <LinearLayout
+        android:id="@+id/summary_layout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginLeft="@dimen/material_component_lists_header_start_margin"
+        android:layout_marginStart="@dimen/material_component_lists_header_start_margin"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@+id/header_line_barrier"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/report_image_view"
+        app:layout_goneMarginEnd="@dimen/material_component_lists_header_end_margin"
+        app:layout_goneMarginRight="@dimen/material_component_lists_header_end_margin">
+
+        <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+            android:id="@+id/income_label_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_marginRight="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/hint_incomes"
+            android:textSize="@dimen/material_component_lists_header_summary_text_size"
+            app:theme_textColor="textColorSecondary" />
+
+        <!--
+          Both amounts carry a weight so that a row too narrow for all four takes the room off
+          each of them and both ellipsize. Without one the last view in the row gets only what
+          the others left, which is nothing, and the expense went missing with no ellipsis to
+          say so.
+
+          ponytail: the weight is also what splits any room left over, so at an ordinary width
+          each amount sits in half the line with its text at the start. And the two labels are
+          not weighted, so a locale whose words are long enough to fill the line on their own
+          takes the room off the amounts first. Both want a constraint chain instead of a row.
+        -->
+        <TextView
+            android:id="@+id/income_text_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:layout_marginRight="12dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textSize="@dimen/material_component_lists_header_summary_text_size"
+            tools:text="$ 120.00" />
+
+        <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+            android:id="@+id/expense_label_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_marginRight="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/hint_expenses"
+            android:textSize="@dimen/material_component_lists_header_summary_text_size"
+            app:theme_textColor="textColorSecondary" />
+
+        <TextView
+            android:id="@+id/expense_text_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textSize="@dimen/material_component_lists_header_summary_text_size"
+            tools:text="$ 720.00" />
+
+    </LinearLayout>
+
+    <com.oriondev.moneywallet.ui.view.theme.ThemedImageView
+        android:id="@+id/report_image_view"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginRight="@dimen/material_component_lists_header_end_margin"
+        android:layout_marginEnd="@dimen/material_component_lists_header_end_margin"
+        android:contentDescription="@string/description_show_period_report"
+        android:src="@drawable/ic_chevron_right_black_24dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:theme_backgroundColor="colorWindowForeground" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

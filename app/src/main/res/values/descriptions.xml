@@ -44,4 +44,5 @@
     <string name="description_show_subcategories">"Show subcategories of %1$s"</string>
     <string name="description_hide_subcategories">"Hide subcategories of %1$s"</string>
     <string name="description_day_has_transactions">"Has transactions"</string>
+    <string name="description_show_period_report">"Show the report for this period"</string>
 </resources>

@@ -90,6 +90,7 @@
     <dimen name="material_component_lists_header_start_margin">16dp</dimen>
     <dimen name="material_component_lists_header_end_margin">16dp</dimen>
     <dimen name="material_component_lists_header_text_size">14sp</dimen>
+    <dimen name="material_component_lists_header_summary_text_size">12sp</dimen>
 
     <dimen name="material_component_lists_card_top_layout_height">64dp</dimen>
     <dimen name="material_component_lists_card_start_margin">8dp</dimen>
