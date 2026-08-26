@@ -37,6 +37,8 @@ public class TransactionHeaderCursor extends AbstractHeaderCursor<TransactionHea
     public static final String COLUMN_HEADER_START_DATE = "header_start_date";
     public static final String COLUMN_HEADER_END_DATE = "header_end_date";
     public static final String COLUMN_HEADER_MONEY = "header_money";
+    public static final String COLUMN_HEADER_INCOME = "header_income";
+    public static final String COLUMN_HEADER_EXPENSE = "header_expense";
     public static final String COLUMN_HEADER_GROUP_TYPE = "header_group_type";
 
     public final static int TYPE_HEADER = 0;
@@ -46,7 +48,9 @@ public class TransactionHeaderCursor extends AbstractHeaderCursor<TransactionHea
     private static final int INDEX_HEADER_START_DATE = 1;
     private static final int INDEX_HEADER_END_DATE = 2;
     private static final int INDEX_HEADER_MONEY = 3;
-    private static final int INDEX_HEADER_GROUP_TYPE = 4;
+    private static final int INDEX_HEADER_INCOME = 4;
+    private static final int INDEX_HEADER_EXPENSE = 5;
+    private static final int INDEX_HEADER_GROUP_TYPE = 6;
 
     private final Group mGroup;
     private final Date mLowerBound;
@@ -87,10 +91,7 @@ public class TransactionHeaderCursor extends AbstractHeaderCursor<TransactionHea
                     String currency = cursor.getString(indexCurrency);
                     long money = cursor.getLong(indexTransactionMoney);
                     int direction = cursor.getInt(indexTransactionDirection);
-                    if (direction == 0) {
-                        money *= -1;
-                    }
-                    header.addMoney(currency, money);
+                    header.add(currency, money, direction);
                 }
             } while (cursor.moveToNext());
         }
@@ -103,6 +104,8 @@ public class TransactionHeaderCursor extends AbstractHeaderCursor<TransactionHea
                 COLUMN_HEADER_START_DATE,
                 COLUMN_HEADER_END_DATE,
                 COLUMN_HEADER_MONEY,
+                COLUMN_HEADER_INCOME,
+                COLUMN_HEADER_EXPENSE,
                 COLUMN_HEADER_GROUP_TYPE
         };
     }
@@ -117,7 +120,11 @@ public class TransactionHeaderCursor extends AbstractHeaderCursor<TransactionHea
                 case INDEX_HEADER_END_DATE:
                     return DateUtils.getSQLDateTimeString(header.getEndDate());
                 case INDEX_HEADER_MONEY:
-                    return header.mMoney.toString();
+                    return header.getMoney().toString();
+                case INDEX_HEADER_INCOME:
+                    return header.getIncome().toString();
+                case INDEX_HEADER_EXPENSE:
+                    return header.getExpense().toString();
             }
         }
         return null;
@@ -162,15 +169,47 @@ public class TransactionHeaderCursor extends AbstractHeaderCursor<TransactionHea
 
     /*package-local*/ static class Header extends DateRangeHeader {
 
-        private Money mMoney;
+        private final Money mMoney;
+        private final Money mIncome;
+        private final Money mExpense;
 
-        private Header(Group group, Date lowerBound, Date upperBound, Date date) {
+        /*package-local*/ Header(Group group, Date lowerBound, Date upperBound, Date date) {
             super(group, lowerBound, upperBound, date);
             mMoney = new Money();
+            mIncome = new Money();
+            mExpense = new Money();
         }
 
-        private void addMoney(String currency, long money) {
-            mMoney.addMoney(currency, money);
+        /**
+         * Count one row into this header. The total is the difference and can come out either
+         * sign. The other two are the same rows split by their direction and both only ever
+         * grow, so a row adds to one of them and leaves the other alone, while the total takes
+         * that same amount as a plus or a minus.
+         *
+         * Direction is all that is read here, so the two halves of a transfer land in both, and a
+         * debt taken on lands in the incoming one. That is what PeriodDetailSummaryLoader counts
+         * too, which is the report a reader reaches from this header, so the two agree.
+         */
+        /*package-local*/ void add(String currency, long money, int direction) {
+            if (direction == Contract.Direction.INCOME) {
+                mIncome.addMoney(currency, money);
+                mMoney.addMoney(currency, money);
+            } else {
+                mExpense.addMoney(currency, money);
+                mMoney.addMoney(currency, -money);
+            }
+        }
+
+        /*package-local*/ Money getMoney() {
+            return mMoney;
+        }
+
+        /*package-local*/ Money getIncome() {
+            return mIncome;
+        }
+
+        /*package-local*/ Money getExpense() {
+            return mExpense;
         }
     }
 }

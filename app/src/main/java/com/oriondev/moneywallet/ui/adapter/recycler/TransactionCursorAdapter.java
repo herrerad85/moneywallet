@@ -48,11 +48,14 @@ import java.util.Date;
 public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView.ViewHolder> {
 
     private final ActionListener mActionListener;
+    private final boolean mHeaderOpensReport;
 
     private int mIndexType;
     private int mIndexHeaderStartDate;
     private int mIndexHeaderEndDate;
     private int mIndexHeaderMoney;
+    private int mIndexHeaderIncome;
+    private int mIndexHeaderExpense;
     private int mIndexHeaderGroupType;
     private int mIndexCategoryName;
     private int mIndexCategoryIcon;
@@ -66,8 +69,18 @@ public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView
     private MoneyFormatter mMoneyFormatter;
 
     public TransactionCursorAdapter(ActionListener actionListener) {
+        this(actionListener, false);
+    }
+
+    /**
+     * Three of the four screens using this adapter answer a header click with an empty method, so
+     * the arrow and the click both wait to be asked for. A screen that shows the arrow has to
+     * open something from onHeaderClick, and one that does not must not show it.
+     */
+    public TransactionCursorAdapter(ActionListener actionListener, boolean headerOpensReport) {
         super(null, Contract.Transaction.ID);
         mActionListener = actionListener;
+        mHeaderOpensReport = headerOpensReport;
         mMoneyFormatter = MoneyFormatter.getInstance();
     }
 
@@ -77,6 +90,8 @@ public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView
         mIndexHeaderStartDate = cursor.getColumnIndex(TransactionHeaderCursor.COLUMN_HEADER_START_DATE);
         mIndexHeaderEndDate = cursor.getColumnIndex(TransactionHeaderCursor.COLUMN_HEADER_END_DATE);
         mIndexHeaderMoney = cursor.getColumnIndex(TransactionHeaderCursor.COLUMN_HEADER_MONEY);
+        mIndexHeaderIncome = cursor.getColumnIndex(TransactionHeaderCursor.COLUMN_HEADER_INCOME);
+        mIndexHeaderExpense = cursor.getColumnIndex(TransactionHeaderCursor.COLUMN_HEADER_EXPENSE);
         mIndexHeaderGroupType = cursor.getColumnIndex(TransactionHeaderCursor.COLUMN_HEADER_GROUP_TYPE);
         mIndexCategoryName = cursor.getColumnIndex(Contract.Transaction.CATEGORY_NAME);
         mIndexCategoryIcon = cursor.getColumnIndex(Contract.Transaction.CATEGORY_ICON);
@@ -118,14 +133,44 @@ public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView
         Date end = DateUtils.getDateFromSQLDateTimeString(cursor.getString(mIndexHeaderEndDate));
         DateFormatter.applyDateRange(holder.mLeftTextView, start, end);
         Money money = Money.parse(cursor.getString(mIndexHeaderMoney));
-        mMoneyFormatter.applyTinted(holder.mRightTextView, money);
+        // untinted, because with the plus and minus setting off, which is the default, this
+        // class shows a sign on an amount it does not color and leaves the sign off one it
+        // does. A tinted difference printed 45.00 for a stretch that spent 45 and earned
+        // nothing, and left the color to say which way it went, on a line whose other two
+        // figures are colored whatever they hold
+        mMoneyFormatter.applyNotTinted(holder.mRightTextView, money);
+        Money income = Money.parse(cursor.getString(mIndexHeaderIncome));
+        Money expense = Money.parse(cursor.getString(mIndexHeaderExpense));
+        mMoneyFormatter.applyTintedIncome(holder.mIncomeTextView, orZero(income, money));
+        mMoneyFormatter.applyTintedExpense(holder.mExpenseTextView, orZero(expense, money));
+    }
+
+    /**
+     * The figure itself, or a zero in the currencies the difference was counted in when the
+     * figure holds none of its own. An amount with no currency in it renders as the placeholder
+     * for a value nobody knows, and a stretch that only spent has a known zero income.
+     *
+     * The zero is put here and not into the running totals because a figure that has rows of
+     * its own must not gain a currency it has none in, which is what putting it in the totals
+     * did. A figure with no rows at all still takes every currency the header counted, so on a
+     * header counting two it reads as two zeros and is cut off the way any long figure is.
+     */
+    /*package-local*/ static Money orZero(Money money, Money counted) {
+        if (money.getNumberOfCurrencies() > 0) {
+            return money;
+        }
+        Money zero = new Money();
+        for (String currency : counted.getCurrencies()) {
+            zero.addMoney(currency, 0);
+        }
+        return zero;
     }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         if (viewType == TransactionHeaderCursor.TYPE_HEADER) {
-            View itemView = inflater.inflate(R.layout.adapter_header_item, parent, false);
+            View itemView = inflater.inflate(R.layout.adapter_transaction_header_item, parent, false);
             return new HeaderViewHolder(itemView);
         } else if (viewType == TransactionHeaderCursor.TYPE_ITEM){
             View itemView = inflater.inflate(R.layout.adapter_transaction_item, parent, false);
@@ -148,12 +193,26 @@ public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView
 
         private TextView mLeftTextView;
         private TextView mRightTextView;
+        private TextView mIncomeTextView;
+        private TextView mExpenseTextView;
 
         /*package-local*/ HeaderViewHolder(View itemView) {
             super(itemView);
             mLeftTextView = itemView.findViewById(R.id.left_text_view);
             mRightTextView = itemView.findViewById(R.id.right_text_view);
-            itemView.setOnClickListener(this);
+            mIncomeTextView = itemView.findViewById(R.id.income_text_view);
+            mExpenseTextView = itemView.findViewById(R.id.expense_text_view);
+            // the arrow is a ThemedImageView, which tints itself from the row it sits on and
+            // repaints when the mode changes. A theme attribute in the vector would resolve
+            // against the xml theme, which is the light one whatever mode the user picked
+            itemView.findViewById(R.id.report_image_view)
+                    .setVisibility(mHeaderOpensReport ? View.VISIBLE : View.GONE);
+            if (mHeaderOpensReport) {
+                itemView.setOnClickListener(this);
+            } else {
+                // no destination, so the row keeps its ripple to itself
+                itemView.setBackground(null);
+            }
         }
 
         @Override
