@@ -183,6 +183,7 @@
     <dimen name="view_mti_timeline_lbl_day_text">12sp</dimen>
     <dimen name="view_mti_timeline_lbl_date_text">14sp</dimen>
     <dimen name="view_mti_timeline_lbl_value">12dp</dimen>
+    <dimen name="view_mti_timeline_dot_size">5dp</dimen>
 
     <dimen name="view_pie_chart_height">320dp</dimen>
     <dimen name="view_pie_chart_margin_top">12dp</dimen>

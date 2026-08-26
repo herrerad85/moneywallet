@@ -53,7 +53,10 @@ import com.oriondev.moneywallet.ui.view.calendar.TimelineView;
 import com.oriondev.moneywallet.utils.DateUtils;
 
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by andrea on 06/04/18.
@@ -71,6 +74,20 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
     private static final String STATE_SELECTED_DAY = "CalendarMultiPanelFragment::State::Day";
 
     private static final int DEFAULT_LOADER_ID = 4834;
+    private static final int MARKED_DAYS_LOADER_ID = 4835;
+
+    private static final String COLUMN_DAY = "day";
+
+    /** No day at all, which no real date can collide with because no year is negative here. */
+    static final int NO_DAY = -1;
+
+    /**
+     * One row per day that has a transaction. DISTINCT rides in the first column because the
+     * provider passes a projection straight into the SELECT clause.
+     */
+    private static final String[] MARKED_DAYS_PROJECTION = new String[] {
+            "DISTINCT DATE(" + Contract.Transaction.DATE + ") AS " + COLUMN_DAY
+    };
 
     private BroadcastReceiver mCurrentWalletObserver;
 
@@ -119,6 +136,7 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
         mTimelineView.setSelectedDate(year, month, day);
         mTimelineView.setOnDateSelectedListener(this);
         onDateSelected(year, month, day, mTimelineView.getSelectedPosition());
+        getLoaderManager().initLoader(MARKED_DAYS_LOADER_ID, null, mMarkedDaysCallbacks);
     }
 
     /**
@@ -193,21 +211,99 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
                     args.getInt(ARG_SELECTED_DAY)
             );
             Uri uri = DataContentProvider.CONTENT_TRANSACTIONS;
-            String selection;
-            String[] arguments;
-            long currentWallet = PreferenceManager.getCurrentWallet();
-            if (currentWallet == PreferenceManager.TOTAL_WALLET_ID) {
-                selection = Contract.Transaction.WALLET_COUNT_IN_TOTAL + " = 1";
-                arguments = null;
-            } else {
-                selection = Contract.Transaction.WALLET_ID + " = ?";
-                arguments = new String[] {String.valueOf(currentWallet)};
-            }
-            selection += " AND DATE(" + Contract.Transaction.DATE + ") == DATE('" + DateUtils.getSQLDateString(date) + "')";
+            String selection = walletSelection()
+                    + " AND DATE(" + Contract.Transaction.DATE + ") == DATE('" + DateUtils.getSQLDateString(date) + "')";
             String sortOrder = Contract.Transaction.DATE + " DESC";
-            return new CursorLoader(activity, uri, null, selection, arguments, sortOrder);
+            return new CursorLoader(activity, uri, null, selection, null, sortOrder);
         }
         return null;
+    }
+
+    /**
+     * The wallet this screen is about. The marks under the strip come from this same rule, so a
+     * day is marked when the list has something to show for it and not when it has not.
+     *
+     * The wallet id is written into the text and not bound, so neither query carries arguments.
+     */
+    private static String walletSelection() {
+        long currentWallet = PreferenceManager.getCurrentWallet();
+        if (currentWallet == PreferenceManager.TOTAL_WALLET_ID) {
+            return Contract.Transaction.WALLET_COUNT_IN_TOTAL + " = 1";
+        }
+        return Contract.Transaction.WALLET_ID + " = " + currentWallet;
+    }
+
+    /**
+     * The days this wallet has transactions on, one row each, which is all the strip needs to
+     * know.
+     *
+     * ponytail: few rows come back and that says nothing about the work. The provider has no
+     * query that answers this on its own, so the dates come from the transaction query, whose
+     * GROUP BY leaves the wallet clause outside a subquery SQLite cannot push it into. EXPLAIN
+     * QUERY PLAN answers SCAN t, every transaction row in every wallet, and it answers the same
+     * for the day list this screen already runs on every day tapped. Tapping a day does not run
+     * this one again, so a tap costs what it always did, and the second scan falls on opening the
+     * screen, changing wallet, pulling to refresh, and any change the cursor is watching for. A
+     * provider uri of its own is the way out.
+     */
+    private final LoaderManager.LoaderCallbacks<Cursor> mMarkedDaysCallbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
+
+        @NonNull
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
+            return new CursorLoader(requireContext(), DataContentProvider.CONTENT_TRANSACTIONS,
+                    MARKED_DAYS_PROJECTION, walletSelection(), null, null);
+        }
+
+        @Override
+        public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
+            if (mTimelineView != null) {
+                mTimelineView.setMarkedDays(readDays(cursor));
+            }
+        }
+
+        @Override
+        public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+            if (mTimelineView != null) {
+                mTimelineView.setMarkedDays(Collections.emptySet());
+            }
+        }
+
+    };
+
+    /**
+     * The dates of a marked days cursor, as the keys the strip matches its cells against.
+     */
+    private static Set<Integer> readDays(@Nullable Cursor cursor) {
+        if (cursor == null) {
+            return Collections.emptySet();
+        }
+        Set<Integer> days = new HashSet<>(cursor.getCount());
+        int index = cursor.getColumnIndex(COLUMN_DAY);
+        for (cursor.moveToPosition(-1); cursor.moveToNext(); ) {
+            int day = dayKey(cursor.getString(index));
+            if (day != NO_DAY) {
+                days.add(day);
+            }
+        }
+        return days;
+    }
+
+    /**
+     * One yyyy-MM-dd date read as the key the strip matches its cells against, or {@link #NO_DAY}
+     * for anything that is not one. The month is put in the strip's terms here, counted from zero.
+     *
+     * DATE() returns either that spelling or null, so a value SQLite could not read arrives as
+     * null and a value it could is ten characters of digits and dashes.
+     */
+    static int dayKey(@Nullable String date) {
+        if (date == null || date.length() != 10) {
+            return NO_DAY;
+        }
+        return TimelineView.dayKey(
+                Integer.parseInt(date.substring(0, 4)),
+                Integer.parseInt(date.substring(5, 7)) - 1,
+                Integer.parseInt(date.substring(8, 10)));
     }
 
     @Override
@@ -232,6 +328,9 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
                 mTimelineView.getSelectedMonth(),
                 mTimelineView.getSelectedDay()
         );
+        // a pull is what somebody does when the screen looks wrong, and the marks are part of
+        // what they are looking at
+        loadMarkedDays();
         mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.REFRESHING);
     }
 
@@ -258,6 +357,7 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
                 mTimelineView.getSelectedMonth(),
                 mTimelineView.getSelectedDay()
         );
+        loadMarkedDays();
         mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.LOADING);
     }
 
@@ -267,5 +367,14 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
         arguments.putInt(ARG_SELECTED_MONTH, month);
         arguments.putInt(ARG_SELECTED_DAY, day);
         getLoaderManager().restartLoader(DEFAULT_LOADER_ID, arguments, this);
+    }
+
+    /**
+     * Read again for a wallet the query cannot be told about, since the wallet is read where the
+     * selection is built. A transaction added or removed inside this wallet needs none of this,
+     * because the cursor is watching the transactions it came from.
+     */
+    private void loadMarkedDays() {
+        getLoaderManager().restartLoader(MARKED_DAYS_LOADER_ID, null, mMarkedDaysCallbacks);
     }
 }

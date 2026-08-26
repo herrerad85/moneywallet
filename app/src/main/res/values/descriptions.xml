@@ -43,4 +43,5 @@
     <string name="description_setting_category_icon">"Setting category icon"</string>
     <string name="description_show_subcategories">"Show subcategories of %1$s"</string>
     <string name="description_hide_subcategories">"Hide subcategories of %1$s"</string>
+    <string name="description_day_has_transactions">"Has transactions"</string>
 </resources>

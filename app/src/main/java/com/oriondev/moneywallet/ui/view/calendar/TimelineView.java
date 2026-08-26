@@ -22,6 +22,7 @@ package com.oriondev.moneywallet.ui.view.calendar;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Build;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,7 +38,9 @@ import com.oriondev.moneywallet.R;
 
 import android.icu.text.DateFormatSymbols;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Locale;
+import java.util.Set;
 
 import static com.oriondev.moneywallet.utils.DateUtils.getCalendarDaysBetween;
 
@@ -55,6 +58,8 @@ public class TimelineView extends RecyclerView {
     private LinearLayoutManager layoutManager;
     private OnDateSelectedListener onDateSelectedListener;
     private MonthView.DateLabelAdapter dateLabelAdapter;
+
+    private Set<Integer> markedDays = Collections.emptySet();
 
     private int startYear = 1970, startMonth = 0, startDay = 1;
     private int selectedYear, selectedMonth, selectedDay;
@@ -234,6 +239,26 @@ public class TimelineView extends RecyclerView {
         this.onDateSelectedListener = onDateSelectedListener;
     }
 
+    /**
+     * The days that get a mark under the number, as the keys {@link #dayKey} builds. The strip
+     * runs from 1900 to 2100 and binds a cell as it is scrolled into view, so the marked days are
+     * held here and are not asked for one cell at a time.
+     */
+    public void setMarkedDays(@NonNull Set<Integer> markedDays) {
+        this.markedDays = markedDays;
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    /**
+     * A year, month and day read as one number. The month is the {@link Calendar} one, counted
+     * from zero, so a caller holding a month counted from one subtracts before it calls this.
+     */
+    public static int dayKey(int year, int month, int day) {
+        return (year * 100 + month) * 100 + day;
+    }
+
     public void setDateLabelAdapter(@Nullable MonthView.DateLabelAdapter dateLabelAdapter) {
         this.dateLabelAdapter = dateLabelAdapter;
     }
@@ -338,7 +363,8 @@ public class TimelineView extends RecyclerView {
             int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
             int day = calendar.get(Calendar.DAY_OF_MONTH);
             boolean isToday = DateUtils.isToday(calendar.getTimeInMillis());
-            holder.bind(position, year, month, day, dayOfWeek,position == selectedPosition, isToday);
+            holder.bind(position, year, month, day, dayOfWeek,position == selectedPosition, isToday,
+                    markedDays.contains(dayKey(year, month, day)));
         }
 
         @Override
@@ -351,6 +377,7 @@ public class TimelineView extends RecyclerView {
 
         private final TextView lblDay;
         private final TextView lblDate;
+        private final DotView dotMarker;
 
         private int position;
         private int year, month, day;
@@ -360,6 +387,7 @@ public class TimelineView extends RecyclerView {
 
             lblDay = root.findViewById(R.id.mti_timeline_lbl_day);
             lblDate = root.findViewById(R.id.mti_timeline_lbl_date);
+            dotMarker = root.findViewById(R.id.mti_timeline_dot_marker);
 
             lblDay.setTextColor(lblDayColor);
             lblDay.setTextSize(TypedValue.COMPLEX_UNIT_PX, dayLabelSize(lblDay, root));
@@ -375,7 +403,7 @@ public class TimelineView extends RecyclerView {
             });
         }
 
-        void bind(int position, int year, int month, int day, int dayOfWeek, boolean selected, boolean isToday) {
+        void bind(int position, int year, int month, int day, int dayOfWeek, boolean selected, boolean isToday, boolean marked) {
             this.position = position;
             this.year = year;
             this.month = month;
@@ -386,8 +414,11 @@ public class TimelineView extends RecyclerView {
             // so the accent color is the only mark on a cell and it marks today and the shown day
             // alike. Weight is what separates them: the shown day is the bold one.
             // lblDate.setBackgroundResource(selected ? R.drawable.mti_bg_lbl_date_selected : (isToday ? R.drawable.mti_bg_lbl_date_today : 0));
-            lblDate.setTextColor(selected || isToday ? lblDateSelectedColor : lblDateColor);
+            int dateColor = selected || isToday ? lblDateSelectedColor : lblDateColor;
+            lblDate.setTextColor(dateColor);
             lblDate.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
+            dotMarker.setColor(dateColor);
+            dotMarker.setVisibility(marked ? VISIBLE : INVISIBLE);
         }
     }
 }
