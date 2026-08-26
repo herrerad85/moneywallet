@@ -1,0 +1,3 @@
+New: a budget can repeat, opening its next period on its own. A transactions list says what came in and what went out. The calendar day strip marks the days that have transactions.
+
+Fixes: opening a search result shows the transaction, not the editor. The calendar keeps the day you picked, and no longer lands on 1 January of the wrong year. A saving refuses a withdraw larger than what the goal will hold. Restoring a backup opens the app on your ledger.
