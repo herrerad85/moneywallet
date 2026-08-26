@@ -20,9 +20,9 @@ This fork is independent and is not endorsed by or affiliated with the original 
 ![Showcase](pictures/showcase.png)
 
 ## Status
-Tallybook is published on F-Droid and actively maintained. The current version in this repository is **1.5.0**, so F-Droid may show an older one.
+Tallybook is published on F-Droid and actively maintained. The current version in this repository is **1.6.0**, so F-Droid may show an older one.
 
-1.5.0 fixes Android's own backup, which stored nothing, so a restore brought back an empty app. It also lets you start a transaction from a person's screen with that person already attached, and clears a run of money, color and import bugs. Before that: 1.4.0 added duplicating a transaction and hiding a category's child categories, then WebDAV backup (1.1.0), a per app language setting (1.2.0), and a map you can point at any tile server (1.3.0).
+1.6.0 lets a budget repeat, says what came in and what went out on a transactions list, and marks the days that have transactions in the calendar day strip. It also stops a search result opening the editor instead of the transaction, keeps the calendar on the day you picked, and checks a saving withdraw against what the goal will hold. Before that: 1.5.0 fixed Android's own backup, which stored nothing, so a restore brought back an empty app, and 1.4.0 added duplicating a transaction and hiding a category's child categories, after WebDAV backup (1.1.0), a per app language setting (1.2.0), and a map you can point at any tile server (1.3.0).
 
 Earlier work, all shipped: Android 14/15 compatibility on a modernized FOSS/OpenStreetMap build, the Android 12+ manifest and PendingIntent updates, a fix for the startup crash caused by a legacy auto-backup path (reported upstream as [#177](https://github.com/AndreAle94/moneywallet/issues/177) and [#286](https://github.com/AndreAle94/moneywallet/issues/286)), the rebrand to a new name and application id, a verified backup and restore migration path (see [MIGRATION.md](MIGRATION.md)), export and import under scoped storage, a local-folder backup option that works with file sync tools, and Android 15 edge-to-edge UI polish.
 
