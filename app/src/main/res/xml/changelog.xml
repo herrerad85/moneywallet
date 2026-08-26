@@ -20,6 +20,22 @@
 
 <changelog>
 
+    <version versionName="1.6.0" versionDate="Aug 26, 2026">
+        <change>[b]New![/b] A budget can repeat, opening its next period on its own when the one before it ends.</change>
+        <change>[b]New![/b] A transactions list says what came in and what went out over the period it is showing.</change>
+        <change>[b]New![/b] The calendar day strip marks the days that have transactions.</change>
+        <change>Opening a search result shows the transaction, where before it opened the editor.</change>
+        <change>The calendar keeps the day you picked, and shows which day that is when it is not today.</change>
+        <change>The calendar no longer lands on 1 January of the year before the one you asked for.</change>
+        <change>A detail panel survives a rotation on a screen wide enough to change how many panels fit.</change>
+        <change>Editing a debt's master transaction moves the debt with it.</change>
+        <change>A saving's deposit or withdraw no longer lets you move it to another wallet.</change>
+        <change>A saving refuses a withdraw larger than what the goal will hold, not just larger than what it holds today.</change>
+        <change>Restoring a backup opens the app on your ledger instead of the welcome screen.</change>
+        <change>Text is mirrored in a right to left layout in the places it was still left aligned.</change>
+        <change>Corrected the French wording shown after an import and in the two backup success messages.</change>
+    </version>
+
     <version versionName="1.5.0" versionDate="Aug 22, 2026">
         <change>[b]New![/b] Start a transaction from a person's screen with that person already attached.</change>
         <change>Android's own backup stored nothing, so a restore brought back an empty app. It now carries the ledger.</change>
