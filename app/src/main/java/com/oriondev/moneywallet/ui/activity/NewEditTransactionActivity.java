@@ -124,6 +124,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     private static final String SS_DEBT_ID = "NewEditTransactionActivity::SavedState::DebtId";
     private static final String SS_SAVING_ID = "NewEditTransactionActivity::SavedState::SavingId";
     private static final String SS_SAVING_COMPLETED = "NewEditTransactionActivity::SavedState::SavingCompleted";
+    private static final String SS_DEBT_PAYMENT = "NewEditTransactionActivity::SavedState::DebtPayment";
 
     private TextView mCurrencyTextView;
     private TextView mMoneyTextView;
@@ -153,6 +154,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     private Long mDebtId = null;
     private Long mSavingId = null;
     private boolean mSavingCompleted = false;
+    private boolean mDebtPayment = false;
 
     private MoneyFormatter mMoneyFormatter = MoneyFormatter.getInstance();
 
@@ -881,11 +883,20 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
             mDebtId = savedInstanceState.containsKey(SS_DEBT_ID) ? savedInstanceState.getLong(SS_DEBT_ID) : null;
             mSavingId = savedInstanceState.containsKey(SS_SAVING_ID) ? savedInstanceState.getLong(SS_SAVING_ID) : null;
             mSavingCompleted = savedInstanceState.getBoolean(SS_SAVING_COMPLETED, false);
+            mDebtPayment = savedInstanceState.getBoolean(SS_DEBT_PAYMENT, false);
+        }
+        if (savedInstanceState == null && category != null) {
+            String categoryTag = category.getTag();
+            mDebtPayment = Contract.CategoryTag.PAID_DEBT.equals(categoryTag)
+                    || Contract.CategoryTag.PAID_CREDIT.equals(categoryTag);
         }
         // depending on the type we must hide pickers that are now allowed to be changed
         switch (mType) {
             case TYPE_DEBT:
                 mCategoryEditText.setVisibility(View.GONE);
+                if (mDebtPayment) {
+                    mWalletEditText.setVisibility(View.GONE);
+                }
                 break;
             case TYPE_SAVING:
                 mCategoryEditText.setVisibility(View.GONE);
@@ -961,6 +972,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
             outState.putLong(SS_SAVING_ID, mSavingId);
         }
         outState.putBoolean(SS_SAVING_COMPLETED, mSavingCompleted);
+        outState.putBoolean(SS_DEBT_PAYMENT, mDebtPayment);
     }
 
     @Override
