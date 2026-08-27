@@ -46,6 +46,7 @@ import java.util.Locale;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.fail;
 
 /**
  * Created by andrea on 28/08/18.
@@ -1391,9 +1392,203 @@ public class SQLDatabaseTest {
         checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), storedIcon, "rent payment", date, null, walletId, "note-1", null, 5000L, false, null, "tag-1");
     }
 
+    /**
+     * A debt is read in the currency of its wallet and what is left to settle is that amount less
+     * its payments, added up with no currency in the sum. The payments stay in the wallet they
+     * were filed against when the debt moves, so the move is refused.
+     */
+    @Test
+    public void movingADebtAwayFromTheCurrencyItsPaymentsAreInIsRefused() throws Exception {
+        long euroWallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long dollarWallet = insertWallet("Test wallet 2", "encoded-icon-2", "USD", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        long paidCategoryId = getSystemCategory(Contract.CategoryTag.PAID_DEBT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, euroWallet, "note-1", null, 2000L, false, null, "tag-1", false);
+        insertTransaction(500L, date, "payment", paidCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.DEBT, euroWallet, null, "payment-note", null, null, debtId, true, true, null, null, "tag-payment");
+        try {
+            updateDebt(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, dollarWallet, "note-1", null, 2000L, false, null, "tag-1");
+            fail("The debt was moved away from the currency its payments are in");
+        } catch (SQLiteDataException e) {
+            assertEquals(Contract.ErrorCode.WALLETS_NOT_CONSISTENT, e.getErrorCode());
+        }
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, euroWallet, "note-1", null, 2000L, false, null, "tag-1");
+    }
+
+    /**
+     * And the move back is allowed. A ledger that was moved across currencies before any of this
+     * existed holds a debt in one currency and its payments in another, and the move that puts it
+     * right is the one a check made against the debt's own wallet would refuse hardest. Deleting
+     * the debt would then be the only way out, and that takes the payments with it.
+     */
+    @Test
+    public void movingADebtBackToTheCurrencyItsPaymentsAreInIsAllowed() throws Exception {
+        long euroWallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long dollarWallet = insertWallet("Test wallet 2", "encoded-icon-2", "USD", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        long paidCategoryId = getSystemCategory(Contract.CategoryTag.PAID_DEBT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        // The debt is held in euro and its payment sits in the dollar wallet.
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, euroWallet, "note-1", null, 2000L, false, null, "tag-1", false);
+        insertTransaction(500L, date, "payment", paidCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.DEBT, dollarWallet, null, "payment-note", null, null, debtId, true, true, null, null, "tag-payment");
+        assertEquals(1, updateDebt(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, dollarWallet, "note-1", null, 2000L, false, null, "tag-1"));
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, dollarWallet, "note-1", null, 2000L, false, null, "tag-1");
+    }
+
+    /**
+     * A mismatched debt can still be moved between two wallets of the currency it is read in. That
+     * move puts nothing right and takes nothing further wrong, and refusing it would leave a
+     * legacy ledger with one permitted wallet and deletion as the only other way out.
+     */
+    @Test
+    public void movingAMismatchedDebtWithinItsOwnCurrencyIsAllowed() throws Exception {
+        long euroWallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long otherEuroWallet = insertWallet("Test wallet 2", "encoded-icon-2", "EUR", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        long dollarWallet = insertWallet("Test wallet 3", "encoded-icon-3", "USD", "note-wallet-3", true, 2000L, false, "tag-wallet-3");
+        long paidCategoryId = getSystemCategory(Contract.CategoryTag.PAID_DEBT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, euroWallet, "note-1", null, 2000L, false, null, "tag-1", false);
+        insertTransaction(500L, date, "payment", paidCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.DEBT, dollarWallet, null, "payment-note", null, null, debtId, true, true, null, null, "tag-payment");
+        assertEquals(1, updateDebt(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, otherEuroWallet, "note-1", null, 2000L, false, null, "tag-1"));
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, otherEuroWallet, "note-1", null, 2000L, false, null, "tag-1");
+    }
+
+    /**
+     * And a third currency is still refused, which is what separates the case above from no check
+     * at all on a mismatched debt.
+     */
+    @Test
+    public void movingAMismatchedDebtToAThirdCurrencyIsRefused() throws Exception {
+        long euroWallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long dollarWallet = insertWallet("Test wallet 2", "encoded-icon-2", "USD", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        long poundWallet = insertWallet("Test wallet 3", "encoded-icon-3", "GBP", "note-wallet-3", true, 2000L, false, "tag-wallet-3");
+        long paidCategoryId = getSystemCategory(Contract.CategoryTag.PAID_DEBT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, euroWallet, "note-1", null, 2000L, false, null, "tag-1", false);
+        insertTransaction(500L, date, "payment", paidCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.DEBT, dollarWallet, null, "payment-note", null, null, debtId, true, true, null, null, "tag-payment");
+        try {
+            updateDebt(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, poundWallet, "note-1", null, 2000L, false, null, "tag-1");
+            fail("The debt was moved to a currency matching neither what it holds nor its payments");
+        } catch (SQLiteDataException e) {
+            assertEquals(Contract.ErrorCode.WALLETS_NOT_CONSISTENT, e.getErrorCode());
+        }
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, euroWallet, "note-1", null, 2000L, false, null, "tag-1");
+    }
+
+    /**
+     * A debt whose payments are already spread over two currencies is still held to those two. It
+     * cannot be put fully right by any single wallet, which is a reason to leave both of the
+     * currencies it holds open and not a reason to let it go anywhere at all.
+     */
+    @Test
+    public void movingAMixedDebtToACurrencyItHoldsNoneOfIsRefused() throws Exception {
+        long euroWallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long dollarWallet = insertWallet("Test wallet 2", "encoded-icon-2", "USD", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        long poundWallet = insertWallet("Test wallet 3", "encoded-icon-3", "GBP", "note-wallet-3", true, 2000L, false, "tag-wallet-3");
+        long paidCategoryId = getSystemCategory(Contract.CategoryTag.PAID_DEBT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, euroWallet, "note-1", null, 2000L, false, null, "tag-1", false);
+        insertTransaction(500L, date, "payment", paidCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.DEBT, euroWallet, null, "payment-note", null, null, debtId, true, true, null, null, "tag-payment");
+        insertTransaction(500L, date, "payment", paidCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.DEBT, dollarWallet, null, "payment-note", null, null, debtId, true, true, null, null, "tag-payment");
+        try {
+            updateDebt(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, poundWallet, "note-1", null, 2000L, false, null, "tag-1");
+            fail("The debt was moved to a currency it holds nothing in");
+        } catch (SQLiteDataException e) {
+            assertEquals(Contract.ErrorCode.WALLETS_NOT_CONSISTENT, e.getErrorCode());
+        }
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, euroWallet, "note-1", null, 2000L, false, null, "tag-1");
+    }
+
+    /**
+     * And either of the two currencies it does hold is still open to it.
+     */
+    @Test
+    public void movingAMixedDebtToOneOfItsOwnCurrenciesIsAllowed() throws Exception {
+        long euroWallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long dollarWallet = insertWallet("Test wallet 2", "encoded-icon-2", "USD", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        long paidCategoryId = getSystemCategory(Contract.CategoryTag.PAID_DEBT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, euroWallet, "note-1", null, 2000L, false, null, "tag-1", false);
+        insertTransaction(500L, date, "payment", paidCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.DEBT, euroWallet, null, "payment-note", null, null, debtId, true, true, null, null, "tag-payment");
+        insertTransaction(500L, date, "payment", paidCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.DEBT, dollarWallet, null, "payment-note", null, null, debtId, true, true, null, null, "tag-payment");
+        assertEquals(1, updateDebt(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, dollarWallet, "note-1", null, 2000L, false, null, "tag-1"));
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, dollarWallet, "note-1", null, 2000L, false, null, "tag-1");
+    }
+
+    /**
+     * A debt with nothing filed against it strands nothing, so it can be moved anywhere. A debt
+     * given its master transaction strands nothing either, since updateDebt carries that
+     * transaction to the new wallet with it.
+     */
+    @Test
+    public void movingADebtThatStrandsNothingGoesThrough() throws Exception {
+        long euroWallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long dollarWallet = insertWallet("Test wallet 2", "encoded-icon-2", "USD", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, euroWallet, "note-1", null, 2000L, false, null, "tag-1", true);
+        assertEquals(1, updateDebt(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, dollarWallet, "note-1", null, 2000L, false, null, "tag-1"));
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, dollarWallet, "note-1", null, 2000L, false, null, "tag-1");
+        assertEquals(dollarWallet, masterTransactionWallet(debtId));
+    }
+
+    /**
+     * The same move made from the other side. A debt's master transaction still offers its wallet,
+     * and the sync carries that wallet onto the debt, so this reaches the debt without the debt
+     * editor being opened.
+     *
+     * The transaction is asserted back where it started as well as the debt. Nothing here runs
+     * inside a database transaction, so a refusal raised after the row was written would leave the
+     * two in different wallets, which is worse than the move it refused.
+     */
+    @Test
+    public void movingTheMasterTransactionToAnotherCurrencyMovesNothing() throws Exception {
+        long euroWallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long dollarWallet = insertWallet("Test wallet 2", "encoded-icon-2", "USD", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        long categoryId = getSystemCategory(Contract.CategoryTag.DEBT);
+        long paidCategoryId = getSystemCategory(Contract.CategoryTag.PAID_DEBT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, euroWallet, "note-1", null, 2000L, false, null, "tag-1", true);
+        // The payment is what the move would strand. Without one the debt has nothing left behind
+        // and the move is allowed, which movingADebtThatStrandsNothingGoesThrough pins.
+        insertTransaction(500L, date, "payment", paidCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.DEBT, euroWallet, null, "payment-note", null, null, debtId, true, true, null, null, "tag-payment");
+        long transactionId = masterTransactionId(debtId);
+        try {
+            updateTransaction(transactionId, 2000L, date, "desc-1", categoryId,
+                    Contract.Direction.INCOME, Contract.TransactionType.DEBT, dollarWallet, null,
+                    "note-1", null, null, debtId, true, true, null, null, "tag-transaction");
+            fail("The master transaction was moved to a wallet in another currency");
+        } catch (SQLiteDataException e) {
+            assertEquals(Contract.ErrorCode.WALLETS_NOT_CONSISTENT, e.getErrorCode());
+        }
+        checkDebtId(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", date, null, euroWallet, "note-1", null, 2000L, false, null, "tag-1");
+        assertEquals(euroWallet, masterTransactionWallet(debtId));
+    }
+
+    private long masterTransactionWallet(long debtId) {
+        Cursor cursor = mDatabase.getTransaction(masterTransactionId(debtId),
+                new String[] {Contract.Transaction.WALLET_ID});
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        cursor.moveToFirst();
+        long walletId = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.WALLET_ID));
+        cursor.close();
+        return walletId;
+    }
+
     private long masterTransactionId(long debtId) {
+        // By category, since a debt that also carries a payment has more than one transaction and
+        // only one of them is the master. Every debt here is a debt and not a credit, so the debt
+        // system category is the only one this has to match.
         Cursor cursor = mDatabase.getTransactions(new String[] {Contract.Transaction.ID},
-                Contract.Transaction.DEBT_ID + " = ?", new String[] {String.valueOf(debtId)}, null);
+                Contract.Transaction.DEBT_ID + " = ? AND " + Contract.Transaction.CATEGORY_ID + " = ?",
+                new String[] {String.valueOf(debtId), String.valueOf(getSystemCategory(Contract.CategoryTag.DEBT))}, null);
         assertNotNull(cursor);
         assertEquals(1, cursor.getCount());
         cursor.moveToFirst();
@@ -1801,6 +1996,78 @@ public class SQLDatabaseTest {
         // now check that both savings have been successfully update
         checkSavingId(id2, "desc-1-edited", "encoded-icon-edited", 3L, 100L, id1, exp, true, "note-1-edited", "tag-1-edited");
         checkSavingId(id3, "desc-2-edited", "encoded-icon-edited", 50L, 73000L, id1, null, false, "note-2-edited", "tag-2-edited");
+    }
+
+    /**
+     * A saving is read in the currency of its wallet and its progress is worked out from its
+     * deposits and withdrawals, added up with no currency in the sum. They stay in the wallet they
+     * were filed against when the saving moves, so the move is refused.
+     */
+    @Test
+    public void movingASavingAwayFromTheCurrencyItsDepositsAreInIsRefused() throws Exception {
+        long euroWallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long dollarWallet = insertWallet("Test wallet 2", "encoded-icon-2", "USD", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        long depositCategoryId = getSystemCategory(Contract.CategoryTag.SAVING_DEPOSIT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long savingId = insertSaving("desc-1", "encoded-icon", 0L, 10000L, euroWallet, null, false, "note-1", "tag-1");
+        insertTransaction(500L, date, "deposit", depositCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.SAVING, euroWallet, null, "deposit-note", null, savingId, null, true, true, null, null, "tag-deposit");
+        try {
+            updateSaving(savingId, "desc-1", "encoded-icon", 0L, 10000L, dollarWallet, null, false, "note-1", "tag-1");
+            fail("The saving was moved away from the currency its deposits are in");
+        } catch (SQLiteDataException e) {
+            assertEquals(Contract.ErrorCode.WALLETS_NOT_CONSISTENT, e.getErrorCode());
+        }
+        checkSavingId(savingId, "desc-1", "encoded-icon", 0L, 10000L, euroWallet, null, false, "note-1", "tag-1");
+    }
+
+    /**
+     * And the move back is allowed, for the reason spelled out on the debt half of this,
+     * movingADebtBackToTheCurrencyItsPaymentsAreInIsAllowed.
+     */
+    @Test
+    public void movingASavingBackToTheCurrencyItsDepositsAreInIsAllowed() throws Exception {
+        long euroWallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long dollarWallet = insertWallet("Test wallet 2", "encoded-icon-2", "USD", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        long depositCategoryId = getSystemCategory(Contract.CategoryTag.SAVING_DEPOSIT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long savingId = insertSaving("desc-1", "encoded-icon", 0L, 10000L, euroWallet, null, false, "note-1", "tag-1");
+        insertTransaction(500L, date, "deposit", depositCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.SAVING, dollarWallet, null, "deposit-note", null, savingId, null, true, true, null, null, "tag-deposit");
+        assertEquals(1, updateSaving(savingId, "desc-1", "encoded-icon", 0L, 10000L, dollarWallet, null, false, "note-1", "tag-1"));
+        checkSavingId(savingId, "desc-1", "encoded-icon", 0L, 10000L, dollarWallet, null, false, "note-1", "tag-1");
+    }
+
+    /**
+     * And the wallet is still a field you can change. Without this case a guard that refused every
+     * move, or one that refused every save naming a wallet, passes the refusal above just as well.
+     * The debt half of it is editingTheMasterTransactionMovesTheDebt, which moves a debt between
+     * two wallets that agree.
+     */
+    @Test
+    public void movingASavingToAWalletInTheSameCurrencyGoesThrough() throws Exception {
+        long walletId = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long otherWalletId = insertWallet("Test wallet 2", "encoded-icon-2", "EUR", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        long depositCategoryId = getSystemCategory(Contract.CategoryTag.SAVING_DEPOSIT);
+        Date date = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long savingId = insertSaving("desc-1", "encoded-icon", 0L, 10000L, walletId, null, false, "note-1", "tag-1");
+        insertTransaction(500L, date, "deposit", depositCategoryId, Contract.Direction.EXPENSE,
+                Contract.TransactionType.SAVING, walletId, null, "deposit-note", null, savingId, null, true, true, null, null, "tag-deposit");
+        assertEquals(1, updateSaving(savingId, "desc-1", "encoded-icon", 0L, 10000L, otherWalletId, null, false, "note-1", "tag-1"));
+        checkSavingId(savingId, "desc-1", "encoded-icon", 0L, 10000L, otherWalletId, null, false, "note-1", "tag-1");
+    }
+
+    /**
+     * A saving with nothing filed against it strands nothing, so it can be moved anywhere. A goal
+     * created against the wrong wallet and corrected straight away is the ordinary case of this.
+     */
+    @Test
+    public void movingASavingThatStrandsNothingGoesThrough() throws Exception {
+        long euroWallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long dollarWallet = insertWallet("Test wallet 2", "encoded-icon-2", "USD", "note-wallet-2", true, 2000L, false, "tag-wallet-2");
+        long savingId = insertSaving("desc-1", "encoded-icon", 0L, 10000L, euroWallet, null, false, "note-1", "tag-1");
+        assertEquals(1, updateSaving(savingId, "desc-1", "encoded-icon", 0L, 10000L, dollarWallet, null, false, "note-1", "tag-1"));
+        checkSavingId(savingId, "desc-1", "encoded-icon", 0L, 10000L, dollarWallet, null, false, "note-1", "tag-1");
     }
 
     /**

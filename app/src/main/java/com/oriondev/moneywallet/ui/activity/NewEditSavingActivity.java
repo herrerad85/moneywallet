@@ -44,10 +44,12 @@ import com.oriondev.moneywallet.picker.MoneyPicker;
 import com.oriondev.moneywallet.picker.WalletPicker;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.storage.database.SQLiteDataException;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.view.text.MaterialEditText;
 import com.oriondev.moneywallet.ui.view.text.NonEmptyTextValidator;
 import com.oriondev.moneywallet.ui.view.text.Validator;
+import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.DateFormatter;
 import com.oriondev.moneywallet.utils.DateUtils;
@@ -300,14 +302,26 @@ public class NewEditSavingActivity extends NewEditItemActivity implements IconPi
             contentValues.put(Contract.Saving.COMPLETE, false);
             contentValues.put(Contract.Saving.NOTE, mNoteEditText.getTextAsString());
             ContentResolver contentResolver = getContentResolver();
-            switch (mode) {
-                case NEW_ITEM:
-                    contentResolver.insert(DataContentProvider.CONTENT_SAVINGS, contentValues);
-                    break;
-                case EDIT_ITEM:
-                    Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, getItemId());
-                    contentResolver.update(uri, contentValues, null, null);
-                    break;
+            try {
+                switch (mode) {
+                    case NEW_ITEM:
+                        contentResolver.insert(DataContentProvider.CONTENT_SAVINGS, contentValues);
+                        break;
+                    case EDIT_ITEM:
+                        Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, getItemId());
+                        contentResolver.update(uri, contentValues, null, null);
+                        break;
+                }
+            } catch (SQLiteDataException e) {
+                if (e.getErrorCode() != Contract.ErrorCode.WALLETS_NOT_CONSISTENT) {
+                    throw e;
+                }
+                ThemedDialog.buildMaterialDialog(this)
+                        .title(R.string.title_error)
+                        .content(R.string.error_wallet_currency_not_consistent)
+                        .positiveText(android.R.string.ok)
+                        .show();
+                return;
             }
             setResult(Activity.RESULT_OK);
             finish();

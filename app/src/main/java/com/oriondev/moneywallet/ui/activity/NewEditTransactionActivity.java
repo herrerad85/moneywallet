@@ -55,6 +55,7 @@ import com.oriondev.moneywallet.picker.PlacePicker;
 import com.oriondev.moneywallet.picker.WalletPicker;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.storage.database.SQLiteDataException;
 import com.oriondev.moneywallet.storage.database.TransactionContentValuesBuilder;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.view.AttachmentView;
@@ -1230,17 +1231,29 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                     .attachmentIds(Contract.getObjectIds(mAttachmentPicker.getCurrentAttachments()))
                     .build();
             ContentResolver contentResolver = getContentResolver();
-            switch (mode) {
-                case NEW_ITEM:
-                    contentResolver.insert(DataContentProvider.CONTENT_TRANSACTIONS, contentValues);
-                    if (mSavingId != null && mSavingCompleted) {
-                        setSavingCompleted(contentResolver, mSavingId);
-                    }
-                    break;
-                case EDIT_ITEM:
-                    Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSACTIONS, getItemId());
-                    contentResolver.update(uri, contentValues, null, null);
-                    break;
+            try {
+                switch (mode) {
+                    case NEW_ITEM:
+                        contentResolver.insert(DataContentProvider.CONTENT_TRANSACTIONS, contentValues);
+                        if (mSavingId != null && mSavingCompleted) {
+                            setSavingCompleted(contentResolver, mSavingId);
+                        }
+                        break;
+                    case EDIT_ITEM:
+                        Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSACTIONS, getItemId());
+                        contentResolver.update(uri, contentValues, null, null);
+                        break;
+                }
+            } catch (SQLiteDataException e) {
+                if (e.getErrorCode() != Contract.ErrorCode.WALLETS_NOT_CONSISTENT) {
+                    throw e;
+                }
+                ThemedDialog.buildMaterialDialog(this)
+                        .title(R.string.title_error)
+                        .content(R.string.error_debt_wallet_currency_not_consistent)
+                        .positiveText(android.R.string.ok)
+                        .show();
+                return;
             }
             mAttachmentPicker.cleanUp(false);
             setResult(RESULT_OK);
