@@ -99,6 +99,14 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
      */
     public static final String DUPLICATE_ID = "NewEditTransactionActivity::DuplicateId";
 
+    /**
+     * The wallet a new transaction should open on, when the caller knows one. Without it the
+     * editor opens on whichever wallet the app is currently showing, which is the right answer
+     * from inside the app and the wrong one from a home screen widget, where the wallet the user
+     * tapped is the one they meant.
+     */
+    public static final String WALLET_ID = "NewEditTransactionActivity::WalletId";
+
     public static final int TYPE_STANDARD = 0;
     public static final int TYPE_TRANSFER = 1;
     public static final int TYPE_DEBT = 2;
@@ -552,7 +560,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                             Contract.Wallet.START_MONEY,
                             Contract.Wallet.TOTAL_MONEY
                     };
-                    long currentWallet = PreferenceManager.getCurrentWallet();
+                    long currentWallet = intent.getLongExtra(WALLET_ID, PreferenceManager.getCurrentWallet());
                     Cursor cursor;
                     if (currentWallet == PreferenceManager.TOTAL_WALLET_ID) {
                         Uri uri = DataContentProvider.CONTENT_WALLETS;

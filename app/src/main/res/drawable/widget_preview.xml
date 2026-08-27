@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2018.
+  ~
+  ~ This file is part of MoneyWallet.
+  ~
+  ~ MoneyWallet is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ MoneyWallet is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!--
+  ~ What the widget picker shows on Android 11 and earlier, where previewLayout is not read and
+  ~ the picker would otherwise fall back to the app icon. It stands in for the same thing the
+  ~ layout draws, a wallet name over a balance with the add button beside them.
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="180dp"
+    android:height="60dp"
+    android:viewportWidth="180"
+    android:viewportHeight="60" >
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16,4 L164,4 A12,12 0 0 1 176,16 L176,44 A12,12 0 0 1 164,56 L16,56 A12,12 0 0 1 4,44 L4,16 A12,12 0 0 1 16,4 Z" />
+    <path
+        android:fillColor="#B3424242"
+        android:pathData="M16,4 L164,4 A12,12 0 0 1 176,16 L176,20 L4,20 L4,16 A12,12 0 0 1 16,4 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14,9 L14,15 M20,9 L20,15 M26,9 L26,15 Z" />
+    <path
+        android:fillColor="#DE000000"
+        android:pathData="M16,32 L102,32 L102,45 L16,45 Z" />
+    <path
+        android:fillColor="#DE000000"
+        android:pathData="M152,32 L156,32 L156,36 L160,36 L160,40 L156,40 L156,44 L152,44 L152,40 L148,40 L148,36 L152,36 Z" />
+
+</vector>

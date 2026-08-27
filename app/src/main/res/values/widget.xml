@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2018.
+  ~
+  ~ This file is part of MoneyWallet.
+  ~
+  ~ MoneyWallet is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ MoneyWallet is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!--
+  ~ A card under a strip that names the app.
+  ~
+  ~ The strip carries an alpha and is drawn over the card, not over the home screen, so what it
+  ~ composites against is the card behind it and never the wallpaper. That is why values-night
+  ~ turns it over as well: dark ink on a white card becomes light ink on a dark one, and the same
+  ~ value carried across would leave the strip and the card the same shade.
+  -->
+<resources>
+    <color name="widget_background">#FFFFFFFF</color>
+    <color name="widget_header_background">#B3424242</color>
+    <color name="widget_header_text">#FFFFFFFF</color>
+    <color name="widget_text_primary">#DE000000</color>
+    <color name="widget_text_secondary">#8A000000</color>
+    <dimen name="widget_background_radius">16dp</dimen>
+    <dimen name="widget_padding">12dp</dimen>
+    <dimen name="widget_padding_vertical">4dp</dimen>
+    <dimen name="widget_header_padding">4dp</dimen>
+    <dimen name="widget_button_padding">12dp</dimen>
+    <dimen name="widget_touch_target">44dp</dimen>
+    <dimen name="widget_header_icon">12dp</dimen>
+    <dimen name="widget_header_spacing">6dp</dimen>
+</resources>

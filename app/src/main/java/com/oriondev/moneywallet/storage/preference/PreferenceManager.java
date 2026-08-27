@@ -33,6 +33,7 @@ import com.oriondev.moneywallet.broadcast.DailyBroadcastReceiver;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.Group;
 import com.oriondev.moneywallet.model.LockMode;
+import com.oriondev.moneywallet.ui.widget.WalletWidgetObserver;
 
 import java.util.Calendar;
 import java.util.Collections;
@@ -163,6 +164,11 @@ public class PreferenceManager {
 
     public static void setCurrentLockMode(LockMode lockMode) {
         mPreferences.edit().putInt(CURRENT_LOCK_MODE, lockMode.getValue()).apply();
+        // A wallet balance sitting on the home screen is hidden while the app is locked, and
+        // turning the lock on writes no transaction, so nothing else would tell the widgets to
+        // stop showing it. Here and not at the ten call sites in LockActivity, which is also
+        // what setCurrentDailyReminder below does with its alarm.
+        WalletWidgetObserver.requestUpdate();
     }
 
     public static void setCurrentLockCode(String code) {
@@ -173,20 +179,28 @@ public class PreferenceManager {
         mPreferences.edit().putLong(LAST_LOCK_TIMESTAMP, time).apply();
     }
 
+    // These four decide how MoneyFormatter writes an amount, so each of them changes the figure a
+    // wallet widget is showing without anything being written to the ledger. Same reason as the
+    // lock above, and the same answer.
+
     public static void setCurrencyEnabled(boolean enabled) {
         mPreferences.edit().putBoolean(SHOW_CURRENCY, enabled).apply();
+        WalletWidgetObserver.requestUpdate();
     }
 
     public static void setGroupDigitsEnabled(boolean enabled) {
         mPreferences.edit().putBoolean(GROUP_DIGITS, enabled).apply();
+        WalletWidgetObserver.requestUpdate();
     }
 
     public static void setRoundDecimalsEnabled(boolean enabled) {
         mPreferences.edit().putBoolean(ROUND_DECIMALS, enabled).apply();
+        WalletWidgetObserver.requestUpdate();
     }
 
     public static void setShowPlusMinusSymbolEnabled(boolean enabled) {
         mPreferences.edit().putBoolean(SHOW_PLUS_MINUS_SYMBOL, enabled).apply();
+        WalletWidgetObserver.requestUpdate();
     }
 
     public static void setCurrentDateFormatIndex(int index) {
