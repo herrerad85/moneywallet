@@ -1804,25 +1804,22 @@ public class SQLDatabaseTest {
     }
 
     /**
-     * A saving's progress counts only the rows that have landed, which is what the savings list
-     * adds to its start money to show. Its projected progress counts every withdrawal it has and
-     * only the deposits that are confirmed, whatever their dates. An unconfirmed deposit is in
-     * neither, because landing takes being confirmed and it never does.
+     * A saving's progress counts only the rows that have landed, which is confirmed and dated at
+     * or before this moment, and it is what the savings list adds to its start money to show.
      *
-     * The saving here carries a deposit and a withdrawal of each kind the two rules can tell
-     * apart, which separates the two sums from the rules they are most likely to be rewritten
-     * into: counting the unconfirmed deposit, dropping the unconfirmed withdrawal, putting a date
-     * test on the projected rule, on either half of it or on the whole, narrowing the landed test
-     * to deposits, dropping either half of it, or copying one sum onto the other all give
-     * something else. It is those cases and not every rule that could be written: a rewrite that
-     * lands on the same two figures for this saving goes through.
+     * The saving here carries a row of every kind that rule has to leave out, which separates it
+     * from the rules it is most likely to be rewritten into: dropping the date test, dropping
+     * the confirmed test, narrowing it to deposits, or counting every row the saving has all
+     * give something else. It is those cases and not every rule that could be written, so a
+     * rewrite landing on the same figure for this saving goes through.
      *
-     * This pins the two sums apart. It says nothing about the ceilings the editor works out of
-     * them, and neither sum carries any date order, so it is not a check that the saving stays
-     * above zero at every moment in between.
+     * This pins one sum. It says nothing about the ceiling the transaction editor holds a
+     * withdrawal to, which is worked out there over the rows in date order, and the sum here
+     * carries no date order, so it is not a check that the saving stays above zero at every
+     * moment.
      */
     @Test
-    public void savingProjectedProgressCountsRowsTheProgressLeavesOut() throws Exception {
+    public void savingProgressCountsOnlyTheRowsThatHaveLanded() throws Exception {
         long wallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 0L, false, "tag-wallet-1");
         long saving = insertSaving("desc-1", "encoded-icon", 0L, 10000L, wallet, null, false, "note-1", "tag-1");
         long deposit = getSystemCategory(Contract.CategoryTag.SAVING_DEPOSIT);
@@ -1830,30 +1827,29 @@ public class SQLDatabaseTest {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, 1);
         Date nextMonth = calendar.getTime();
-        // Landed, so both sums count them: a confirmed deposit of 1000 and a confirmed
-        // withdrawal of 100, both dated now. The withdrawal is the only row either sum counts
-        // negatively while it is landed, so without it the progress cannot tell a rule that
-        // counts every landed row from one that counts only landed deposits.
+        // Landed, so the progress counts them: a confirmed deposit of 1000 and a confirmed
+        // withdrawal of 100, both dated now. The withdrawal is the only landed row counted
+        // negatively, so without it the progress cannot tell a rule that counts every landed row
+        // from one that counts only landed deposits.
         insertTransaction(1000, new Date(), null, deposit, Contract.Direction.EXPENSE, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, true, true, null, null, "tag");
         insertTransaction(100, new Date(), null, withdraw, Contract.Direction.INCOME, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, true, true, null, null, "tag");
-        // Only the projected sum: a confirmed deposit of 400 dated next month, the row that
-        // stops a date test on the projected rule reading the same as the rule itself.
+        // Left out by the date alone, one on each side: a confirmed deposit of 400 and a
+        // confirmed withdrawal of 300, both dated next month. Without them a rule with no date
+        // test at all reads the same as this one.
         insertTransaction(400, nextMonth, null, deposit, Contract.Direction.EXPENSE, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, true, true, null, null, "tag");
-        // Only the projected sum again: a confirmed withdrawal of 300 dated next month, an
-        // unconfirmed withdrawal of 200 dated now, and an unconfirmed withdrawal of 50 dated next
-        // month. The last one is the drain the projected sum is most pessimistic about, and it is
-        // the only row that separates the rule from one that counts withdrawals only once they
-        // have landed.
         insertTransaction(300, nextMonth, null, withdraw, Contract.Direction.INCOME, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, true, true, null, null, "tag");
+        // Left out by the confirmed test alone, one on each side: an unconfirmed withdrawal of
+        // 200 and an unconfirmed deposit of 500, both dated now. Without them a rule that counts
+        // every row dated at or before now reads the same as this one.
         insertTransaction(200, new Date(), null, withdraw, Contract.Direction.INCOME, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, false, true, null, null, "tag");
-        insertTransaction(50, nextMonth, null, withdraw, Contract.Direction.INCOME, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, false, true, null, null, "tag");
-        // In neither: an unconfirmed deposit of 500, which never lands.
         insertTransaction(500, new Date(), null, deposit, Contract.Direction.EXPENSE, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, false, true, null, null, "tag");
+        // Left out by both, an unconfirmed withdrawal of 50 dated next month, so a rule that
+        // drops one test still has to drop the other to reach it.
+        insertTransaction(50, nextMonth, null, withdraw, Contract.Direction.INCOME, Contract.TransactionType.SAVING, wallet, null, null, null, saving, null, false, true, null, null, "tag");
 
         Cursor cursor = mDatabase.getSavings(null, null, null, null);
         assertEquals(true, cursor.moveToFirst());
         assertEquals(900L, cursor.getLong(cursor.getColumnIndex(Contract.Saving.PROGRESS)));
-        assertEquals(750L, cursor.getLong(cursor.getColumnIndex(Contract.Saving.PROJECTED_PROGRESS)));
         cursor.close();
     }
 

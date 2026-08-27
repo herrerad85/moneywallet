@@ -68,6 +68,7 @@ import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -123,9 +124,6 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     private static final String SS_DEBT_ID = "NewEditTransactionActivity::SavedState::DebtId";
     private static final String SS_SAVING_ID = "NewEditTransactionActivity::SavedState::SavingId";
     private static final String SS_SAVING_COMPLETED = "NewEditTransactionActivity::SavedState::SavingCompleted";
-    private static final String SS_SAVING_WITHDRAW_LIMIT = "NewEditTransactionActivity::SavedState::SavingWithdrawLimit";
-    private static final String SS_SAVING_WITHDRAW_LANDED_LIMIT = "NewEditTransactionActivity::SavedState::SavingWithdrawLandedLimit";
-    private static final String SS_SAVING_WITHDRAW_CURRENCY = "NewEditTransactionActivity::SavedState::SavingWithdrawCurrency";
 
     private TextView mCurrencyTextView;
     private TextView mMoneyTextView;
@@ -155,9 +153,6 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     private Long mDebtId = null;
     private Long mSavingId = null;
     private boolean mSavingCompleted = false;
-    private Long mSavingWithdrawLimit = null;
-    private Long mSavingWithdrawLandedLimit = null;
-    private String mSavingWithdrawCurrency = null;
 
     private MoneyFormatter mMoneyFormatter = MoneyFormatter.getInstance();
 
@@ -462,24 +457,6 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                         }
                         mConfirmedCheckBox.setChecked(cursor.getInt(cursor.getColumnIndex(Contract.Transaction.CONFIRMED)) == 1);
                         mCountInTotalCheckBox.setChecked(cursor.getInt(cursor.getColumnIndex(Contract.Transaction.COUNT_IN_TOTAL)) == 1);
-                        // A withdraw already in the database is being opened. Without a limit
-                        // here it can simply be edited upwards, which is the same bug by another
-                        // route. What it can grow to comes from the same two ceilings a new one
-                        // gets, each with this row's own amount added back to it, and each only
-                        // if that sum already counts this row.
-                        //
-                        // The projected sum counts it whatever its confirmed box and its date
-                        // say. The progress counts it only while it is confirmed and not dated
-                        // ahead, which is the same pair getSavings filters on, so adding it back
-                        // there for a row the progress never counted would hand out a ceiling too
-                        // high by exactly that amount.
-                        if (mSavingId != null && category != null
-                                && Contract.CategoryTag.SAVING_WITHDRAW.equals(category.getTag())) {
-                            boolean storedRowHasLanded = cursor.getInt(cursor.getColumnIndex(Contract.Transaction.CONFIRMED)) == 1
-                                    && !DateUtils.getDateFromSQLDateTimeString(cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE))).after(new Date());
-                            loadSavingWithdrawLimits(contentResolver, mSavingId, money,
-                                    storedRowHasLanded ? money : 0L);
-                        }
                     }
                     cursor.close();
                 }
@@ -737,8 +714,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                     }
                 } else if (mType == TYPE_SAVING) {
                     mSavingId = intent.getLongExtra(SAVING_ID, 0L);
-                    long landedMoney = 0L;
-                    long projectedMoney = 0L;
+                    long startMoney = 0L;
                     // getItemId is the id of the transaction being edited, and this branch only
                     // runs when there is no transaction yet, so it was always the -1 assigned for
                     // a new item. That built the uri savings/-1, which matches no route in the
@@ -747,31 +723,18 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                     // against: it read the typed digits as minor units and 2000 became 20.00.
                     // Load the saving the intent names, the way the debt branch above loads its
                     // debt.
-                    Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, mSavingId);
+                    Uri savingUri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, mSavingId);
                     String[] projection = new String[] {
                             Contract.Saving.START_MONEY,
-                            Contract.Saving.PROGRESS,
-                            Contract.Saving.PROJECTED_PROGRESS,
                             Contract.Saving.WALLET_ID,
                             Contract.Saving.WALLET_NAME,
                             Contract.Saving.WALLET_ICON,
                             Contract.Saving.WALLET_CURRENCY
                     };
-                    Cursor cursor = contentResolver.query(uri, projection, null, null, null);
+                    Cursor cursor = contentResolver.query(savingUri, projection, null, null, null);
                     if (cursor != null) {
                         if (cursor.moveToFirst()) {
-                            // Two figures, because a withdraw can take a saving under zero at
-                            // two different moments. What it holds today is its start money plus
-                            // its progress, the same sum the savings list draws its current
-                            // amount from. The lowest it can end up at is its start money plus
-                            // its projected progress, which counts every withdraw it carries and
-                            // only the deposits that are confirmed. END_MONEY is the
-                            // target, and a saving can be deposited past its target, so the
-                            // target would strand the overshoot in a withdraw everything.
-                            landedMoney = cursor.getLong(cursor.getColumnIndex(Contract.Saving.START_MONEY))
-                                    + cursor.getLong(cursor.getColumnIndex(Contract.Saving.PROGRESS));
-                            projectedMoney = cursor.getLong(cursor.getColumnIndex(Contract.Saving.START_MONEY))
-                                    + cursor.getLong(cursor.getColumnIndex(Contract.Saving.PROJECTED_PROGRESS));
+                            startMoney = cursor.getLong(cursor.getColumnIndex(Contract.Saving.START_MONEY));
                             wallet = new Wallet(
                                     cursor.getLong(cursor.getColumnIndex(Contract.Saving.WALLET_ID)),
                                     cursor.getString(cursor.getColumnIndex(Contract.Saving.WALLET_NAME)),
@@ -782,7 +745,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                         }
                         cursor.close();
                     }
-                    uri = DataContentProvider.CONTENT_CATEGORIES;
+                    Uri uri = DataContentProvider.CONTENT_CATEGORIES;
                     projection = new String[] {
                             Contract.Category.ID,
                             Contract.Category.NAME,
@@ -798,19 +761,22 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                             selectionArgs[0] = Contract.CategoryTag.SAVING_DEPOSIT;
                             break;
                         case SAVING_WITHDRAW_EVERYTHING:
-                            // The row this writes opens dated now and confirmed, so it lands
-                            // today and both ceilings bind it. The smaller of the two is what
-                            // the saving can actually give, and prefilling anything above it
-                            // offers an amount this same screen then refuses. Moving the date
-                            // ahead or unticking Confirmed only drops the landed ceiling, and
-                            // the prefill is at or under the other one too.
+                            // The row this writes opens dated now, so what it can actually take
+                            // is the lowest the saving reaches from now onwards, which is the
+                            // same figure the check applies when the save is pressed. Prefilling
+                            // anything above it offers an amount this same screen then refuses.
+                            // END_MONEY is the target, and a saving can be deposited past its
+                            // target, so the target would strand the overshoot here.
                             //
                             // Never below zero either. A saving already carrying more
                             // withdrawals than it holds gives a negative figure here, and the
-                            // check below only refuses an amount above the ceiling, so the field
-                            // would open on a negative amount and saving it untouched would
-                            // write a withdraw of a negative amount.
-                            money = Math.max(Math.min(landedMoney, projectedMoney), 0L);
+                            // check on the way out only refuses an amount above the ceiling, so
+                            // the field would open on a negative amount and saving it untouched
+                            // would write a withdrawal of a negative amount. A saving whose rows
+                            // do not come back offers nothing for the same reason.
+                            Long lowest = readLowestSavingBalanceFrom(contentResolver, savingUri,
+                                    startMoney, DateUtils.getSQLDateTimeString(new Date()), -1L);
+                            money = lowest != null ? Math.max(lowest, 0L) : 0L;
                             mSavingCompleted = true;
                             // Deliberate fall through: withdraw everything needs the withdraw
                             // category set below. A break here, which is what an IDE inspection
@@ -818,12 +784,6 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                             // crashes the editor as it opens: the bind value at index 1 is null.
                         case SAVING_WITHDRAW:
                             selectionArgs[0] = Contract.CategoryTag.SAVING_WITHDRAW;
-                            // Both figures are already in hand from the query above, so this
-                            // sets both ceilings from them instead of reading the same row
-                            // again. Nothing is added back to either: this row does not exist
-                            // yet, so neither sum can already be counting it.
-                            setSavingWithdrawLimits(projectedMoney, landedMoney, 0L, 0L,
-                                    wallet != null && wallet.getCurrency() != null ? wallet.getCurrency().getIso() : null);
                             break;
                     }
                     cursor = contentResolver.query(uri, projection, selection, selectionArgs, null);
@@ -921,24 +881,6 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
             mDebtId = savedInstanceState.containsKey(SS_DEBT_ID) ? savedInstanceState.getLong(SS_DEBT_ID) : null;
             mSavingId = savedInstanceState.containsKey(SS_SAVING_ID) ? savedInstanceState.getLong(SS_SAVING_ID) : null;
             mSavingCompleted = savedInstanceState.getBoolean(SS_SAVING_COMPLETED, false);
-            // v1.5.0 wrote the first key alone, holding what the saving held today, so a bundle
-            // from it has no second key. Neither ceiling can be worked out again here, because
-            // both calls that build them run only when there is no bundle, so the landed one
-            // falls back to the other. That editor then holds one number, today's, and applies
-            // it to every withdraw. It is neither rule: v1.5.0 waved a row dated ahead through,
-            // and this build would bound it by what the saving ends up at, which can be lower or
-            // higher than today's.
-            //
-            // Written out instead of as a second conditional on purpose. A conditional whose
-            // arms are a long and a Long is a numeric one, so the Long arm is unboxed, and here
-            // that arm is a field that is null on every editor which is not a saving withdraw.
-            // As a conditional this line crashed the editor on rotation.
-            mSavingWithdrawLimit = savedInstanceState.containsKey(SS_SAVING_WITHDRAW_LIMIT) ? savedInstanceState.getLong(SS_SAVING_WITHDRAW_LIMIT) : null;
-            mSavingWithdrawLandedLimit = mSavingWithdrawLimit;
-            if (savedInstanceState.containsKey(SS_SAVING_WITHDRAW_LANDED_LIMIT)) {
-                mSavingWithdrawLandedLimit = savedInstanceState.getLong(SS_SAVING_WITHDRAW_LANDED_LIMIT);
-            }
-            mSavingWithdrawCurrency = savedInstanceState.getString(SS_SAVING_WITHDRAW_CURRENCY);
         }
         // depending on the type we must hide pickers that are now allowed to be changed
         switch (mType) {
@@ -1019,15 +961,6 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
             outState.putLong(SS_SAVING_ID, mSavingId);
         }
         outState.putBoolean(SS_SAVING_COMPLETED, mSavingCompleted);
-        // Never the landed key without the other one. The restore above reads the landed key
-        // as an override on the projected one and falls back to it when there is none, and
-        // the check bails out entirely on a null projected ceiling, so a bundle carrying
-        // only the landed key would come back with no ceiling at all.
-        if (mSavingWithdrawLimit != null && mSavingWithdrawLandedLimit != null) {
-            outState.putLong(SS_SAVING_WITHDRAW_LIMIT, mSavingWithdrawLimit);
-            outState.putLong(SS_SAVING_WITHDRAW_LANDED_LIMIT, mSavingWithdrawLandedLimit);
-            outState.putString(SS_SAVING_WITHDRAW_CURRENCY, mSavingWithdrawCurrency);
-        }
     }
 
     @Override
@@ -1077,120 +1010,174 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     }
 
     /**
-     * Reads both of a saving's figures, the lowest it can end up at once everything already on
-     * it has happened and what it holds today, and remembers the currency they are in.
+     * The lowest a saving's balance reaches from a moment onwards, over the rows it already
+     * carries, or null when those rows do not come back at all.
      *
-     * alreadyTaken is what the row being edited is itself withdrawing, added back because the
-     * projected sum counts that row. alreadyTakenLanded is the same amount when the progress
-     * counts it too, which is while the stored row is confirmed and not dated ahead, and zero
-     * otherwise. A new withdraw has no stored row to add back and does not come through here; it
-     * sets its ceilings from the figures the saving branch of this screen has already read.
+     * They come back ordered on the raw date column, which is the order
+     * {@link Contract#lowestSavingBalanceFrom(long, String[], long[], String)} needs, and are
+     * held to the two saving categories so this walks the same rows the saving's own sums count.
+     * A deposit that is not confirmed is left out, because landing takes being confirmed and
+     * money that never arrives must not pay for a withdrawal that does. A withdrawal is counted
+     * whether it is confirmed or not, for the mirror reason, that leaving it out hands out a
+     * ceiling it can then take the saving under.
+     *
+     * excludedId names the row being edited, whose own drain has to come out before the walk or
+     * the row would be held against itself. A new row names nothing, since the id of a new item
+     * is minus one and no row carries it.
      */
-    private void loadSavingWithdrawLimits(ContentResolver contentResolver, long savingId,
-                                          long alreadyTaken, long alreadyTakenLanded) {
-        Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, savingId);
+    private Long readLowestSavingBalanceFrom(ContentResolver contentResolver, Uri savingUri,
+                                             long startMoney, String from, long excludedId) {
         String[] projection = new String[] {
-                Contract.Saving.START_MONEY,
-                Contract.Saving.PROGRESS,
-                Contract.Saving.PROJECTED_PROGRESS,
-                Contract.Saving.WALLET_CURRENCY
+                Contract.Transaction.ID,
+                Contract.Transaction.DATE,
+                Contract.Transaction.MONEY,
+                Contract.Transaction.DIRECTION,
+                Contract.Transaction.CONFIRMED
+        };
+        String selection = Contract.Transaction.CATEGORY_TAG + " IN (?, ?)";
+        String[] selectionArgs = new String[] {
+                Contract.CategoryTag.SAVING_DEPOSIT,
+                Contract.CategoryTag.SAVING_WITHDRAW
+        };
+        Cursor cursor = contentResolver.query(Uri.withAppendedPath(savingUri, "transactions"),
+                projection, selection, selectionArgs, Contract.Transaction.DATE + " ASC");
+        if (cursor == null) {
+            return null;
+        }
+        String[] dates = new String[cursor.getCount()];
+        long[] signedMoney = new long[cursor.getCount()];
+        int rows = 0;
+        while (cursor.moveToNext()) {
+            if (cursor.getLong(cursor.getColumnIndex(Contract.Transaction.ID)) == excludedId) {
+                continue;
+            }
+            // A withdrawal is the income half of the pair, since it pays money into the wallet,
+            // and it is what takes the saving down.
+            boolean withdrawal = cursor.getInt(cursor.getColumnIndex(Contract.Transaction.DIRECTION))
+                    == Contract.Direction.INCOME;
+            if (!withdrawal && cursor.getInt(cursor.getColumnIndex(Contract.Transaction.CONFIRMED)) != 1) {
+                continue;
+            }
+            long money = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY));
+            dates[rows] = cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE));
+            signedMoney[rows] = withdrawal ? -money : money;
+            rows++;
+        }
+        cursor.close();
+        return Contract.lowestSavingBalanceFrom(startMoney, Arrays.copyOf(dates, rows),
+                Arrays.copyOf(signedMoney, rows), from);
+    }
+
+    /**
+     * Whether the row being edited is being kept or lowered on a date it does not move back
+     * from. Such a save takes nothing the saving is not already giving, so it is never refused.
+     *
+     * Without this, two withdrawals that already have a saving under zero would freeze each
+     * other, since neither can be lowered while the other one alone is more than the saving
+     * holds, and deleting one would be the only way out. Moving a stored row earlier is a new
+     * drain on the dates it moves across and is held to the ceiling like any other.
+     *
+     * A new row answers false, since there is no stored row to compare with.
+     */
+    private boolean isStoredWithdrawalKeptOrLowered(ContentResolver contentResolver, long money,
+                                                    String date) {
+        if (getMode() != Mode.EDIT_ITEM) {
+            return false;
+        }
+        Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSACTIONS, getItemId());
+        String[] projection = new String[] {
+                Contract.Transaction.MONEY,
+                Contract.Transaction.DATE
         };
         Cursor cursor = contentResolver.query(uri, projection, null, null, null);
+        boolean unchangedOrSmaller = false;
         if (cursor != null) {
             if (cursor.moveToFirst()) {
-                long startMoney = cursor.getLong(cursor.getColumnIndex(Contract.Saving.START_MONEY));
-                setSavingWithdrawLimits(
-                        startMoney + cursor.getLong(cursor.getColumnIndex(Contract.Saving.PROJECTED_PROGRESS)),
-                        startMoney + cursor.getLong(cursor.getColumnIndex(Contract.Saving.PROGRESS)),
-                        alreadyTaken,
-                        alreadyTakenLanded,
-                        cursor.getString(cursor.getColumnIndex(Contract.Saving.WALLET_CURRENCY)));
+                unchangedOrSmaller = money <= cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY))
+                        && date.compareTo(cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE))) >= 0;
             }
             cursor.close();
         }
+        return unchangedOrSmaller;
     }
 
     /**
-     * Two ceilings, because one number cannot say both things. A withdraw must not take the
-     * saving under zero once everything already on it has happened, which is what the projected
-     * sum bounds, and a withdraw already counted in today's figure must not take it under zero
-     * today, which is what the progress bounds. Bounding only the first lets a deposit dated
-     * ahead pay for a withdraw taken now; bounding only the second lets a withdraw dated ahead
-     * land on a saving that cannot cover it.
+     * A withdrawal must not take the saving under zero on its own date, nor on any date after
+     * it. What it may take is therefore the lowest the balance reaches from its date onwards,
+     * counted over the saving's rows in date order.
      *
-     * Each ceiling is held at the term added back to it, since a saving that is under zero gives
-     * a negative one and that would refuse every save of the row, including lowering the amount
-     * or correcting the note. A row both sums already count gets its own amount added back to
-     * both, so it can always be kept or reduced. A stored row the progress does not count gets
-     * nothing added back to the landed ceiling, which is a different case on purpose:
-     * confirming it and dating it today adds a drain today's figure has never carried, so it is
-     * held to today's figure like any other new drain and can be refused at its own amount.
+     * That replaces the two totals this used to hold, what the saving holds today and the lowest
+     * it can end up at once everything already on it has happened. A total carries no date order
+     * and neither of them said anything about the dates in between, so a withdrawal dated before
+     * the deposit that funds it cleared both and left the saving under zero for the days between
+     * the two.
      *
-     * For a new row both terms are zero, so the floor is zero.
-     */
-    private void setSavingWithdrawLimits(long projectedHeld, long landedHeld, long alreadyTaken,
-                                         long alreadyTakenLanded, String currencyIso) {
-        mSavingWithdrawLimit = Math.max(projectedHeld + alreadyTaken, alreadyTaken);
-        mSavingWithdrawLandedLimit = Math.max(landedHeld + alreadyTakenLanded, alreadyTakenLanded);
-        mSavingWithdrawCurrency = currencyIso;
-    }
-
-    /**
-     * A withdraw cannot take the saving under zero today, nor once everything already on it has
-     * happened, which counts every withdraw it carries and only the deposits that are confirmed.
-     * Those are two moments and not every moment between them: the sums behind them are totals
-     * and carry no date order, so a withdraw dated before a deposit that funds it still passes
-     * and the saving dips under zero in between.
+     * The figures are read here and not when the editor opened, because the answer depends on
+     * the date on screen and that date is still being chosen while the editor is up. It is still
+     * only a check on the way in. Whatever pays for a withdrawal can be lowered, deleted,
+     * unconfirmed or dated later afterwards, or from another screen while this one waits, with
+     * nothing refused, and the saving's own start money is editable on its own screen.
      *
-     * This is a check on the way in and only on a withdraw, against figures read once when the
-     * editor opened. They are not read again, not even across a rotation, where the pair comes
-     * back out of the bundle. So a withdraw is measured against the saving as it stood when the
-     * screen opened, and anything that pays for it can be taken away either before the save,
-     * from another screen while this one waits, or afterwards, with nothing refused: the deposit
-     * it was allowed against can be lowered, deleted, unconfirmed or dated ahead, and the
-     * saving's own start money is editable on its own screen.
+     * The check runs on a withdrawal alone, so a deposit and an ordinary transaction are
+     * unaffected. It steps aside for a wallet on screen whose currency the saving's figures
+     * cannot be compared with, for a saving whose own currency the app cannot resolve, which a
+     * restored backup can produce, and for a saving whose rows do not come back.
      *
-     * The ceilings are loaded whenever the editor opens on a withdraw, whether that is a new one
-     * from the savings list or one already in the database, and stay null everywhere else, so a
-     * deposit and an ordinary transaction are unaffected. Loaded is not the same as enforced: the
-     * currency test below steps aside both for a wallet on screen whose currency the ceilings
-     * cannot be compared with and for a saving whose own currency the app cannot resolve, which
-     * a restored backup can produce.
-     *
-     * The check applies to every withdraw, including one saved unconfirmed or dated ahead. Such a
-     * row moves the saving by nothing on the day it is written and by its full amount on the day
-     * it lands, and nothing looks at the saving again in between.
-     *
-     * A row already counted in today's figure is held to both ceilings and takes the smaller.
-     * The test is the one getSavings uses, confirmed and dated at or before this moment, so a
-     * row dated later today is not one of them and only the projected ceiling binds it. That is
-     * read from the fields as they stand now and not from the stored row, because it is the row
-     * about to be written that matters.
+     * The Confirmed box does not enter into it. A withdrawal is counted against the saving
+     * whether it is ticked or not, because leaving an unconfirmed one out would hand out a
+     * ceiling it can then take the saving under.
      */
     private boolean validateSavingWithdraw() {
-        if (mSavingWithdrawLimit == null) {
+        if (mSavingId == null) {
             return true;
         }
-        long limit = mSavingWithdrawLimit;
-        if (mSavingWithdrawLandedLimit != null && mConfirmedCheckBox.isChecked()
-                && !mDateTimePicker.getCurrentDateTime().after(new Date())) {
-            limit = Math.min(limit, mSavingWithdrawLandedLimit);
+        Category category = mCategoryPicker.getCurrentCategory();
+        if (category == null || !Contract.CategoryTag.SAVING_WITHDRAW.equals(category.getTag())) {
+            return true;
         }
-        CurrencyUnit currency = mSavingWithdrawCurrency != null ? CurrencyManager.getCurrency(mSavingWithdrawCurrency) : null;
-        // The limit is in the saving's own currency. If the row sits in a wallet held in another
+        ContentResolver contentResolver = getContentResolver();
+        Uri savingUri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, mSavingId);
+        String[] projection = new String[] {
+                Contract.Saving.START_MONEY,
+                Contract.Saving.WALLET_CURRENCY
+        };
+        long startMoney = 0L;
+        String currencyIso = null;
+        Cursor cursor = contentResolver.query(savingUri, projection, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                startMoney = cursor.getLong(cursor.getColumnIndex(Contract.Saving.START_MONEY));
+                currencyIso = cursor.getString(cursor.getColumnIndex(Contract.Saving.WALLET_CURRENCY));
+            }
+            cursor.close();
+        }
+        CurrencyUnit currency = currencyIso != null ? CurrencyManager.getCurrency(currencyIso) : null;
+        // The ceiling is in the saving's own currency. If the row sits in a wallet held in another
         // one the two are not comparable as they stand, and this screen converts nowhere else, so
-        // the check steps aside instead of comparing amounts that do not mean the same thing.
+        // the check steps aside instead of comparing amounts that do not mean the same thing. A
+        // saving that gives back no row at all leaves the currency null and stops here too.
         CurrencyUnit walletCurrency = mWalletPicker.getCurrentWallet().getCurrency();
         if (currency == null || walletCurrency == null || !currency.getIso().equals(walletCurrency.getIso())) {
             return true;
         }
-        // An amount of nothing is not refused. Refusing it would refuse every save of a stored
-        // withdraw of nothing, whatever its ceiling, so its own note and date could never be
-        // corrected and only deletion would be open. The old withdraw everything path could
-        // write such a row. What it costs is an empty row: on a saving with nothing left to give
-        // the withdraw everything prefill is zero, and saving that writes the row and, on that
-        // path only, marks the goal complete.
-        if (mMoneyPicker.getCurrentMoney() <= limit) {
+        long money = mMoneyPicker.getCurrentMoney();
+        String date = DateUtils.getSQLDateTimeString(mDateTimePicker.getCurrentDateTime());
+        if (isStoredWithdrawalKeptOrLowered(contentResolver, money, date)) {
+            return true;
+        }
+        Long lowest = readLowestSavingBalanceFrom(contentResolver, savingUri, startMoney, date,
+                getItemId());
+        if (lowest == null) {
+            return true;
+        }
+        // Held at nothing, since a saving already under zero on some date from here on gives a
+        // negative figure and no amount at all would clear it. An amount of nothing is therefore
+        // never refused, and that matters. Refusing it would refuse every save of a stored
+        // withdrawal of nothing, whatever the saving holds, so its own note and date could never
+        // be corrected and only deletion would be open. The old withdraw everything path could
+        // write such a row.
+        long limit = Math.max(lowest, 0L);
+        if (money <= limit) {
             return true;
         }
         // The figure every time, with no separate wording for a ceiling of nothing. What a

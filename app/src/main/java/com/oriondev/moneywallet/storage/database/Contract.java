@@ -334,6 +334,55 @@ public class Contract {
                 ? budgetUUID.substring(0, separator) : budgetUUID;
     }
 
+    /**
+     * The lowest a saving's balance reaches from a given moment onwards, over the rows it
+     * already carries. A withdrawal dated at that moment can take at most this, because taking
+     * more puts the saving under zero on some date at or after it.
+     *
+     * A saving's own sum cannot answer that. It is a total over the whole set of rows and holds
+     * no date order, so a withdrawal dated before the deposit that funds it clears it and the
+     * saving sits under zero in between.
+     *
+     * dates and signedMoney describe the same rows in the same positions, ordered by date
+     * ascending. A deposit is positive and a withdrawal negative. A deposit that is not
+     * confirmed belongs in neither array; a withdrawal belongs in them whether it is confirmed
+     * or not. The caller orders on the raw date column and this compares those
+     * same strings, so the two orders are one order, and a date this app writes is a fixed width
+     * yyyy-MM-dd HH:mm:ss whose byte order is its time order.
+     *
+     * The answer can be negative, which says the saving is already under zero on some date from
+     * here on and has nothing at all to give. A caller deciding what a withdrawal may take holds
+     * it at zero itself.
+     *
+     * @param startMoney the saving's start money.
+     * @param dates the date of each row, ascending.
+     * @param signedMoney what each row moves the saving by, in the same positions.
+     * @param from the moment to count from, as a date string of the same kind.
+     * @return the lowest balance the saving reaches at or after from.
+     */
+    public static long lowestSavingBalanceFrom(long startMoney, String[] dates,
+                                               long[] signedMoney, String from) {
+        long balance = startMoney;
+        int row = 0;
+        while (row < dates.length && dates[row].compareTo(from) <= 0) {
+            balance += signedMoney[row];
+            row++;
+        }
+        long lowest = balance;
+        for (; row < dates.length; row++) {
+            balance += signedMoney[row];
+            // Only at the end of a run of rows sharing a date. The balance part way through
+            // such a run is not one the saving ever holds, and the order inside the run is
+            // whatever the query gives back, so comparing there both invents a low point and
+            // makes the answer depend on that order.
+            if ((row + 1 == dates.length || !dates[row + 1].equals(dates[row]))
+                    && balance < lowest) {
+                lowest = balance;
+            }
+        }
+        return lowest;
+    }
+
     public static final class Saving {
         public static final String ID = Schema.Saving.ID;
         public static final String DESCRIPTION = Schema.Saving.DESCRIPTION;
@@ -351,7 +400,6 @@ public class Contract {
         public static final String COMPLETE = Schema.Saving.COMPLETE;
         public static final String NOTE = Schema.Saving.NOTE;
         public static final String PROGRESS = "saving_" + Schema.Alias.PROGRESS;
-        public static final String PROJECTED_PROGRESS = "saving_" + Schema.Alias.PROJECTED_PROGRESS;
         public static final String TAG = Schema.Saving.TAG;
     }
 
