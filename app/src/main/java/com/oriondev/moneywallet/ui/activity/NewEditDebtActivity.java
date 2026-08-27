@@ -50,6 +50,7 @@ import com.oriondev.moneywallet.picker.PlacePicker;
 import com.oriondev.moneywallet.picker.WalletPicker;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.storage.database.SQLiteDataException;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.view.text.MaterialEditText;
 import com.oriondev.moneywallet.ui.view.text.NonEmptyTextValidator;
@@ -462,14 +463,26 @@ public class NewEditDebtActivity extends NewEditItemActivity implements IconPick
         contentValues.put(Contract.Debt.PEOPLE_IDS, Contract.getObjectIds(mPersonPicker.getCurrentPeople()));
         contentValues.put(Contract.Debt.INSERT_MASTER_TRANSACTION, addMasterTransaction);
         ContentResolver contentResolver = getContentResolver();
-        switch (mode) {
-            case NEW_ITEM:
-                contentResolver.insert(DataContentProvider.CONTENT_DEBTS, contentValues);
-                break;
-            case EDIT_ITEM:
-                Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_DEBTS, getItemId());
-                contentResolver.update(uri, contentValues, null, null);
-                break;
+        try {
+            switch (mode) {
+                case NEW_ITEM:
+                    contentResolver.insert(DataContentProvider.CONTENT_DEBTS, contentValues);
+                    break;
+                case EDIT_ITEM:
+                    Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_DEBTS, getItemId());
+                    contentResolver.update(uri, contentValues, null, null);
+                    break;
+            }
+        } catch (SQLiteDataException e) {
+            if (e.getErrorCode() != Contract.ErrorCode.WALLETS_NOT_CONSISTENT) {
+                throw e;
+            }
+            ThemedDialog.buildMaterialDialog(this)
+                    .title(R.string.title_error)
+                    .content(R.string.error_wallet_currency_not_consistent)
+                    .positiveText(android.R.string.ok)
+                    .show();
+            return;
         }
         setResult(Activity.RESULT_OK);
         finish();

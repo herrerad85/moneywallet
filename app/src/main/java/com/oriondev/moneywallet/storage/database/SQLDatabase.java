@@ -894,9 +894,11 @@ import java.util.UUID;
      * @param transactionId id of the transaction to update.
      * @param contentValues set of column values to update.
      * @return the number of rows affected by the update.
-     * @throws SQLiteDataException if the transaction is part of a transfer.
+     * @throws SQLiteDataException if the transaction is part of a transfer, or if it is a debt's
+     *                             master transaction and checkStrandedCurrency refuses the wallet.
      */
     /*package-local*/ int updateTransaction(long transactionId, ContentValues contentValues) {
+        checkDebtOfMasterTransactionWallet(transactionId, contentValues);
         int rows = updateTransactionRow(transactionId, contentValues);
         if (rows > 0) {
             syncDebtOfMasterTransaction(transactionId, contentValues);
@@ -2290,8 +2292,12 @@ import java.util.UUID;
      * a payment on the paid debt or paid credit one. Same test updateDebt uses to find the master
      * transaction from the other side.
      *
-     * Asked of the stored row, which by this point carries the update, so an update naming none
-     * of these three columns is still judged on what the row holds.
+     * Asked of the stored row. syncDebtOfMasterTransaction asks after the row is written and
+     * checkDebtOfMasterTransactionWallet asks before it, and the only saves that reach both are
+     * the transaction editor's. That editor has no field for the type or the debt id and hides the
+     * category picker on a debt row, so it sends all three back at what it loaded and the answer
+     * is the same either way. updateDebt writes the master transaction through updateTransactionRow
+     * and reaches neither.
      *
      * Straight off the table, the way the transfer check at the top of updateTransactionRow reads
      * its own. getTransaction would answer this too, and it builds the joined view every reader
@@ -2328,6 +2334,29 @@ import java.util.UUID;
             }
         }
         return debtId;
+    }
+
+    /**
+     * The wallet half of the sync below, asked before anything is written.
+     *
+     * Nothing here runs inside a database transaction, so a refusal raised from the sync would
+     * leave the transaction already moved and the debt sitting in the wallet it started in. The
+     * question is asked of the debt's own wallet, which is the one every figure on the debt is
+     * read in, and not of the transaction's.
+     *
+     * @param transactionId id of the transaction being updated.
+     * @param contentValues set of column values to update.
+     * @throws SQLiteDataException if checkStrandedCurrency refuses the wallet.
+     */
+    private void checkDebtOfMasterTransactionWallet(long transactionId, ContentValues contentValues) {
+        if (!contentValues.containsKey(Contract.Transaction.WALLET_ID)) {
+            return;
+        }
+        Long debtId = masterTransactionDebtId(transactionId);
+        if (debtId == null) {
+            return;
+        }
+        checkDebtWalletCurrency(debtId, contentValues.getAsLong(Contract.Transaction.WALLET_ID));
     }
 
     /**
@@ -2585,8 +2614,12 @@ import java.util.UUID;
      * @param debtId id of the debt to update.
      * @param contentValues bundle that contains the data from the content provider.
      * @return the number of row affected.
+     * @throws SQLiteDataException if checkStrandedCurrency refuses the wallet.
      */
     /*package-local*/ int updateDebt(long debtId, ContentValues contentValues) {
+        if (contentValues.containsKey(Contract.Debt.WALLET_ID)) {
+            checkDebtWalletCurrency(debtId, contentValues.getAsLong(Contract.Debt.WALLET_ID));
+        }
         ContentValues cv = new ContentValues();
         if (contentValues.containsKey(Contract.Debt.TYPE)) {
             cv.put(Schema.Debt.TYPE, contentValues.getAsInteger(Contract.Debt.TYPE));
@@ -3229,6 +3262,182 @@ import java.util.UUID;
     }
 
     /**
+     * A saving and a debt each point at one wallet, and that wallet decides the currency the whole
+     * thing is read in. What is filed against them is added up with no currency in the sum and
+     * stays in the wallet it was filed against, so moving one of them to a wallet in another
+     * currency rereads their figures against money that is still held somewhere else.
+     *
+     * Three wallets go through. One of the currency the row is read in today, one of a currency
+     * something filed against the row already sits in, and any wallet at all when nothing is filed
+     * against the row, since then there is nothing to leave behind. A wallet id that names no row
+     * goes through as well, having no currency to be asked about. On a row whose transactions
+     * are all in a wallet of the currency it points at, the first two are the same currency and
+     * this is the plain refusal to change the currency a saving or a debt is read in.
+     *
+     * They come apart on a row that was moved across currencies, and both are needed to leave one
+     * usable. Without the wallet it has now, the move to another wallet of the currency it is
+     * already read in would be refused, which puts nothing right and takes nothing further wrong.
+     * Without what is filed against it, the move back to the currency the transactions are really
+     * in would be refused, and that is the one move that puts the row right. Either way deleting
+     * the saving or the debt becomes the way out, and that takes every transaction filed against
+     * it.
+     *
+     * On a row whose transactions are already spread over several currencies, every one of those
+     * currencies goes through and only a currency it holds nothing in is refused. This does not
+     * work out which of them leaves the fewest transactions misread; a row like that cannot be put
+     * fully right by any single wallet, and picking between its currencies is a judgement this
+     * does not make.
+     *
+     * @param storedWalletId id of the wallet the row holds now.
+     * @param walletId id of the wallet the update names.
+     * @param selection what counts as filed against the row, over the transaction table as t.
+     * @param selectionArgs arguments of that selection.
+     * @throws SQLiteDataException if the wallet is found, its currency is not the one the row is
+     *                             read in now, and the row has transactions, none of them in it.
+     */
+    private void checkStrandedCurrency(long storedWalletId, long walletId, String selection,
+                                       String[] selectionArgs) {
+        String walletCurrency = walletCurrency(walletId);
+        if (walletCurrency == null || TextUtils.equals(walletCurrency,
+                walletCurrency(storedWalletId))) {
+            return;
+        }
+        if (noneIsHeldIn(walletCurrency, selection, selectionArgs)) {
+            String message = String.format(Locale.ENGLISH,
+                    "Wallet (id: %d) is in %s and nothing filed against this item is",
+                    walletId, walletCurrency);
+            throw new SQLiteDataException(Contract.ErrorCode.WALLETS_NOT_CONSISTENT, message);
+        }
+    }
+
+    /**
+     * Whether the selection matches at least one transaction and none of the ones it matches is
+     * held in this currency. False when it matches none at all, which is a row with nothing filed
+     * against it and nothing to say about where it may go.
+     *
+     * Counted in one statement instead of read back as a list, since the answer is a yes or a no
+     * and a saving or a debt can carry any number of rows.
+     */
+    private boolean noneIsHeldIn(String currency, String selection, String[] selectionArgs) {
+        String query = "SELECT COUNT(*), SUM(CASE WHEN w." + Schema.Wallet.CURRENCY +
+                " = ? THEN 1 ELSE 0 END) FROM " + Schema.Transaction.TABLE + " AS t JOIN " +
+                Schema.Wallet.TABLE + " AS w ON t." + Schema.Transaction.WALLET + " = w." +
+                Schema.Wallet.ID + " WHERE t." + Schema.Transaction.DELETED + " = 0 AND " +
+                selection;
+        String[] args = new String[selectionArgs.length + 1];
+        args[0] = currency;
+        System.arraycopy(selectionArgs, 0, args, 1, selectionArgs.length);
+        Cursor cursor = getReadableDatabase().rawQuery(query, args);
+        boolean noneIsHeldIn = false;
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    noneIsHeldIn = cursor.getLong(0) > 0L && cursor.getLong(1) == 0L;
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        return noneIsHeldIn;
+    }
+
+    /**
+     * The currency of one wallet, or null when there is no such row. Read straight off the table,
+     * so a wallet flagged deleted still answers and a saving or a debt left pointing at one can
+     * still be edited.
+     */
+    private String walletCurrency(long walletId) {
+        String[] projection = new String[] {Schema.Wallet.CURRENCY};
+        String selection = Schema.Wallet.ID + " = ?";
+        String[] selectionArgs = new String[] {String.valueOf(walletId)};
+        Cursor cursor = getReadableDatabase().query(Schema.Wallet.TABLE, projection, selection,
+                selectionArgs, null, null, null);
+        String currency = null;
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    currency = cursor.getString(cursor.getColumnIndex(Schema.Wallet.CURRENCY));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        return currency;
+    }
+
+    /**
+     * The wallet a saving or a debt holds now, or null when there is no such row.
+     */
+    private Long storedWallet(String table, String idColumn, String walletColumn, long id) {
+        String[] projection = new String[] {walletColumn};
+        String selection = idColumn + " = ?";
+        String[] selectionArgs = new String[] {String.valueOf(id)};
+        Cursor cursor = getReadableDatabase().query(table, projection, selection, selectionArgs,
+                null, null, null);
+        Long walletId = null;
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    walletId = cursor.getLong(cursor.getColumnIndex(walletColumn));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        return walletId;
+    }
+
+    /**
+     * Everything filed against a saving stays where it is when the saving moves.
+     *
+     * @param savingId id of the saving being updated.
+     * @param walletId id of the wallet the update names.
+     * @throws SQLiteDataException if checkStrandedCurrency refuses the wallet.
+     */
+    private void checkSavingWalletCurrency(long savingId, long walletId) {
+        Long storedWalletId = storedWallet(Schema.Saving.TABLE, Schema.Saving.ID,
+                Schema.Saving.WALLET, savingId);
+        if (storedWalletId == null || storedWalletId == walletId) {
+            return;
+        }
+        checkStrandedCurrency(storedWalletId, walletId, "t." + Schema.Transaction.SAVING + " = ?",
+                new String[] {String.valueOf(savingId)});
+    }
+
+    /**
+     * A debt's payments stay where they are when the debt moves. Its master transaction does not,
+     * it travels with the debt in both directions, so it is not something the move strands and it
+     * is left out of the question. Told apart by category, the way updateDebt and
+     * masterTransactionDebtId both tell them apart.
+     *
+     * @param debtId id of the debt being updated.
+     * @param walletId id of the wallet the update names.
+     * @throws SQLiteDataException if checkStrandedCurrency refuses the wallet.
+     */
+    private void checkDebtWalletCurrency(long debtId, long walletId) {
+        Long storedWalletId = storedWallet(Schema.Debt.TABLE, Schema.Debt.ID, Schema.Debt.WALLET,
+                debtId);
+        Long debtCategoryId = getSystemCategoryId(Schema.CategoryTag.DEBT);
+        Long creditCategoryId = getSystemCategoryId(Schema.CategoryTag.CREDIT);
+        // Without both category ids the master transaction cannot be told from a payment. Counting
+        // it as one refuses the move of a debt that has a master transaction and no payments,
+        // since that transaction sits in the wallet the debt is leaving and would then be the only
+        // thing answering for it. Nothing else here fails closed and neither does this.
+        if (storedWalletId == null || storedWalletId == walletId || debtCategoryId == null
+                || creditCategoryId == null) {
+            return;
+        }
+        String selection = "t." + Schema.Transaction.DEBT + " = ? AND t." +
+                Schema.Transaction.CATEGORY + " NOT IN (?, ?)";
+        String[] selectionArgs = new String[] {
+                String.valueOf(debtId),
+                String.valueOf(debtCategoryId),
+                String.valueOf(creditCategoryId)
+        };
+        checkStrandedCurrency(storedWalletId, walletId, selection, selectionArgs);
+    }
+
+    /**
      * Delete a budget from the database. If the 'mCacheDeletedObjects' flag is enabled the data
      * is not removed but simply flagged as deleted.
      *
@@ -3390,8 +3599,12 @@ import java.util.UUID;
      * @param savingId id of the saving to update.
      * @param contentValues bundle that contains the values to update.
      * @return the number of row affected.
+     * @throws SQLiteDataException if checkStrandedCurrency refuses the wallet.
      */
     /*package-local*/ int updateSaving(long savingId, ContentValues contentValues) {
+        if (contentValues.containsKey(Contract.Saving.WALLET_ID)) {
+            checkSavingWalletCurrency(savingId, contentValues.getAsLong(Contract.Saving.WALLET_ID));
+        }
         ContentValues cv = new ContentValues();
         if (contentValues.containsKey(Contract.Saving.COMPLETE)) {
             cv.put(Schema.Saving.COMPLETE, contentValues.getAsBoolean(Contract.Saving.COMPLETE));
