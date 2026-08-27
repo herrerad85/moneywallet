@@ -3283,28 +3283,16 @@ import java.util.UUID;
      * @return a cursor with zero or more rows.
      */
     /*package-local*/ Cursor getSavings(String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        // A saving carries two sums over the same set of rows, its deposits and its withdrawals.
-        // Its progress counts only the confirmed ones dated at or before this moment, so with the
-        // start money added it is what the saving holds now, and it is the sum the savings list
-        // draws its current amount from. A row dated later today is not one of them.
+        // A saving's progress sums its deposits and its withdrawals, counting only the confirmed
+        // ones dated at or before this moment, so with the start money added it is what the
+        // saving holds now, and it is the sum the savings list draws its current amount from. A
+        // row dated later today is not one of them.
         //
-        // Its projected progress counts every withdrawal the saving has and every deposit that is
-        // confirmed, whatever their dates. With the start money added it is the lowest the saving
-        // can end up at once everything already on it has happened. Each side of that rule is the
-        // pessimistic one. An unconfirmed deposit is left out because it never lands, since
-        // landing takes being confirmed, so counting it would let money that has not arrived pay
-        // for a withdrawal that does. An unconfirmed withdrawal is counted for the mirror reason,
-        // and not because it is any likelier to happen: leaving it out would hand out a ceiling
-        // it can then take the saving under.
-        //
-        // Both are built from the one signedMoney expression below, so the two can never disagree
-        // about the sign of a row.
-        //
-        // Neither is a balance at a date in between, and the saving is not bounded between the
-        // two either. Both are totals with no date order in them, so a saving carrying rows on
-        // both sides can dip under zero on a date where neither sum says so: a withdrawal dated
-        // tomorrow against a deposit dated next month leaves both sums at zero and the saving
-        // under from tomorrow.
+        // It is a total and it holds no date order, so it says nothing about what the saving is
+        // worth on any other date. A withdrawal dated before the deposit that funds it leaves
+        // this sum where it was and takes the saving under zero in between. The transaction
+        // editor works that out for itself, walking the saving's rows in date order, and this
+        // sum is not the figure it holds a withdrawal to.
         //
         // The confirmed and date test used to sit in the WHERE and now sits in the CASE, so a
         // saving with rows but none of them in the progress produces a group row where it
@@ -3317,8 +3305,6 @@ import java.util.UUID;
                 Schema.Transaction.MONEY + ")";
         String landed = Schema.Transaction.CONFIRMED + " = 1 AND DATETIME(" +
                 Schema.Transaction.DATE + ") <= DATETIME('now', 'localtime')";
-        String counted = Schema.Transaction.DIRECTION + " = " + Schema.Direction.INCOME +
-                " OR " + Schema.Transaction.CONFIRMED + " = 1";
         String subQuery = "SELECT " +
                 Schema.Saving.ID + " AS " + Contract.Saving.ID + ", " +
                 Schema.Saving.DESCRIPTION + " AS " + Contract.Saving.DESCRIPTION + ", " +
@@ -3336,13 +3322,11 @@ import java.util.UUID;
                 Schema.Saving.COMPLETE + " AS " + Contract.Saving.COMPLETE + ", " +
                 Schema.Saving.NOTE + " AS " + Contract.Saving.NOTE + ", " +
                 Schema.Saving.TAG + " AS " + Contract.Saving.TAG + ", " +
-                "_progress AS " + Contract.Saving.PROGRESS + ", " +
-                "_projected_progress AS " + Contract.Saving.PROJECTED_PROGRESS +
+                "_progress AS " + Contract.Saving.PROGRESS +
                 " FROM " + Schema.Saving.TABLE +
                 " AS s LEFT JOIN " + Schema.Wallet.TABLE + " ON " + Schema.Saving.WALLET + " = " +
                 Schema.Wallet.ID + " LEFT JOIN (SELECT " + Schema.Transaction.SAVING + " AS _saving, " +
-                " SUM(CASE WHEN " + landed + " THEN " + signedMoney + " ELSE 0 END) AS _progress, " +
-                " SUM(CASE WHEN " + counted + " THEN " + signedMoney + " ELSE 0 END) AS _projected_progress" +
+                " SUM(CASE WHEN " + landed + " THEN " + signedMoney + " ELSE 0 END) AS _progress" +
                 " FROM " + Schema.Transaction.TABLE + " AS j LEFT JOIN " + Schema.Category.TABLE +
                 " ON " + Schema.Transaction.CATEGORY + " = " + Schema.Category.ID + " WHERE j." +
                 Schema.Transaction.DELETED + " = 0 AND (" + Schema.Category.TAG + " = '" +
