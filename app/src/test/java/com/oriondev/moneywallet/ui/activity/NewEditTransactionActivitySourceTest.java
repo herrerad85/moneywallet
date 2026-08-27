@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -31,14 +32,14 @@ import static org.junit.Assert.fail;
  * that the case falls through, that the statement assigning wallet builds a Wallet from the
  * saving's wallet columns, that the walk over a saving's rows signs and skips them the way the
  * saving's own sums do, that every column the check's three queries read is in the projection
- * beside it, that the check counts from the date on screen over rows ordered by date,
- * that the saving case of the visibility switch hides the wallet field, and that between the debt
- * label and the saving label the source names no wallet field and does carry a break. That makes
- * them a tripwire against a revert or a careless rewrite. It does not make them a proof of
- * behavior, and they cannot show the value the keypad ends up with. A rewrite that keeps those
- * tokens and still breaks the editor goes through. One example, not a list: a second assignment
- * written with += or -= is invisible here, because "money -=" does not contain the "money =" a
- * statement is found by.
+ * beside it, that the check counts from the date on screen over rows ordered by date, that the
+ * debt case and the saving case of the visibility switch each read as the hides they should be and
+ * nothing more, and that the flag the debt case reads is worked out from the two paid categories
+ * before the switch and is carried across a recreate. That makes them a tripwire against a revert
+ * or a careless rewrite. It does not make them a proof of behavior, and they cannot show the value
+ * the keypad ends up with. A rewrite that keeps those tokens and still breaks the editor goes
+ * through. One example, not a list: a second assignment written with += or -= is invisible here,
+ * because "money -=" does not contain the "money =" a statement is found by.
  *
  * Invariant one: inside the branch that fills a new transaction from its intent, getItemId is
  * always -1, the value NewEditItemActivity assigns whenever it was not launched to edit an
@@ -77,14 +78,42 @@ import static org.junit.Assert.fail;
  * back from is never refused, or two withdrawals that already have a saving under zero freeze
  * each other and deleting one is the only way out.
  *
- * Invariant six: a saving transaction does not offer its wallet field. A saving's progress is
- * summed over its transactions with no currency anywhere in that sum, so a row moved onto a wallet
- * held in another currency is added at face value, and 500 euros count as 500 dollars. The debt
- * label sits beside the saving one in the same switch and the two shared a body until the hide was
- * added. A debt payment is deliberately left offering its wallet field, since a debt's progress is
- * summed the same way and answering that is a separate change. Three things are read: the saving
- * case must hide the wallet field, and between the two labels the field's name must be absent and
- * a break must be present.
+ * Invariant six: neither a saving transaction nor a debt payment offers its wallet field, and a
+ * debt's master transaction still does. A saving's progress and a debt's progress are each summed
+ * over the transactions filed against them with no currency anywhere in that sum, so a row moved
+ * onto a wallet held in another currency is added at face value, and 500 euros count as 500
+ * dollars. A debt's master transaction is not one of those rows. It carries the same TYPE_DEBT as
+ * a payment and is told apart only by its category, and editing its wallet moves the debt itself
+ * through syncDebtOfMasterTransaction, so hiding the field there would take that away and no test
+ * on the database would see it, since SQLDatabaseTest drives the database and not this screen. So
+ * both cases are read whole and compared, not searched. A second hide written above the guard, or a
+ * break dropped so the debt case falls into the saving body below it, both hide the field on a
+ * master transaction while a search for the guard still finds it, and the guard copied onto the
+ * saving case is false on every saving row and gives that field back. The derivation is pinned
+ * whole, its guard and the line the tag is read from included, and it carries the restore line
+ * above it and the switch below it inside the same literal, so it is held against both of its
+ * neighbors and nothing can be written on either side of it. That matters in three directions.
+ * category is null everywhere above the loader, so a derivation hoisted there reads a guard that
+ * is false on every path and the feature is gone with its own text unchanged. Moved below the
+ * switch it leaves false to be read and every payment offers its wallet field again. Left where it
+ * is with a single statement written under it, mDebtPayment = false on the edit path, it is
+ * reverted just as completely. A guard flipped to run only on a recreate leaves false the same way
+ * with the assignment still sitting there, and a tag read replaced by one of the two paid
+ * constants makes every debt row a payment and takes the field off a master transaction, with both
+ * case bodies untouched. The lines the tag is read from are pinned as well. The edit path's is
+ * its own text; the two loads off the category table, the new payment one and the saving one, are
+ * identical text, so those are counted and a swap on either drops the count. The derivation
+ * compares whatever getTag returns, and a tag read off a name column, or a fifth argument dropped
+ * for the four argument constructor the model branch already uses, is false on every row without
+ * any of this text moving. Its
+ * save and restore are pinned separately, because losing either one gives a payment its field back
+ * on the next rotation and no assertion over the switch can see it.
+ *
+ * Comparing a case whole costs what searching it does not. A body that is behaviorally identical
+ * and written differently fails, a guard without its braces or two statements swapped, and so does
+ * any third statement a later change has a good reason to add. That is a false alarm to be read
+ * and corrected, not a defect, and it is the price of catching a hide that a search finds in the
+ * wrong place.
  */
 public class NewEditTransactionActivitySourceTest {
 
@@ -113,6 +142,25 @@ public class NewEditTransactionActivitySourceTest {
     private static final String DEBT_CASE = "case TYPE_DEBT:";
     private static final String SAVING_CASE = "case TYPE_SAVING:";
     private static final String CASE_BREAK = "break;";
+    private static final String WALLET_HIDE = "mWalletEditText.setVisibility(View.GONE)";
+    private static final String CATEGORY_HIDE = "mCategoryEditText.setVisibility(View.GONE)";
+    private static final String PAYMENT_GUARD = "if (mDebtPayment) { " + WALLET_HIDE + "; }";
+    private static final String DEBT_CASE_BODY =
+            DEBT_CASE + " " + CATEGORY_HIDE + "; " + PAYMENT_GUARD + " ";
+    private static final String SAVING_CASE_BODY =
+            SAVING_CASE + " " + CATEGORY_HIDE + "; " + WALLET_HIDE + "; ";
+    private static final String SWITCH_ON_TYPE = "switch (mType) {";
+    private static final String DEBT_PAYMENT_DERIVATION =
+            "mDebtPayment = savedInstanceState.getBoolean(SS_DEBT_PAYMENT, false); }"
+                    + " if (savedInstanceState == null && category != null) {"
+                    + " String categoryTag = category.getTag();"
+                    + " mDebtPayment = Contract.CategoryTag.PAID_DEBT.equals(categoryTag)"
+                    + " || Contract.CategoryTag.PAID_CREDIT.equals(categoryTag); } "
+                    + SWITCH_ON_TYPE;
+    private static final String EDIT_PATH_TAG_READ =
+            "cursor.getString(cursor.getColumnIndex(Contract.Transaction.CATEGORY_TAG)) );";
+    private static final String CATEGORY_TABLE_TAG_READ =
+            "cursor.getString(cursor.getColumnIndex(Contract.Category.TAG)) );";
 
     @Test
     public void newItemBranchDoesNotReadTheItemId() throws IOException {
@@ -226,24 +274,69 @@ public class NewEditTransactionActivitySourceTest {
 
     @Test
     public void aSavingTransactionDoesNotOfferItsWalletField() throws IOException {
-        assertTrue("a saving's progress is summed with no currency in it, so the wallet a saving "
-                + "transaction sits in must not be changeable from the editor",
-                region(SAVING_CASE, CASE_BREAK)
-                        .contains("mWalletEditText.setVisibility(View.GONE)"));
+        assertEquals("a saving's progress is summed with no currency in it, so the wallet a saving "
+                + "transaction sits in must not be changeable from the editor. The whole case is "
+                + "compared, since the debt guard four lines above it is false on every saving row "
+                + "and would give the field back if it were copied down here",
+                SAVING_CASE_BODY, squash(region(SAVING_CASE, CASE_BREAK)));
     }
 
     @Test
-    public void theDebtCaseDoesNotNameTheWalletField() throws IOException {
-        assertEquals("a debt payment is deliberately left offering its wallet field, so that field "
-                + "must not be named between the debt label and the saving one", -1,
-                region(DEBT_CASE, SAVING_CASE).indexOf("mWalletEditText"));
+    public void aDebtPaymentDoesNotOfferItsWalletField() throws IOException {
+        assertEquals("a debt's progress is summed with no currency in it either, so the wallet a "
+                + "debt payment sits in must not be changeable from the editor. The whole case is "
+                + "compared, since a second hide above the guard, or a break dropped so this case "
+                + "falls into the saving body, takes the field off a master transaction too",
+                DEBT_CASE_BODY, squash(region(DEBT_CASE, CASE_BREAK)));
     }
 
     @Test
-    public void theDebtCaseCarriesABreak() throws IOException {
-        assertTrue("a debt payment is deliberately left offering its wallet field, and the two "
-                + "labels shared a body until the wallet hide was added, so a break has to appear "
-                + "between them", region(DEBT_CASE, SAVING_CASE).contains(CASE_BREAK));
+    public void aDebtsMasterTransactionKeepsItsWalletField() throws IOException {
+        String source = squash(stripCommentsAndStrings(readSource()));
+        int derived = source.indexOf(DEBT_PAYMENT_DERIVATION);
+        int read = source.indexOf(SWITCH_ON_TYPE);
+        assertTrue("only a payment loses the field, and the derivation is compared whole, its "
+                + "guard and the line the tag is read from included, because a tag read replaced "
+                + "by one of the two paid constants makes every debt row a payment: " + source,
+                derived >= 0);
+        assertEquals("this reads the first switch on the type and there has to be only one, or a "
+                + "second one added anywhere above the derivation calls it late when it is not",
+                -1, source.indexOf(SWITCH_ON_TYPE, read + 1));
+        assertTrue("and the tag has to come off the category's own tag column on the edit path. "
+                + "Every other column on that row is a name or an icon, and a tag read swapped for "
+                + "one of them, or a fifth argument dropped for the four argument constructor the "
+                + "model branch already uses, leaves the tag null or a display name, which never "
+                + "equals either paid constant and hands every stored payment its wallet field "
+                + "back", source.contains(EDIT_PATH_TAG_READ));
+        assertEquals("and off the category table's tag column on both of the loads that read it, "
+                + "the new payment one and the saving one. Those two are identical text, so they "
+                + "are counted and not found. A swap on the new payment load is the half a check "
+                + "on the edit path alone cannot see, and finding one of the two would have gone "
+                + "on passing on the strength of the other", 2,
+                source.split(Pattern.quote(CATEGORY_TABLE_TAG_READ), -1).length - 1);
+    }
+
+    @Test
+    public void theDebtPaymentFlagIsCarriedAcrossARecreate() throws IOException {
+        String source = squash(stripCommentsAndStrings(readSource()));
+        assertTrue("the derivation is skipped on a recreate, since it runs only when there is no "
+                + "saved state, so the flag has to come back out of the bundle or a rotation gives "
+                + "a payment its wallet field back: " + source,
+                source.contains("mDebtPayment = savedInstanceState.getBoolean(SS_DEBT_PAYMENT, "
+                        + "false);"));
+        assertTrue("and it has to be put in the bundle, which fails the same way and is the half a "
+                + "rotation test on the restore alone still passes without",
+                source.contains("outState.putBoolean(SS_DEBT_PAYMENT, mDebtPayment);"));
+        assertTrue("and it starts false, so a debt row the flag was never worked out for keeps its "
+                + "wallet field instead of losing it",
+                source.contains("private boolean mDebtPayment = false;"));
+        assertTrue("and its key has to be its own. The five saved state keys are near identical "
+                + "lines and this one was written by copying its neighbor, so a key repeated from "
+                + "one of them puts two values in one bundle entry and the one read back is "
+                + "whichever was written last. This is the one assertion here that reads the "
+                + "source with its string literals left in, since the key is a literal",
+                squash(stripComments(readSource())).contains(
+                        "SS_DEBT_PAYMENT = \"NewEditTransactionActivity::SavedState::DebtPayment\";"));
     }
 
     /**
@@ -360,8 +453,8 @@ public class NewEditTransactionActivitySourceTest {
     }
 
     /**
-     * The same with the string literals left in, for the one assertion whose invariant is written
-     * as a literal. Comments still go, so the text it looks for cannot come from prose.
+     * The same with the string literals left in, for the assertions whose invariant is written as
+     * a literal. Comments still go, so the text they look for cannot come from prose.
      */
     private static String stripComments(String text) {
         return strip(text, false);
