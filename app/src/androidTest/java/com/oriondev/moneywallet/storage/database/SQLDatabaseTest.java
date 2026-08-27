@@ -1281,6 +1281,29 @@ public class SQLDatabaseTest {
     }
 
     @Test
+    public void savingADebtKeepsItsMasterTransactionTime() throws Exception {
+        long walletId = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long categoryId = getSystemCategory(Contract.CategoryTag.DEBT);
+        Date picked = DateUtils.getDateFromSQLDateString("2026-07-01");
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-1", picked, null, walletId, "note-1", null, 2000L, false, null, "tag-1", true);
+        // A master transaction is created at the start of the debt's day, so the time under test
+        // has to be put there the way a user does it, through the transaction editor.
+        Date afternoon = DateUtils.getDateFromSQLDateTimeString("2026-07-01 14:30:45");
+        assertEquals(1, updateTransaction(masterTransactionId(debtId), 2000L, afternoon, "desc-1", categoryId,
+                Contract.Direction.INCOME, Contract.TransactionType.DEBT, walletId, null, "note-1",
+                null, null, debtId, true, true, null, null, "tag-1"));
+        assertEquals("2026-07-01 14:30:45", masterTransactionDate(debtId));
+        // The debt editor sends its date on every save, so this is a save that changed something
+        // else and never opened the date field.
+        assertEquals(1, updateDebt(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-edited", picked, null, walletId, "note-1", null, 2000L, false, null, "tag-1"));
+        assertEquals("2026-07-01 14:30:45", masterTransactionDate(debtId));
+        // And a date that did move takes the transaction to the new day at the same time.
+        Date moved = DateUtils.getDateFromSQLDateString("2026-06-15");
+        assertEquals(1, updateDebt(debtId, Contract.DebtType.DEBT.getValue(), "encoded-icon-1", "desc-edited", moved, null, walletId, "note-1", null, 2000L, false, null, "tag-1"));
+        assertEquals("2026-06-15 14:30:45", masterTransactionDate(debtId));
+    }
+
+    @Test
     public void editingTheMasterTransactionMovesTheDebt() throws Exception {
         long walletId = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
         long otherWalletId = insertWallet("Test wallet 2", "encoded-icon-2", "EUR", "note-wallet-2", true, 2000L, false, "tag-wallet-2");

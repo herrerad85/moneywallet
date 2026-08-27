@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -2268,21 +2269,37 @@ import java.util.UUID;
 
     /**
      * A debt and its master transaction are the same event, so the transaction takes the debt's
-     * own date at the start of that day. The debt editor writes the date with no time of day, so
-     * the value cannot be carried across as it stands. Debt.DATE is NOT NULL in the schema, so
-     * the null branch cannot fire today and is only there to keep a schema change from becoming
-     * a crash here.
+     * day. Only the day, since the debt editor writes that date with no time of day. The time of
+     * day is the transaction's own, entered through the time picker in the transaction editor, and
+     * saving the debt no longer replaces it with the start of the day.
      *
-     * The parse is lenient, like every other getDateFromSQLDateString call in this app: a day
-     * past the end of its month rolls forward and a trailing time is dropped without complaint.
-     * NewEditDebtActivity is the only caller that writes this key and it always writes a plain
-     * valid date, so nothing here has to refuse those the way CSVDataImporter.parseDatetime does.
+     * A null transaction date is the insert path, where there is no transaction yet and no time to
+     * keep, so the new one starts at the beginning of the day. Debt.DATE is NOT NULL in the
+     * schema, so its own null branch cannot fire today and is only there to keep a schema change
+     * from becoming a crash here.
+     *
+     * The parse of the debt's date is lenient, like every other getDateFromSQLDateString call in
+     * this app, so a day past the end of its month rolls forward and a trailing time is dropped
+     * without complaint. NewEditDebtActivity is the only caller that writes this key and it always
+     * writes a plain valid date, so nothing here has to refuse those the way
+     * CSVDataImporter.parseDatetime does.
+     *
+     * The calendar that carries the time over is lenient too, so a time that does not exist on the
+     * debt's new day, the hour a spring forward skips, moves forward by the length of the skip.
+     * Tested on a device, 02:30:45 carried onto 2026-03-08 in America/New_York lands on 03:30:45.
+     * A time that happens twice on a fall back day writes back the string it was given.
      */
-    private static String masterTransactionDateFor(String debtDate) {
+    private static String masterTransactionDateFor(String debtDate, String transactionDate) {
         if (debtDate == null) {
             return DateUtils.getSQLDateTimeString(System.currentTimeMillis());
         }
-        return DateUtils.getSQLDateTimeString(DateUtils.getDateFromSQLDateString(debtDate));
+        Date day = DateUtils.getDateFromSQLDateString(debtDate);
+        if (transactionDate == null) {
+            return DateUtils.getSQLDateTimeString(day);
+        }
+        Calendar time = DateUtils.getCalendar(DateUtils.getDateFromSQLDateTimeString(transactionDate));
+        return DateUtils.getSQLDateTimeString(DateUtils.setTime(day, time.get(Calendar.HOUR_OF_DAY),
+                time.get(Calendar.MINUTE), time.get(Calendar.SECOND), 0));
     }
 
     /**
@@ -2375,14 +2392,11 @@ import java.util.UUID;
      * description this method just moved. renamedDebtIcon below carries them and says what it
      * leaves alone.
      *
-     * The debt row is written here instead of through updateDebt, which would push these same
-     * values straight back onto the transaction. The date is the one that would not survive the
-     * round trip, since a debt carries a day and a transaction a moment, so the way back would
-     * replace the time of day the user had just typed with the start of that day.
+     * The debt row is written here instead of through updateDebt, which would turn around and
+     * write the transaction a second time with the values it was just read from.
      *
-     * That is only this direction. Saving a debt from its own editor still puts its master
-     * transaction at the start of the day through masterTransactionDateFor, whether or not the
-     * date was touched, so a time entered here survives until the next save of the debt.
+     * A time of day entered here survives a later save of the debt, since masterTransactionDateFor
+     * takes only the day from the debt.
      */
     private void syncDebtOfMasterTransaction(long transactionId, ContentValues contentValues) {
         Long debtId = masterTransactionDebtId(transactionId);
@@ -2587,7 +2601,7 @@ import java.util.UUID;
                 cv = new ContentValues();
                 Contract.DebtType type = Contract.DebtType.fromValue(contentValues.getAsInteger(Contract.Debt.TYPE));
                 cv.put(Contract.Transaction.MONEY, contentValues.getAsLong(Contract.Debt.MONEY));
-                cv.put(Contract.Transaction.DATE, masterTransactionDateFor(contentValues.getAsString(Contract.Debt.DATE)));
+                cv.put(Contract.Transaction.DATE, masterTransactionDateFor(contentValues.getAsString(Contract.Debt.DATE), null));
                 cv.put(Contract.Transaction.DESCRIPTION, contentValues.getAsString(Contract.Debt.DESCRIPTION));
                 cv.put(Contract.Transaction.CATEGORY_ID, getSystemCategoryId((type == Contract.DebtType.DEBT) ? Schema.CategoryTag.DEBT : Schema.CategoryTag.CREDIT));
                 cv.put(Contract.Transaction.DIRECTION, (type == Contract.DebtType.CREDIT) ? Contract.Direction.EXPENSE : Contract.Direction.INCOME);
@@ -2666,7 +2680,8 @@ import java.util.UUID;
             Long debtCategoryId = getSystemCategoryId(Schema.CategoryTag.DEBT);
             Long creditCategoryId = getSystemCategoryId(Schema.CategoryTag.CREDIT);
             String[] projection = new String[] {
-                    Contract.Transaction.ID
+                    Contract.Transaction.ID,
+                    Contract.Transaction.DATE
             };
             String selection = Contract.Transaction.TYPE + " = ? AND " +
                     Contract.Transaction.DEBT_ID + " = ? AND (" +
@@ -2682,6 +2697,7 @@ import java.util.UUID;
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
                     long transactionId = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.ID));
+                    String transactionDate = cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE));
                     cv = new ContentValues();
                     if (contentValues.containsKey(Contract.Debt.MONEY)) {
                         cv.put(Contract.Transaction.MONEY, contentValues.getAsLong(Contract.Debt.MONEY));
@@ -2690,7 +2706,8 @@ import java.util.UUID;
                         cv.put(Contract.Transaction.DESCRIPTION, contentValues.getAsString(Contract.Debt.DESCRIPTION));
                     }
                     if (contentValues.containsKey(Contract.Debt.DATE)) {
-                        cv.put(Contract.Transaction.DATE, masterTransactionDateFor(contentValues.getAsString(Contract.Debt.DATE)));
+                        cv.put(Contract.Transaction.DATE, masterTransactionDateFor(
+                                contentValues.getAsString(Contract.Debt.DATE), transactionDate));
                     }
                     if (contentValues.containsKey(Contract.Debt.TYPE)) {
                         Contract.DebtType type = Contract.DebtType.fromValue(contentValues.getAsInteger(Contract.Debt.TYPE));
