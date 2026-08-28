@@ -41,13 +41,13 @@ import java.util.List;
 /**
  * This class is used by the IconListActivity to fetch all the available icons and organize
  * them inside a list of IconGroup items. The list of available icons is statically described
- * by the icons_old.json file inside the assets/resources directory of the project.
- * When a new buildMaterialDialog is performed, the developer should check that all the icons inside this file
- * are available inside the drawable directory of the project.
+ * by the icons.json file inside the assets/resources directory of the project.
  *
- * NB: This project is open source but the icon pack used is not free to use and the license
- * of the author explicitly says that those icons cannot be released in public. For this reason
- * the public repository has very few icons (only the ones that are license-free).
+ * Every icon is either original artwork or an original disc with a glyph from a permissively
+ * licensed library composed on top, so a new one is a vector drawable in res/drawable named by an
+ * entry in that file. The libraries and their licenses are in THIRD_PARTY_NOTICES.md. Nothing in
+ * the build checks that a name in the file resolves, so run the instrumented IconGroupLoaderTest
+ * on a device after adding one.
  */
 public class IconGroupLoader extends AbstractGenericLoader<List<IconGroup>> {
 
