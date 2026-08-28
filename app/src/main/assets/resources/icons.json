@@ -182,6 +182,48 @@
       "icons": [
         {
           "resource": "ic_icon_cocktail"
+        },
+        {
+          "resource": "ic_icon_hamburger"
+        },
+        {
+          "resource": "ic_icon_pizza"
+        },
+        {
+          "resource": "ic_icon_coffee"
+        },
+        {
+          "resource": "ic_icon_beer_stein"
+        },
+        {
+          "resource": "ic_icon_wine"
+        },
+        {
+          "resource": "ic_icon_bowl_food"
+        },
+        {
+          "resource": "ic_icon_ice_cream"
+        },
+        {
+          "resource": "ic_icon_bread"
+        },
+        {
+          "resource": "ic_icon_egg"
+        },
+        {
+          "resource": "ic_icon_fish"
+        },
+        {
+          "resource": "ic_icon_carrot"
+        },
+        {
+          "resource": "ic_icon_cake"
+        },
+        {
+          "resource": "ic_icon_cookie"
+        },
+        {
+          "resource": "ic_icon_fork_knife"
         }
       ]
     },
@@ -225,6 +267,213 @@
         },
         {
           "resource": "ic_icon_pos"
+        },
+        {
+          "resource": "ic_icon_coins"
+        },
+        {
+          "resource": "ic_icon_money"
+        },
+        {
+          "resource": "ic_icon_credit_card"
+        },
+        {
+          "resource": "ic_icon_piggy_bank"
+        },
+        {
+          "resource": "ic_icon_receipt"
+        },
+        {
+          "resource": "ic_icon_hand_coins"
+        },
+        {
+          "resource": "ic_icon_chart_line_up"
+        },
+        {
+          "resource": "ic_icon_chart_line_down"
+        },
+        {
+          "resource": "ic_icon_currency_circle_dollar"
+        },
+        {
+          "resource": "ic_icon_vault"
+        },
+        {
+          "resource": "ic_icon_percent"
+        },
+        {
+          "resource": "ic_icon_calculator"
+        }
+      ]
+    },
+    {
+      "name": "icon_category_people",
+      "icons": [
+        {
+          "resource": "ic_icon_user"
+        },
+        {
+          "resource": "ic_icon_users"
+        },
+        {
+          "resource": "ic_icon_users_three"
+        },
+        {
+          "resource": "ic_icon_handshake"
+        },
+        {
+          "resource": "ic_icon_briefcase"
+        },
+        {
+          "resource": "ic_icon_graduation_cap"
+        },
+        {
+          "resource": "ic_icon_address_book"
+        },
+        {
+          "resource": "ic_icon_hand_heart"
+        }
+      ]
+    },
+    {
+      "name": "icon_category_animals",
+      "icons": [
+        {
+          "resource": "ic_icon_dog"
+        },
+        {
+          "resource": "ic_icon_cat"
+        },
+        {
+          "resource": "ic_icon_bird"
+        },
+        {
+          "resource": "ic_icon_horse"
+        },
+        {
+          "resource": "ic_icon_rabbit"
+        },
+        {
+          "resource": "ic_icon_butterfly"
+        },
+        {
+          "resource": "ic_icon_paw_print"
+        },
+        {
+          "resource": "ic_icon_cow"
+        }
+      ]
+    },
+    {
+      "name": "icon_category_payments",
+      "icons": [
+        {
+          "resource": "ic_icon_invoice"
+        },
+        {
+          "resource": "ic_icon_qr_code"
+        },
+        {
+          "resource": "ic_icon_hand_deposit"
+        },
+        {
+          "resource": "ic_icon_hand_withdraw"
+        },
+        {
+          "resource": "ic_icon_arrows_left_right"
+        },
+        {
+          "resource": "ic_icon_lightning"
+        },
+        {
+          "resource": "ic_icon_wifi_high"
+        },
+        {
+          "resource": "ic_icon_fire"
+        }
+      ]
+    },
+    {
+      "name": "icon_category_party",
+      "icons": [
+        {
+          "resource": "ic_icon_confetti"
+        },
+        {
+          "resource": "ic_icon_balloon"
+        },
+        {
+          "resource": "ic_icon_champagne"
+        },
+        {
+          "resource": "ic_icon_disco_ball"
+        },
+        {
+          "resource": "ic_icon_music_notes"
+        },
+        {
+          "resource": "ic_icon_microphone_stage"
+        },
+        {
+          "resource": "ic_icon_cheers"
+        },
+        {
+          "resource": "ic_icon_speaker_high"
+        }
+      ]
+    },
+    {
+      "name": "icon_category_baby",
+      "icons": [
+        {
+          "resource": "ic_icon_baby"
+        },
+        {
+          "resource": "ic_icon_baby_carriage"
+        },
+        {
+          "resource": "ic_icon_lego"
+        },
+        {
+          "resource": "ic_icon_bed"
+        },
+        {
+          "resource": "ic_icon_puzzle_piece"
+        },
+        {
+          "resource": "ic_icon_moon_stars"
+        },
+        {
+          "resource": "ic_icon_bandaids"
+        }
+      ]
+    },
+    {
+      "name": "icon_category_beauty_and_wellness",
+      "icons": [
+        {
+          "resource": "ic_icon_scissors"
+        },
+        {
+          "resource": "ic_icon_hair_dryer"
+        },
+        {
+          "resource": "ic_icon_bathtub"
+        },
+        {
+          "resource": "ic_icon_heartbeat"
+        },
+        {
+          "resource": "ic_icon_pill"
+        },
+        {
+          "resource": "ic_icon_first_aid_kit"
+        },
+        {
+          "resource": "ic_icon_flower_lotus"
+        },
+        {
+          "resource": "ic_icon_hand_soap"
         }
       ]
     }

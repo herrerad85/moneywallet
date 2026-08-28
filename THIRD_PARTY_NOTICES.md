@@ -1,7 +1,8 @@
 # Third-party notices
 
-Tallybook's category icons place glyphs from the icon libraries below onto
-original disc backgrounds. The glyphs are recolored but otherwise unmodified.
+Almost all of Tallybook's category icons place glyphs from the icon libraries
+below onto original disc backgrounds, and the rest are original artwork. The
+glyphs are recolored but otherwise unmodified.
 Each library's full copyright and license text follows, as required by its
 license. The libraries also appear in the app under About > Open source licenses.
 
