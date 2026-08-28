@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2018.
+  ~
+  ~ This file is part of MoneyWallet.
+  ~
+  ~ MoneyWallet is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ MoneyWallet is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!--
+  ~ minWidth and minHeight are what devices before Android 12 size this by, and targetCellWidth
+  ~ and targetCellHeight replace them from Android 12 on, where the launcher counts grid cells
+  ~ instead of guessing from a width. Both are declared because this app runs from API 24.
+  ~
+  ~ The smallest size allowed has to be one the layout still reads in. The add button is a 48dp
+  ~ target and the padding is 12dp on each side, so anything under 72dp high clips the button, and
+  ~ the width left for the figure is what is asked for minus those same 24dp and the button. At
+  ~ 180dp that leaves 108dp, which the balance can shrink into. Allowing less would guarantee the
+  ~ cut off figure the layout goes out of its way to avoid.
+  ~
+  ~ Two things redraw this, and they cover different causes. WalletWidgetObserver pushes a redraw
+  ~ the moment a wallet or a transaction is written, which is what makes the figure keep up with
+  ~ the app. updatePeriodMillis covers the one change no write announces, a transaction dated
+  ~ ahead coming due, since every balance in this app counts only rows dated at or before now, so
+  ~ a widget touched by nothing can go wrong as the clock passes it.
+  ~
+  ~ Six hours, not minutes. The period exists to bound how long that one case can sit wrong, and
+  ~ a short one would wake the device to redraw a figure that almost never moved.
+  -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="com.oriondev.moneywallet.ui.widget.WalletWidgetConfigureActivity"
+    android:description="@string/widget_description"
+    android:initialLayout="@layout/widget_wallet_initial"
+    android:minHeight="72dp"
+    android:minResizeHeight="72dp"
+    android:minResizeWidth="180dp"
+    android:minWidth="250dp"
+    android:previewImage="@drawable/widget_preview"
+    android:previewLayout="@layout/widget_wallet"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="1"
+    android:targetCellWidth="3"
+    android:updatePeriodMillis="21600000"
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable" />

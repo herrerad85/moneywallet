@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2018.
+  ~
+  ~ This file is part of MoneyWallet.
+  ~
+  ~ MoneyWallet is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ MoneyWallet is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!--
+  ~ The same tile with the ink turned over, for a phone the user has put in its dark theme. The
+  ~ launcher inflates this layout against the system configuration, so nothing has to ask which
+  ~ theme is on and nothing is stored per widget.
+  ~
+  ~ The strip is a light wash here where the default set has a dark one, because it composites
+  ~ against the card behind it and a dark wash on a dark card is no strip at all.
+  ~
+  ~ Only what changes. widget_header_text is white against both, and the sizes and the radius are
+  ~ not a matter of theme.
+  -->
+<resources>
+    <color name="widget_background">#FF202124</color>
+    <color name="widget_header_background">#33FFFFFF</color>
+    <color name="widget_text_primary">#FFFFFFFF</color>
+    <color name="widget_text_secondary">#B3FFFFFF</color>
+</resources>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2018.
+  ~
+  ~ This file is part of MoneyWallet.
+  ~
+  ~ MoneyWallet is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ MoneyWallet is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!--
+  ~ This layout is also the widget picker preview, named by previewLayout in widget_wallet_info.
+  ~ The wallet and the amount set here are what the picker shows, so they read as a plausible
+  ~ wallet and not as a placeholder. Both are overwritten the moment a placed widget is drawn.
+  ~
+  ~ A strip naming the app over a white card. A tile holding a bare figure says nothing about
+  ~ where the figure came from once it is sitting among a screen of other tiles.
+  ~
+  ~ Two lines and no more. The row a widget gets on a phone is around 70dp and the add button
+  ~ alone is a 44dp touch target, so a third line would push this into a second row and take twice
+  ~ the home screen for the same one number.
+  -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/widget_header_background"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/widget_padding"
+        android:paddingRight="@dimen/widget_padding"
+        android:paddingTop="@dimen/widget_header_padding"
+        android:paddingBottom="@dimen/widget_header_padding" >
+
+        <ImageView
+            android:layout_width="@dimen/widget_header_icon"
+            android:layout_height="@dimen/widget_header_icon"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_widget_tallybook" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/widget_header_spacing"
+            android:layout_marginStart="@dimen/widget_header_spacing"
+            android:text="@string/app_name"
+            android:textColor="@color/widget_header_text"
+            android:textSize="10sp" />
+
+        <TextView
+            android:id="@+id/widget_wallet_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/widget_header_spacing"
+            android:layout_marginStart="@dimen/widget_header_spacing"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="end"
+            android:maxLines="1"
+            android:text="@string/widget_preview_wallet_name"
+            android:textColor="@color/widget_header_text"
+            android:textSize="10sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widget_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/widget_padding"
+        android:paddingRight="@dimen/widget_padding"
+        android:paddingTop="@dimen/widget_padding_vertical"
+        android:paddingBottom="@dimen/widget_padding_vertical" >
+
+        <!--
+          ~ The balance shrinks to fit instead of ellipsizing. A cut off figure is the one thing
+          ~ this widget must never show, and the width it has to work in is decided by the user,
+          ~ who can drag it down to the smallest size the provider allows.
+          ~
+          ~ autoSizeTextType is read from API 26 and ignored below it, where the text stays at
+          ~ textSize and a long figure can still be cut. That is two of the versions this app
+          ~ supports and the framework carries no backport of it.
+          -->
+        <TextView
+            android:id="@+id/widget_wallet_balance"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:autoSizeMaxTextSize="20sp"
+            android:autoSizeMinTextSize="12sp"
+            android:autoSizeTextType="uniform"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/widget_preview_wallet_balance"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="20sp" />
+
+        <ImageView
+            android:id="@+id/widget_add_button"
+            android:layout_width="@dimen/widget_touch_target"
+            android:layout_height="@dimen/widget_touch_target"
+            android:contentDescription="@string/widget_add_transaction"
+            android:padding="@dimen/widget_button_padding"
+            android:src="@drawable/ic_add_24dp"
+            android:tint="@color/widget_text_primary" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_message"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:paddingLeft="@dimen/widget_padding"
+        android:paddingRight="@dimen/widget_padding"
+        android:text="@string/widget_message_not_configured"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+</LinearLayout>

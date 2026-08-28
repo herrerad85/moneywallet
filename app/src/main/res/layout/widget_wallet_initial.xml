@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2018.
+  ~
+  ~ This file is part of MoneyWallet.
+  ~
+  ~ MoneyWallet is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ MoneyWallet is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!--
+  ~ What the launcher draws between the moment the widget is dropped and the moment the app hands
+  ~ it something to show, which is at least as long as the configuration screen is open.
+  ~
+  ~ Its own file, and not the layout the widget itself uses, because that one carries a sample
+  ~ wallet and a sample balance so the picker has something to show. Drawing those here would put
+  ~ an invented amount of money on the home screen, styled exactly like a real reading, before the
+  ~ user has even said which wallet they meant.
+  -->
+<TextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:gravity="center"
+    android:padding="@dimen/widget_padding"
+    android:text="@string/widget_message_not_configured"
+    android:textColor="@color/widget_text_secondary"
+    android:textSize="14sp" />

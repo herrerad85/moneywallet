@@ -35,6 +35,7 @@ import com.oriondev.moneywallet.storage.preference.BackendManager;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.notification.NotificationContract;
 import com.oriondev.moneywallet.ui.view.theme.ThemeEngine;
+import com.oriondev.moneywallet.ui.widget.WalletWidgetObserver;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 
 import me.weishu.reflection.Reflection;
@@ -59,6 +60,10 @@ public class App extends Application {
         // this existed needs one repair whether or not its language ever changes again, and a
         // system language changed while the process was dead delivers no configuration callback
         SystemCategoryLocalizer.relocalize(this);
+        // Registered here because a balance is moved by writes from all over the app, and this
+        // is the one place every one of them has already started. It gets its own thread and
+        // folds a burst of writes into one redraw, so an import does not pay for this per row.
+        WalletWidgetObserver.register(this);
         initializeScheduledTimers();
     }
 

@@ -97,6 +97,44 @@
         <activity android:name=".ui.activity.LockActivity" />
         <activity android:name=".ui.activity.BackendExplorerActivity" />
         <activity android:name=".ui.activity.ImportExportActivity" />
+        <!--
+          ~ Exported because the launcher is a different app and starts this itself on every
+          ~ version this app runs on. Only Android 12 and later can start a configuration screen
+          ~ that is not exported, through the host, and this app runs from API 24.
+          ~
+          ~ It hands out nothing. It is handed a widget id by whoever starts it, shows the wallet
+          ~ picker, and writes the choice against that id.
+          -->
+        <activity
+            android:name="com.oriondev.moneywallet.ui.widget.WalletWidgetConfigureActivity"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <!--
+          ~ Written out in full instead of as .ui.widget.WalletWidgetProvider on purpose. A
+          ~ relative name is expanded against the namespace in app/build.gradle, so renaming that
+          ~ namespace would change the component name the launcher is holding on the user's
+          ~ behalf, and every placed widget would disappear on the next update with no warning.
+          ~ The namespace here is still com.oriondev.moneywallet while the app ships as
+          ~ io.github.herrerad85.tallybook, so that rename is a thing someone may reasonably do.
+          ~
+          ~ The configuration activity above is written out for the same reason, since
+          ~ widget_wallet_info names it as a literal string that no rename would follow.
+          -->
+        <receiver
+            android:name="com.oriondev.moneywallet.ui.widget.WalletWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_label" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_wallet_info" />
+        </receiver>
 
         <provider
             android:name=".storage.database.DataContentProvider"

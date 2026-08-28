@@ -729,5 +729,15 @@
     <string name="notification_channel_name_exchange_rate">"Exchange rates"</string>
     <string name="notification_channel_name_error">"Error"</string>
 
+    <string name="widget_label">"Wallet balance"</string>
+    <string name="widget_description">"The money in one wallet, with a button that adds a transaction to it"</string>
+    <string name="widget_add_transaction">"Add a transaction"</string>
+    <string name="widget_preview_wallet_name">"Wallet"</string>
+    <string name="widget_preview_wallet_balance">"$ 1,240.00"</string>
+    <string name="widget_message_locked">"Tallybook is locked"</string>
+    <string name="widget_message_not_configured">"Set this widget up again to choose a wallet"</string>
+    <string name="widget_message_wallet_missing">"This wallet is gone. Add the widget again to pick another one."</string>
+    <string name="title_activity_widget_configure">"Wallet balance"</string>
+    <string name="hint_widget_show_when_locked">"Show the balance even when the app is locked"</string>
 
 </resources>

@@ -34,6 +34,7 @@ import androidx.annotation.Nullable;
 
 import com.oriondev.moneywallet.BuildConfig;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
+import com.oriondev.moneywallet.ui.widget.WalletWidgetProvider;
 
 import java.util.List;
 
@@ -839,6 +840,12 @@ public class DataContentProvider extends ContentProvider {
             if (contentProvider instanceof DataContentProvider) {
                 ((DataContentProvider) contentProvider).initializeDatabase(context);
                 PreferenceManager.setCurrentWallet(context, PreferenceManager.NO_CURRENT_WALLET);
+                // Same reason the current wallet is cleared just above. Every wallet is inserted
+                // fresh by a restore, so the ids come back naming other wallets, and a widget is
+                // pointed at one by its id. Left alone it would show a wallet nobody chose and
+                // file new transactions into it. Nothing on this path calls notifyChange either,
+                // which is why the redraw is asked for here.
+                WalletWidgetProvider.forgetConfiguredWallets(context);
             }
             client.close();
         }
