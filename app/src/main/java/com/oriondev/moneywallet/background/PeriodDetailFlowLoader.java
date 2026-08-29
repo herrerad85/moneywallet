@@ -133,8 +133,9 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
                     long money = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY));
                     String iso = cursor.getString(cursor.getColumnIndex(Contract.Transaction.WALLET_CURRENCY));
                     if (categoryCache.containsKey(categoryId)) {
-                        if (childId != 0L) {
-                            addChildMoney(childMoneyMap, childCategoryCache, categoryId, childId, iso, money);
+                        Category child = childId != 0L ? childCategoryCache.get(childId) : null;
+                        if (child != null) {
+                            addChildMoney(childMoneyMap, categoryId, childId, child, iso, money);
                         } else {
                             addDirectMoney(directMoneyMap, categoryId, iso, money);
                         }
@@ -215,33 +216,21 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
      * Adds one transaction to the running total of the child category it was filed under. The
      * caller has already checked that the parent survived the report filter, so a child is only
      * counted here when its money is also counted in the parent row above it.
-     *
-     * A child is listed whatever its own show in reports setting says. That setting is never
-     * consulted for the parent total either, since the roll up looks the parent up and not the
-     * child, so honoring it here would leave the children failing to add up to the row the user
-     * opened.
      */
     private void addChildMoney(Map<Long, Map<Long, CategoryMoney>> childMoneyMap,
-                               Map<Long, Category> childCategoryCache,
-                               long parentId, long childId, String iso, long money) {
+                               long parentId, long childId, Category child, String iso, long money) {
         Map<Long, CategoryMoney> children = childMoneyMap.get(parentId);
-        if (children != null) {
-            CategoryMoney childMoney = children.get(childId);
-            if (childMoney != null) {
-                childMoney.getMoney().addMoney(iso, money);
-                return;
-            }
-        }
-        Category child = childCategoryCache.get(childId);
-        if (child == null) {
-            return;
-        }
         if (children == null) {
             children = new HashMap<>();
             childMoneyMap.put(parentId, children);
         }
-        children.put(childId, new CategoryMoney(childId, child.getName(), child.getIcon(),
-                new Money(iso, money)));
+        CategoryMoney childMoney = children.get(childId);
+        if (childMoney != null) {
+            childMoney.getMoney().addMoney(iso, money);
+        } else {
+            children.put(childId, new CategoryMoney(childId, child.getName(), child.getIcon(),
+                    new Money(iso, money)));
+        }
     }
 
     private void addDirectMoney(Map<Long, Money> directMoneyMap, long categoryId, String iso, long money) {
@@ -284,8 +273,14 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
         }
     }
 
+    /**
+     * The children this screen is allowed to name. A child hidden from the reports is left out,
+     * and the caller then counts its money against the parent's own row, so the setting is kept
+     * without the rows under a category ceasing to add up to the category.
+     */
     private Map<Long, Category> loadChildCategoryCache() {
-        return loadCategories(Contract.Category.PARENT + " IS NOT NULL");
+        return loadCategories(Contract.Category.PARENT + " IS NOT NULL AND " +
+                Contract.Category.SHOW_REPORT + " = '1'");
     }
 
     @SuppressLint("UseSparseArrays")

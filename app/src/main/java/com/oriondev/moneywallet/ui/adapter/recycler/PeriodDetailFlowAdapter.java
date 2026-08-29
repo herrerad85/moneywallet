@@ -131,7 +131,7 @@ public class PeriodDetailFlowAdapter extends RecyclerView.Adapter<PeriodDetailFl
      * What is expanded is deliberately kept across a reload. The loader redelivers its cached
      * result whenever this screen is started again, so clearing here would collapse the list every
      * time the user opened a category's transactions and came back, which is the way through this
-     * feature. An id left behind by a category that is no longer in the data is never read again.
+     * feature.
      */
     public void setData(PeriodDetailFlowData data) {
         mData = data;
