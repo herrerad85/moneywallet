@@ -91,7 +91,10 @@ public class PeriodDetailFlowAdapter extends RecyclerView.Adapter<PeriodDetailFl
 
     private void bindChildrenToggle(ViewHolder holder, CategoryMoney category) {
         boolean hasChildren = !category.getChildren().isEmpty();
-        holder.mChildrenToggle.setVisibility(hasChildren ? View.VISIBLE : View.GONE);
+        // Invisible and not gone, so a category without children still reserves the arrow's width
+        // and every amount in the list keeps the same right edge. A child's amount is read against
+        // the parent total directly above it, so the two have to line up.
+        holder.mChildrenToggle.setVisibility(hasChildren ? View.VISIBLE : View.INVISIBLE);
         if (hasChildren) {
             boolean expanded = mExpandedCategories.contains(category.getId());
             holder.mChildrenToggle.setRotation(expanded ? 180f : 0f);
@@ -124,9 +127,14 @@ public class PeriodDetailFlowAdapter extends RecyclerView.Adapter<PeriodDetailFl
         return mItems.get(position).mChildIndex == INDEX_PARENT ? VIEW_TYPE_PARENT : VIEW_TYPE_CHILD;
     }
 
+    /**
+     * What is expanded is deliberately kept across a reload. The loader redelivers its cached
+     * result whenever this screen is started again, so clearing here would collapse the list every
+     * time the user opened a category's transactions and came back, which is the way through this
+     * feature. An id left behind by a category that is no longer in the data is never read again.
+     */
     public void setData(PeriodDetailFlowData data) {
         mData = data;
-        mExpandedCategories.clear();
         rebuildItems();
     }
 
@@ -191,8 +199,7 @@ public class PeriodDetailFlowAdapter extends RecyclerView.Adapter<PeriodDetailFl
             mMoneyTextView = itemView.findViewById(R.id.money_text_view);
             itemView.setOnClickListener(this);
             if (mChildrenToggle != null) {
-                // Its own listener, because a tap on the row still means what it always did:
-                // open the transactions behind this total.
+                // Its own listener, because the row already has a click of its own.
                 mChildrenToggle.setOnClickListener(new View.OnClickListener() {
 
                     @Override

@@ -225,20 +225,25 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
                                Map<Long, Category> childCategoryCache,
                                long parentId, long childId, String iso, long money) {
         Map<Long, CategoryMoney> children = childMoneyMap.get(parentId);
+        if (children != null) {
+            CategoryMoney childMoney = children.get(childId);
+            if (childMoney != null) {
+                childMoney.getMoney().addMoney(iso, money);
+                return;
+            }
+        }
+        Category child = childCategoryCache.get(childId);
+        if (child == null) {
+            // Nothing is registered for a child the cache does not know, so a category whose
+            // breakdown would be short of its own total shows no arrow at all instead.
+            return;
+        }
         if (children == null) {
             children = new HashMap<>();
             childMoneyMap.put(parentId, children);
         }
-        CategoryMoney childMoney = children.get(childId);
-        if (childMoney != null) {
-            childMoney.getMoney().addMoney(iso, money);
-            return;
-        }
-        Category child = childCategoryCache.get(childId);
-        if (child != null) {
-            children.put(childId, new CategoryMoney(childId, child.getName(), child.getIcon(),
-                    new Money(iso, money)));
-        }
+        children.put(childId, new CategoryMoney(childId, child.getName(), child.getIcon(),
+                new Money(iso, money)));
     }
 
     private void addDirectMoney(Map<Long, Money> directMoneyMap, long categoryId, String iso, long money) {

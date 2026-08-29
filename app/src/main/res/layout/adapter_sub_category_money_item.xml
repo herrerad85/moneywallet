@@ -73,7 +73,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/name_text_view"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/children_toggle_spacer"
         tools:text="€ 500.00" />
+
+    <!-- Holds the width of the arrow a parent row carries, so a child's amount lines up with the
+         total above it. A child has no children of its own and so never has an arrow. -->
+    <Space
+        android:id="@+id/children_toggle_spacer"
+        android:layout_width="48dp"
+        android:layout_height="0dp"
+        android:layout_marginRight="@dimen/material_component_lists_one_line_action_icon_end_margin"
+        android:layout_marginEnd="@dimen/material_component_lists_one_line_action_icon_end_margin"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
