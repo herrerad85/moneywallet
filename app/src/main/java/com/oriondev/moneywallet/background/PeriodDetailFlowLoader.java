@@ -39,6 +39,8 @@ import com.oriondev.moneywallet.utils.DateUtils;
 import com.oriondev.moneywallet.utils.IconLoader;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -82,8 +84,11 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
         Money totalMoney = new Money();
         Map<CurrencyUnit, PieData> pieDataSets = new HashMap<>();
         Map<Long, CategoryMoney> categoryMoneyMap = new HashMap<>();
+        Map<Long, Map<Long, CategoryMoney>> childMoneyMap = new HashMap<>();
+        Map<Long, Money> directMoneyMap = new HashMap<>();
         // load from content resolver
         Map<Long, Category> categoryCache = loadCategoryCache();
+        Map<Long, Category> childCategoryCache = loadChildCategoryCache();
         Uri uri = DataContentProvider.CONTENT_TRANSACTIONS;
         String[] projection = new String[] {
                 Contract.Transaction.CATEGORY_ID,
@@ -115,14 +120,25 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
+                    long ownId = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.CATEGORY_ID));
                     long categoryId;
+                    long childId;
                     if (cursor.isNull(cursor.getColumnIndex(Contract.Transaction.CATEGORY_PARENT_ID))) {
-                        categoryId = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.CATEGORY_ID));
+                        categoryId = ownId;
+                        childId = 0L;
                     } else {
                         categoryId = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.CATEGORY_PARENT_ID));
+                        childId = ownId;
                     }
                     long money = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY));
                     String iso = cursor.getString(cursor.getColumnIndex(Contract.Transaction.WALLET_CURRENCY));
+                    if (categoryCache.containsKey(categoryId)) {
+                        if (childId != 0L) {
+                            addChildMoney(childMoneyMap, childCategoryCache, categoryId, childId, iso, money);
+                        } else {
+                            addDirectMoney(directMoneyMap, categoryId, iso, money);
+                        }
+                    }
                     if (categoryMoneyMap.containsKey(categoryId)) {
                         CategoryMoney categoryMoney = categoryMoneyMap.get(categoryId);
                         categoryMoney.getMoney().addMoney(iso, money);
@@ -174,6 +190,8 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
                 }*/
                 // <---
             }
+            attachChildren(categoryMoney, childMoneyMap.get(categoryMoney.getId()),
+                    directMoneyMap.get(categoryMoney.getId()));
             categoryMoneyList.add(categoryMoney);
         }
         // buildMaterialDialog the return object
@@ -193,8 +211,88 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
         return new PeriodDetailFlowData(totalMoney, pieDataList, categoryMoneyList);
     }
 
+    /**
+     * Adds one transaction to the running total of the child category it was filed under. The
+     * caller has already checked that the parent survived the report filter, so a child is only
+     * counted here when its money is also counted in the parent row above it.
+     *
+     * A child is listed whatever its own show in reports setting says. That setting is never
+     * consulted for the parent total either, since the roll up looks the parent up and not the
+     * child, so honoring it here would leave the children failing to add up to the row the user
+     * opened.
+     */
+    private void addChildMoney(Map<Long, Map<Long, CategoryMoney>> childMoneyMap,
+                               Map<Long, Category> childCategoryCache,
+                               long parentId, long childId, String iso, long money) {
+        Map<Long, CategoryMoney> children = childMoneyMap.get(parentId);
+        if (children == null) {
+            children = new HashMap<>();
+            childMoneyMap.put(parentId, children);
+        }
+        CategoryMoney childMoney = children.get(childId);
+        if (childMoney != null) {
+            childMoney.getMoney().addMoney(iso, money);
+            return;
+        }
+        Category child = childCategoryCache.get(childId);
+        if (child != null) {
+            children.put(childId, new CategoryMoney(childId, child.getName(), child.getIcon(),
+                    new Money(iso, money)));
+        }
+    }
+
+    private void addDirectMoney(Map<Long, Money> directMoneyMap, long categoryId, String iso, long money) {
+        Money direct = directMoneyMap.get(categoryId);
+        if (direct == null) {
+            directMoneyMap.put(categoryId, new Money(iso, money));
+        } else {
+            direct.addMoney(iso, money);
+        }
+    }
+
+    /**
+     * Children sorted by name, because the map they arrive in has no order of its own and rows
+     * that move between two loads of the same period read as a defect.
+     *
+     * What was filed on the parent itself leads the list, so that the rows under a category always
+     * add up to the total on the category. Without it the money on the parent is on screen in the
+     * total and nowhere in the breakdown, which reads as an error in the arithmetic. Nothing is
+     * added when the category has no children, since there is nothing to expand and the total
+     * already stands on its own.
+     */
+    private void attachChildren(CategoryMoney parent, Map<Long, CategoryMoney> children, Money direct) {
+        if (children == null) {
+            return;
+        }
+        if (direct != null) {
+            parent.addChild(new CategoryMoney(parent.getId(), parent.getName(), parent.getIcon(), direct));
+        }
+        List<CategoryMoney> sorted = new ArrayList<>(children.values());
+        Collections.sort(sorted, new Comparator<CategoryMoney>() {
+
+            @Override
+            public int compare(CategoryMoney left, CategoryMoney right) {
+                return String.CASE_INSENSITIVE_ORDER.compare(left.getName(), right.getName());
+            }
+
+        });
+        for (CategoryMoney child : sorted) {
+            parent.addChild(child);
+        }
+    }
+
+    private Map<Long, Category> loadChildCategoryCache() {
+        return loadCategories(Contract.Category.PARENT + " IS NOT NULL");
+    }
+
     @SuppressLint("UseSparseArrays")
     private Map<Long, Category> loadCategoryCache() {
+        return loadCategories(Contract.Category.PARENT + " IS NULL AND " +
+                Contract.Category.SHOW_REPORT + " = '1'");
+    }
+
+    @SuppressLint("UseSparseArrays")
+    private Map<Long, Category> loadCategories(String selection) {
         Map<Long, Category> cache = new HashMap<>();
         Uri uri = DataContentProvider.CONTENT_CATEGORIES;
         String[] projection = new String[] {
@@ -203,8 +301,6 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
                 Contract.Category.ICON,
                 Contract.Category.TYPE
         };
-        String selection = Contract.Category.PARENT + " IS NULL AND " +
-                Contract.Category.SHOW_REPORT + " = '1'";
         Cursor cursor = getContext().getContentResolver().query(uri, projection, selection, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {

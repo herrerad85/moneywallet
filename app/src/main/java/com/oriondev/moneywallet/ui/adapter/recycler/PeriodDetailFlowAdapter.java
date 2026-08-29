@@ -29,17 +29,31 @@ import android.widget.TextView;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.CategoryMoney;
 import com.oriondev.moneywallet.model.PeriodDetailFlowData;
+import com.oriondev.moneywallet.ui.view.CategoryChildIndicator;
 import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by andrea on 13/08/18.
  */
 public class PeriodDetailFlowAdapter extends RecyclerView.Adapter<PeriodDetailFlowAdapter.ViewHolder> {
 
+    private static final int INDEX_PARENT = -1;
+
+    private static final int VIEW_TYPE_PARENT = 0;
+    private static final int VIEW_TYPE_CHILD = 1;
+
     private final Controller mController;
     private final boolean mIncomes;
     private final MoneyFormatter mMoneyFormatter;
+
+    private final List<ItemWrapper> mItems = new ArrayList<>();
+    private final Set<Long> mExpandedCategories = new HashSet<>();
 
     private PeriodDetailFlowData mData;
 
@@ -51,12 +65,16 @@ public class PeriodDetailFlowAdapter extends RecyclerView.Adapter<PeriodDetailFl
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.adapter_category_money_item, parent, false));
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        if (viewType == VIEW_TYPE_PARENT) {
+            return new ViewHolder(inflater.inflate(R.layout.adapter_category_money_item, parent, false));
+        }
+        return new ViewHolder(inflater.inflate(R.layout.adapter_sub_category_money_item, parent, false));
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        CategoryMoney category = mData.getCategory(position);
+        CategoryMoney category = getCategoryAt(position);
         IconLoader.loadInto(category.getIcon(), holder.mIconImageView);
         holder.mNameTextView.setText(category.getName());
         if (mIncomes) {
@@ -64,39 +82,137 @@ public class PeriodDetailFlowAdapter extends RecyclerView.Adapter<PeriodDetailFl
         } else {
             mMoneyFormatter.applyTintedExpense(holder.mMoneyTextView, category.getMoney());
         }
+        if (holder.getItemViewType() == VIEW_TYPE_CHILD) {
+            holder.mChildIndicator.setLast(isLastChild(position));
+        } else {
+            bindChildrenToggle(holder, category);
+        }
+    }
+
+    private void bindChildrenToggle(ViewHolder holder, CategoryMoney category) {
+        boolean hasChildren = !category.getChildren().isEmpty();
+        holder.mChildrenToggle.setVisibility(hasChildren ? View.VISIBLE : View.GONE);
+        if (hasChildren) {
+            boolean expanded = mExpandedCategories.contains(category.getId());
+            holder.mChildrenToggle.setRotation(expanded ? 180f : 0f);
+            // Named, because a screen reader reaches the arrow on its own and every one of them
+            // would otherwise read the same words.
+            holder.mChildrenToggle.setContentDescription(holder.itemView.getContext().getString(
+                    expanded ? R.string.description_hide_subcategories
+                            : R.string.description_show_subcategories, category.getName()));
+        }
+    }
+
+    /**
+     * Whether the child at this row is the last one drawn under its category, which is what tells
+     * the indicator to stop its line half way. A category's children are shown or hidden all
+     * together, so the last of them is always the last one on screen.
+     */
+    private boolean isLastChild(int position) {
+        ItemWrapper item = mItems.get(position);
+        CategoryMoney parent = mData.getCategory(item.mParentIndex);
+        return item.mChildIndex == parent.getChildren().size() - 1;
     }
 
     @Override
     public int getItemCount() {
-        return mData != null ? mData.getCategoryCount() : 0;
+        return mItems.size();
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return mItems.get(position).mChildIndex == INDEX_PARENT ? VIEW_TYPE_PARENT : VIEW_TYPE_CHILD;
     }
 
     public void setData(PeriodDetailFlowData data) {
         mData = data;
+        mExpandedCategories.clear();
+        rebuildItems();
+    }
+
+    /**
+     * Every category is a row, and the children of an expanded one follow it. Categories start
+     * collapsed so that opening a period still shows the list of totals it always did.
+     */
+    private void rebuildItems() {
+        mItems.clear();
+        if (mData != null) {
+            for (int i = 0; i < mData.getCategoryCount(); i++) {
+                CategoryMoney category = mData.getCategory(i);
+                mItems.add(new ItemWrapper(i, INDEX_PARENT));
+                if (mExpandedCategories.contains(category.getId())) {
+                    for (int j = 0; j < category.getChildren().size(); j++) {
+                        mItems.add(new ItemWrapper(i, j));
+                    }
+                }
+            }
+        }
         notifyDataSetChanged();
+    }
+
+    private void toggleChildren(long categoryId) {
+        if (!mExpandedCategories.remove(categoryId)) {
+            mExpandedCategories.add(categoryId);
+        }
+        rebuildItems();
+    }
+
+    private CategoryMoney getCategoryAt(int position) {
+        ItemWrapper item = mItems.get(position);
+        CategoryMoney parent = mData.getCategory(item.mParentIndex);
+        return item.mChildIndex == INDEX_PARENT ? parent : parent.getChildren().get(item.mChildIndex);
+    }
+
+    private static class ItemWrapper {
+
+        private final int mParentIndex;
+        private final int mChildIndex;
+
+        private ItemWrapper(int parentIndex, int childIndex) {
+            mParentIndex = parentIndex;
+            mChildIndex = childIndex;
+        }
     }
 
     /*package-local*/ class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+        private CategoryChildIndicator mChildIndicator;
         private ImageView mIconImageView;
+        private ImageView mChildrenToggle;
         private TextView mNameTextView;
         private TextView mMoneyTextView;
 
-        public ViewHolder(View itemView) {
+        /*package-local*/ ViewHolder(View itemView) {
             super(itemView);
+            mChildIndicator = itemView.findViewById(R.id.category_child_indicator);
             mIconImageView = itemView.findViewById(R.id.icon_image_view);
+            mChildrenToggle = itemView.findViewById(R.id.children_toggle_image_view);
             mNameTextView = itemView.findViewById(R.id.name_text_view);
             mMoneyTextView = itemView.findViewById(R.id.money_text_view);
             itemView.setOnClickListener(this);
+            if (mChildrenToggle != null) {
+                // Its own listener, because a tap on the row still means what it always did:
+                // open the transactions behind this total.
+                mChildrenToggle.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View view) {
+                        int position = getAdapterPosition();
+                        if (position != RecyclerView.NO_POSITION) {
+                            toggleChildren(getCategoryAt(position).getId());
+                        }
+                    }
+
+                });
+            }
         }
 
         @Override
         public void onClick(View v) {
             if (mController != null) {
-                int index = getAdapterPosition();
-                if (mData != null) {
-                    CategoryMoney category = mData.getCategory(index);
-                    mController.onCategoryClick(category.getId());
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    mController.onCategoryClick(getCategoryAt(position).getId());
                 }
             }
         }

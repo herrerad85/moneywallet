@@ -26,15 +26,23 @@
     android:layout_height="@dimen/material_component_lists_one_line_with_avatar_height"
     android:background="?attr/selectableItemBackground" >
 
+    <com.oriondev.moneywallet.ui.view.theme.ThemedCategoryChildIndicator
+        android:id="@+id/category_child_indicator"
+        android:layout_width="@dimen/material_component_lists_one_line_avatar_width"
+        android:layout_height="@dimen/material_component_lists_one_line_with_avatar_height"
+        android:layout_marginLeft="@dimen/material_component_lists_one_line_avatar_start_margin"
+        android:layout_marginStart="@dimen/material_component_lists_one_line_avatar_start_margin"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ImageView
         android:id="@+id/icon_image_view"
         android:layout_width="@dimen/material_component_lists_one_line_avatar_width"
         android:layout_height="@dimen/material_component_lists_one_line_avatar_height"
         android:contentDescription="@string/description_category_icon"
-        android:layout_marginLeft="@dimen/material_component_lists_one_line_avatar_start_margin"
-        android:layout_marginStart="@dimen/material_component_lists_one_line_avatar_start_margin"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/category_child_indicator"
         app:layout_constraintTop_toTopOf="parent"
         tools:src="@mipmap/ic_launcher" />
 
@@ -65,25 +73,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/name_text_view"
-        app:layout_constraintEnd_toStartOf="@+id/children_toggle_image_view"
-        app:layout_goneMarginEnd="@dimen/material_component_lists_one_line_primary_text_end_margin"
-        tools:text="€ 500.00" />
-
-    <com.oriondev.moneywallet.ui.view.theme.ThemedImageView
-        android:id="@+id/children_toggle_image_view"
-        android:layout_width="48dp"
-        android:layout_height="0dp"
-        android:layout_marginRight="@dimen/material_component_lists_one_line_action_icon_end_margin"
-        android:layout_marginEnd="@dimen/material_component_lists_one_line_action_icon_end_margin"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:padding="12dp"
-        android:scaleType="fitCenter"
-        android:src="@drawable/ic_expand_more_black_24dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:theme_backgroundColor="colorWindowForeground"
-        tools:visibility="visible" />
+        tools:text="€ 500.00" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

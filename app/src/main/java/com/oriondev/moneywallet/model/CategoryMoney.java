@@ -19,6 +19,9 @@
 
 package com.oriondev.moneywallet.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by andrea on 13/08/18.
  */
@@ -28,12 +31,26 @@ public class CategoryMoney {
     private final String mName;
     private final Icon mIcon;
     private final Money mMoney;
+    private final List<CategoryMoney> mChildren = new ArrayList<>();
 
     public CategoryMoney(long id, String name, Icon icon, Money money) {
         mId = id;
         mName = name;
         mIcon = icon;
         mMoney = money;
+    }
+
+    /**
+     * The child categories that contributed to this total, empty when nothing was spent through
+     * one. A child is only ever added to the parent it rolls up into, so the money on this object
+     * always covers every child listed here plus whatever was filed on the parent directly.
+     */
+    public List<CategoryMoney> getChildren() {
+        return mChildren;
+    }
+
+    public void addChild(CategoryMoney child) {
+        mChildren.add(child);
     }
 
     public long getId() {
