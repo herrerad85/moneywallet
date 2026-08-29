@@ -158,6 +158,23 @@ public class PeriodDetailFlowAdapter extends RecyclerView.Adapter<PeriodDetailFl
         notifyDataSetChanged();
     }
 
+    public long[] getExpandedCategories() {
+        long[] expanded = new long[mExpandedCategories.size()];
+        int index = 0;
+        for (Long categoryId : mExpandedCategories) {
+            expanded[index++] = categoryId;
+        }
+        return expanded;
+    }
+
+    public void setExpandedCategories(long[] expanded) {
+        mExpandedCategories.clear();
+        for (long categoryId : expanded) {
+            mExpandedCategories.add(categoryId);
+        }
+        rebuildItems();
+    }
+
     private void toggleChildren(long categoryId) {
         if (!mExpandedCategories.remove(categoryId)) {
             mExpandedCategories.add(categoryId);

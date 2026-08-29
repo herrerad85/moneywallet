@@ -42,8 +42,7 @@ public class CategoryMoney {
 
     /**
      * The child categories that contributed to this total, empty when nothing was spent through
-     * one. A child is only ever added to the parent it rolls up into, so the money on this object
-     * always covers every child listed here plus whatever was filed on the parent directly.
+     * one. A child is only ever added to the parent it rolls up into.
      */
     public List<CategoryMoney> getChildren() {
         return mChildren;

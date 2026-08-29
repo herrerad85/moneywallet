@@ -234,8 +234,6 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
         }
         Category child = childCategoryCache.get(childId);
         if (child == null) {
-            // Nothing is registered for a child the cache does not know, so a category whose
-            // breakdown would be short of its own total shows no arrow at all instead.
             return;
         }
         if (children == null) {
