@@ -25,6 +25,7 @@ import android.content.ContentValues;
 import android.net.Uri;
 
 import com.oriondev.moneywallet.storage.database.model.*;
+import java.util.UUID;
 
 /**
  * Created by andrea on 27/10/18.
@@ -190,6 +191,41 @@ public class SQLDatabaseImporter {
         contentValues.put(Schema.Budget.LAST_EDIT, budget.mLastEdit);
         contentValues.put(Schema.Budget.DELETED, budget.mDeleted);
         Uri uri = SyncContentProvider.CONTENT_BUDGET;
+        uri = contentResolver.insert(uri, contentValues);
+        return ContentUris.parseId(uri);
+    }
+
+    /**
+     * Puts the single category a budget carries into the join table. A backup written before the
+     * budget_categories array existed, and the legacy database, both name one category on the
+     * budget row itself, and the queries match on the join table alone, so a restore that skipped
+     * this would leave every category budget matching nothing at all.
+     *
+     * @param contentResolver resolver the restore is writing through.
+     * @param budgetId id the budget was given by this restore.
+     * @param categoryId category it names, ignored when null.
+     */
+    public static void insertBudgetCategory(ContentResolver contentResolver, long budgetId, Long categoryId) {
+        if (categoryId == null) {
+            return;
+        }
+        BudgetCategory budgetCategory = new BudgetCategory();
+        budgetCategory.mBudget = budgetId;
+        budgetCategory.mCategory = categoryId;
+        budgetCategory.mUUID = UUID.randomUUID().toString();
+        budgetCategory.mLastEdit = System.currentTimeMillis();
+        budgetCategory.mDeleted = false;
+        insert(contentResolver, budgetCategory);
+    }
+
+    public static long insert(ContentResolver contentResolver, BudgetCategory budgetCategory) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Schema.BudgetCategory.BUDGET, budgetCategory.mBudget);
+        contentValues.put(Schema.BudgetCategory.CATEGORY, budgetCategory.mCategory);
+        contentValues.put(Schema.BudgetCategory.UUID, budgetCategory.mUUID);
+        contentValues.put(Schema.BudgetCategory.LAST_EDIT, budgetCategory.mLastEdit);
+        contentValues.put(Schema.BudgetCategory.DELETED, budgetCategory.mDeleted);
+        Uri uri = SyncContentProvider.CONTENT_BUDGET_CATEGORY;
         uri = contentResolver.insert(uri, contentValues);
         return ContentUris.parseId(uri);
     }

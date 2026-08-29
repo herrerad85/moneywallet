@@ -63,6 +63,7 @@ public class LegacyEditionImporter {
         mDatabaseImporter.importDebtPeople(contentResolver);
         mDatabaseImporter.importBudgets(contentResolver);
         mDatabaseImporter.importBudgetWallets(contentResolver);
+        mDatabaseImporter.importBudgetCategories(contentResolver);
         mDatabaseImporter.importSavings(contentResolver);
         mDatabaseImporter.importRecurrentTransactions(contentResolver);
         mDatabaseImporter.importRecurrentTransfers(contentResolver);

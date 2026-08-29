@@ -241,6 +241,16 @@ import java.util.Map;
         return budget;
     }
 
+    /*package-local*/ BudgetCategory getBudgetCategory(JSONObject object) {
+        BudgetCategory budgetCategory = new BudgetCategory();
+        budgetCategory.mBudget = mCacheBudgets.get(object.optString(JSONDatabase.BudgetCategory.BUDGET, null));
+        budgetCategory.mCategory = mCacheCategories.get(object.optString(JSONDatabase.BudgetCategory.CATEGORY, null));
+        budgetCategory.mUUID = object.optString(JSONDatabase.BudgetCategory.ID, null);
+        budgetCategory.mLastEdit = object.optLong(JSONDatabase.BudgetCategory.LAST_EDIT, 0L);
+        budgetCategory.mDeleted = object.optBoolean(JSONDatabase.BudgetCategory.DELETED, false);
+        return budgetCategory;
+    }
+
     /*package-local*/ BudgetWallet getBudgetWallet(JSONObject object) {
         BudgetWallet budgetWallet = new BudgetWallet();
         budgetWallet.mBudget = mCacheBudgets.get(object.optString(JSONDatabase.BudgetWallet.BUDGET, null));

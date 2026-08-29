@@ -70,7 +70,7 @@ import java.util.Date;
  */
 public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyPicker.Controller,
                                                                         BudgetTypePicker.Controller,
-                                                                        CategoryPicker.Controller,
+                                                                        CategoryPicker.MultiCategoryController,
                                                                         DateTimePicker.Controller,
                                                                         RecurrencePicker.Controller,
                                                                         WalletPicker.MultiWalletController {
@@ -325,7 +325,7 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
             @NonNull
             @Override
             public String getErrorMessage() {
-                return getString(R.string.error_input_missing_category);
+                return getString(R.string.error_input_missing_categories);
             }
 
             @Override
@@ -352,7 +352,7 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
 
             @Override
             public void onClick(View v) {
-                mCategoryPicker.showPicker();
+                mCategoryPicker.showMultiPicker();
             }
 
         });
@@ -395,7 +395,7 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
         super.onViewCreated(savedInstanceState);
         long money = 0L;
         Contract.BudgetType type = null;
-        Category category = null;
+        Category[] categories = null;
         Date startDate = null;
         Date endDate = null;
         String rule = null;
@@ -421,14 +421,6 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
                 if (cursor != null) {
                     if (cursor.moveToFirst()) {
                         type = Contract.BudgetType.fromValue(cursor.getInt(cursor.getColumnIndex(Contract.Budget.TYPE)));
-                        if (type == Contract.BudgetType.CATEGORY) {
-                            category = new Category(
-                                    cursor.getLong(cursor.getColumnIndex(Contract.Budget.CATEGORY_ID)),
-                                    cursor.getString(cursor.getColumnIndex(Contract.Budget.CATEGORY_NAME)),
-                                    IconLoader.parse(cursor.getString(cursor.getColumnIndex(Contract.Budget.CATEGORY_ICON))),
-                                    Contract.CategoryType.fromValue(cursor.getInt(cursor.getColumnIndex(Contract.Budget.CATEGORY_TYPE)))
-                            );
-                        }
                         money = cursor.getLong(cursor.getColumnIndex(Contract.Budget.MONEY));
                         startDate = DateUtils.getDateFromSQLDateString(cursor.getString(cursor.getColumnIndex(Contract.Budget.START_DATE)));
                         endDate = DateUtils.getDateFromSQLDateString(cursor.getString(cursor.getColumnIndex(Contract.Budget.END_DATE)));
@@ -439,6 +431,35 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
                         }
                     }
                     cursor.close();
+                }
+                // The budget row names its categories in one column of ids and one of joined
+                // names, neither of which rebuilds the objects the picker holds, so they are
+                // asked for on their own. This is the same reason the wallets are queried again
+                // below.
+                if (type == Contract.BudgetType.CATEGORY) {
+                    Uri categoriesUri = Uri.withAppendedPath(uri, "categories");
+                    String[] categoryProjection = new String[] {
+                            Contract.Category.ID,
+                            Contract.Category.NAME,
+                            Contract.Category.ICON,
+                            Contract.Category.TYPE
+                    };
+                    // lowest id first, which is the order a budget row hands its categories
+                    // over in, so the one that ends up back in Contract.Budget.CATEGORY_ID on a
+                    // save is the same one that was there before the edit
+                    Cursor categoryCursor = contentResolver.query(categoriesUri, categoryProjection, null, null, Contract.Category.ID + " ASC");
+                    if (categoryCursor != null) {
+                        categories = new Category[categoryCursor.getCount()];
+                        for (int i = 0; categoryCursor.moveToPosition(i); i++) {
+                            categories[i] = new Category(
+                                    categoryCursor.getLong(categoryCursor.getColumnIndex(Contract.Category.ID)),
+                                    categoryCursor.getString(categoryCursor.getColumnIndex(Contract.Category.NAME)),
+                                    IconLoader.parse(categoryCursor.getString(categoryCursor.getColumnIndex(Contract.Category.ICON))),
+                                    Contract.CategoryType.fromValue(categoryCursor.getInt(categoryCursor.getColumnIndex(Contract.Category.TYPE)))
+                            );
+                        }
+                        categoryCursor.close();
+                    }
                 }
                 // the previous cursor contains only a column with the list of ids of linked wallets.
                 // we need instead to buildMaterialDialog the full wallet object so we must perform a separated
@@ -510,7 +531,7 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
         FragmentManager fragmentManager = getSupportFragmentManager();
         mMoneyPicker = MoneyPicker.createPicker(fragmentManager, TAG_MONEY_PICKER, null, money);
         mBudgetTypePicker = BudgetTypePicker.createPicker(fragmentManager, TAG_BUDGET_TYPE_PICKER, type);
-        mCategoryPicker = CategoryPicker.createPicker(fragmentManager, TAG_CATEGORY_PICKER, category);
+        mCategoryPicker = CategoryPicker.createPicker(fragmentManager, TAG_CATEGORY_PICKER, categories);
         mStartDatePicker = DateTimePicker.createPicker(fragmentManager, TAG_START_DATE_PICKER, startDate);
         mEndDatePicker = DateTimePicker.createPicker(fragmentManager, TAG_END_DATE_PICKER, endDate);
         mWalletsPicker = WalletPicker.createPicker(fragmentManager, TAG_WALLETS_PICKER, wallets);
@@ -799,8 +820,9 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
             ContentValues contentValues = new ContentValues();
             contentValues.put(Contract.Budget.TYPE, mBudgetTypePicker.getCurrentType().getValue());
             if (mBudgetTypePicker.getCurrentType() == Contract.BudgetType.CATEGORY) {
-                contentValues.put(Contract.Budget.CATEGORY_ID, mCategoryPicker.getCurrentCategory().getId());
+                contentValues.put(Contract.Budget.CATEGORY_IDS, Contract.getObjectIds(mCategoryPicker.getCurrentCategories()));
             } else {
+                contentValues.putNull(Contract.Budget.CATEGORY_IDS);
                 contentValues.putNull(Contract.Budget.CATEGORY_ID);
             }
             if (mRepeatCheckBox.isChecked() && isSupersededPeriod()) {
@@ -894,9 +916,16 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
     }
 
     @Override
-    public void onCategoryChanged(String tag, Category category) {
-        if (category != null) {
-            mCategoryEditText.setText(category.getName());
+    public void onCategoryListChanged(String tag, Category[] categories) {
+        if (categories != null && categories.length > 0) {
+            StringBuilder builder = new StringBuilder();
+            for (Category category : categories) {
+                if (builder.length() > 0) {
+                    builder.append(", ");
+                }
+                builder.append(category.getName());
+            }
+            mCategoryEditText.setText(builder.toString());
         } else {
             mCategoryEditText.setText(null);
         }

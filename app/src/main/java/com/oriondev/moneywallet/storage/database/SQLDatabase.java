@@ -22,6 +22,7 @@ package com.oriondev.moneywallet.storage.database;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -73,7 +74,7 @@ import java.util.UUID;
     private static final String TAG = "SQLDatabase";
 
     /*package-local*/ static final String DATABASE_NAME = "database.db";
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
 
     private static final String ENABLE_FOREIGN_KEYS = "PRAGMA foreign_keys=ON";
 
@@ -110,6 +111,7 @@ import java.util.UUID;
         db.execSQL(Schema.CREATE_TABLE_DEBT_PEOPLE);
         db.execSQL(Schema.CREATE_TABLE_BUDGET);
         db.execSQL(Schema.CREATE_TABLE_BUDGET_WALLET);
+        db.execSQL(Schema.CREATE_TABLE_BUDGET_CATEGORY);
         db.execSQL(Schema.CREATE_TABLE_SAVING);
         db.execSQL(Schema.CREATE_TABLE_TRANSACTION);
         db.execSQL(Schema.CREATE_TABLE_TRANSACTION_PEOPLE);
@@ -167,6 +169,24 @@ import java.util.UUID;
             if (!hasColumn(db, Schema.Budget.TABLE, Schema.Budget.RULE_START)) {
                 db.execSQL(Schema.CREATE_BUDGET_RULE_START_COLUMN);
             }
+        }
+        if (oldVersion < 5) {
+            // a budget can now cover more than one category, and the join table is what the
+            // queries match on. This runs a second time whenever a release that predates the
+            // table is installed over this database and then upgraded again, because onDowngrade
+            // leaves the schema alone and only stamps the version back. The table survives that
+            // round trip, so the create is guarded and the fill covers only the budgets that hold
+            // no live row. Anything the older release wrote to the single column of a budget
+            // that already covers categories is therefore ignored, which is the safe direction,
+            // the older release could only ever see one of them and reading its column would
+            // drop the rest. The align then puts that column back on the first category the
+            // budget covers, so no live budget comes out of an upgrade carrying a column its own
+            // categories do not name.
+            db.execSQL(Schema.CREATE_TABLE_BUDGET_CATEGORY);
+            db.execSQL(Schema.FILL_BUDGET_CATEGORY_FROM_COLUMN);
+            db.execSQL(Schema.ALIGN_BUDGET_CATEGORY_COLUMN);
+            db.execSQL(Schema.CLEAR_BUDGET_CATEGORY_OF_OTHER_TYPES);
+            db.execSQL(Schema.CLEAR_BUDGET_COLUMN_OF_OTHER_TYPES);
         }
     }
 
@@ -2113,11 +2133,31 @@ import java.util.UUID;
                 cursor.close();
             }
         }
-        // check if category is in use in some budget
+        // check if category is in use in some budget. Both places have to be asked. The column
+        // carries ON DELETE CASCADE, so a category it names and this check misses does not fail,
+        // it takes the whole budget row with it. And a budget covering several categories reaches
+        // all but the first of them through the join table alone, which the column cannot see.
         projection = new String[] {Schema.Budget.ID};
         where = Schema.Budget.CATEGORY + " = ? AND " + Schema.Budget.DELETED + " = 0";
         whereArgs = new String[]{String.valueOf(categoryId)};
         cursor = getReadableDatabase().query(Schema.Budget.TABLE, projection, where, whereArgs, null, null, null);
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    throw new SQLiteDataException(Contract.ErrorCode.CATEGORY_IN_USE,
+                            String.format(Locale.ENGLISH, "The category (id: %d) cannot be deleted because it is in use in %d budgets", categoryId, cursor.getCount()));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        projection = new String[] {"bc." + Schema.BudgetCategory.BUDGET};
+        where = "bc." + Schema.BudgetCategory.CATEGORY + " = ? AND bc." +
+                Schema.BudgetCategory.DELETED + " = 0 AND b." + Schema.Budget.DELETED + " = 0";
+        whereArgs = new String[]{String.valueOf(categoryId)};
+        cursor = getReadableDatabase().query(Schema.BudgetCategory.TABLE + " AS bc JOIN " +
+                Schema.Budget.TABLE + " AS b ON bc." + Schema.BudgetCategory.BUDGET + " = b." +
+                Schema.Budget.ID, projection, where, whereArgs, null, null, null);
         if (cursor != null) {
             try {
                 if (cursor.moveToFirst()) {
@@ -2811,7 +2851,20 @@ import java.util.UUID;
                 "b." + Schema.Budget.ID + " AS " + Contract.Budget.ID + ", " +
                 "b." + Schema.Budget.TYPE + " AS " + Contract.Budget.TYPE + ", " +
                 "b." + Schema.Budget.CATEGORY + " AS " + Contract.Budget.CATEGORY_ID + ", " +
-                "c." + Schema.Category.NAME + " AS " + Contract.Budget.CATEGORY_NAME + ", " +
+                "(SELECT GROUP_CONCAT(n, ', ') FROM (SELECT c2." + Schema.Category.NAME +
+                " AS n FROM " + Schema.BudgetCategory.TABLE + " AS bc2 JOIN " +
+                Schema.Category.TABLE + " AS c2 ON bc2." + Schema.BudgetCategory.CATEGORY +
+                " = c2." + Schema.Category.ID + " AND c2." + Schema.Category.DELETED +
+                " = 0 WHERE bc2." + Schema.BudgetCategory.BUDGET + " = b." + Schema.Budget.ID +
+                " AND bc2." + Schema.BudgetCategory.DELETED + " = 0 ORDER BY c2." +
+                Schema.Category.NAME + ")) AS " + Contract.Budget.CATEGORY_NAME + ", " +
+                "(SELECT GROUP_CONCAT(i) FROM (SELECT '<' || bc3." + Schema.BudgetCategory.CATEGORY +
+                " || '>' AS i FROM " + Schema.BudgetCategory.TABLE + " AS bc3 JOIN " +
+                Schema.Category.TABLE + " AS c3 ON bc3." + Schema.BudgetCategory.CATEGORY +
+                " = c3." + Schema.Category.ID + " AND c3." + Schema.Category.DELETED +
+                " = 0 WHERE bc3." + Schema.BudgetCategory.BUDGET + " = b." + Schema.Budget.ID +
+                " AND bc3." + Schema.BudgetCategory.DELETED + " = 0 ORDER BY bc3." +
+                Schema.BudgetCategory.CATEGORY + ")) AS " + Contract.Budget.CATEGORY_IDS + ", " +
                 "c." + Schema.Category.ICON + " AS " + Contract.Budget.CATEGORY_ICON + ", " +
                 "c." + Schema.Category.TYPE + " AS " + Contract.Budget.CATEGORY_TYPE + ", " +
                 "c." + Schema.Category.SHOW_REPORT + " AS " + Contract.Budget.CATEGORY_SHOW_REPORT + ", " +
@@ -2904,9 +2957,9 @@ import java.util.UUID;
                 Schema.Transaction.WALLET + " AND DATETIME(t." + Schema.Transaction.DATE +
                 ") <= DATETIME('now', 'localtime') AND DATE(t." + Schema.Transaction.DATE +
                 ") >= DATE(b." + Schema.Budget.START_DATE + ") AND DATE(t." +
-                Schema.Transaction.DATE + ") <=  DATE(b." + Schema.Budget.END_DATE + ") AND (b."
-                + Schema.Budget.CATEGORY + " = t." + Schema.Transaction.CATEGORY + " OR b." +
-                Schema.Budget.CATEGORY + " = t._parent_category)) GROUP BY b." + Schema.Budget.ID +
+                Schema.Transaction.DATE + ") <=  DATE(b." + Schema.Budget.END_DATE + ") AND (t."
+                + Schema.Transaction.CATEGORY + " IN " + budgetCategoriesOf("b") +
+                " OR t._parent_category IN " + budgetCategoriesOf("b") + ")) GROUP BY b." + Schema.Budget.ID +
                 ", _wallet_id) AS b LEFT JOIN " + Schema.Category.TABLE + " AS c ON b." +
                 Schema.Budget.CATEGORY + " = c." + Schema.Category.ID + " AND c." +
                 Schema.Category.DELETED + " = 0 GROUP BY b." + Schema.Budget.ID;
@@ -2938,6 +2991,35 @@ import java.util.UUID;
                 "ON bw." + Schema.BudgetWallet.WALLET + " = w." + Schema.Wallet.ID + " AND bw." +
                 Schema.BudgetWallet.DELETED + " = 0 AND w." + Schema.Wallet.DELETED + " = 0 AND " +
                 Schema.BudgetWallet.BUDGET + " = " + String.valueOf(id);
+        return queryFrom(subQuery, projection, selection, selectionArgs, sortOrder);
+    }
+
+    /**
+     * This method is called by the content provider when the user is querying all the categories
+     * covered by a given budget.
+     *
+     * @param id of the budget.
+     * @param projection column names that are requested to be part of the cursor.
+     * @param selection string that may contains additional filters for the query.
+     * @param selectionArgs string array that may contains the arguments for the selection string.
+     * @param sortOrder string that may contains column name to use to sort the cursor.
+     * @return a cursor with zero or more rows.
+     */
+    /*package-local*/ Cursor getBudgetCategories(long id, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        String subQuery = "SELECT " +
+                "c." + Schema.Category.ID + " AS " + Contract.Category.ID + ", " +
+                "c." + Schema.Category.NAME + " AS " + Contract.Category.NAME + ", " +
+                "c." + Schema.Category.ICON + " AS " + Contract.Category.ICON + ", " +
+                "c." + Schema.Category.TYPE + " AS " + Contract.Category.TYPE + ", " +
+                "c." + Schema.Category.PARENT + " AS " + Contract.Category.PARENT + ", " +
+                "c." + Schema.Category.SHOW_REPORT + " AS " + Contract.Category.SHOW_REPORT + ", " +
+                "c." + Schema.Category.INDEX + " AS " + Contract.Category.INDEX + ", " +
+                "c." + Schema.Category.TAG + " AS " + Contract.Category.TAG + " " +
+                "FROM " + Schema.BudgetCategory.TABLE + " AS bc JOIN " + Schema.Category.TABLE +
+                " AS c ON bc." + Schema.BudgetCategory.CATEGORY + " = c." + Schema.Category.ID +
+                " AND bc." + Schema.BudgetCategory.DELETED + " = 0 AND c." +
+                Schema.Category.DELETED + " = 0 AND bc." + Schema.BudgetCategory.BUDGET + " = " +
+                String.valueOf(id);
         return queryFrom(subQuery, projection, selection, selectionArgs, sortOrder);
     }
 
@@ -3065,9 +3147,9 @@ import java.util.UUID;
                 ") AS b LEFT JOIN " + Schema.Transaction.TABLE + " AS t ON b._wallet_id = t." +
                 Schema.Transaction.WALLET + " AND t." + Schema.Transaction.DELETED + " = 0 JOIN " +
                 Schema.Category.TABLE + " AS tc ON t." + Schema.Transaction.CATEGORY + " = tc." +
-                Schema.Category.ID + " AND tc." + Schema.Category.DELETED + " = 0 WHERE (b." +
-                Schema.Budget.CATEGORY + " = " + Schema.Transaction.CATEGORY + " OR b." +
-                Schema.Budget.CATEGORY + " = tc."+ Schema.Category.PARENT + ") " +
+                Schema.Category.ID + " AND tc." + Schema.Category.DELETED + " = 0 WHERE (" +
+                Schema.Transaction.CATEGORY + " IN " + budgetCategoriesOf("b") + " OR tc." +
+                Schema.Category.PARENT + " IN " + budgetCategoriesOf("b") + ") " +
                 "AND DATETIME(t." + Schema.Transaction.DATE + ") <= DATETIME('now', 'localtime') " +
                 "AND DATE(t." + Schema.Transaction.DATE + ") >= DATE(b." +
                 Schema.Budget.START_DATE + ") AND DATE(t." + Schema.Transaction.DATE +
@@ -3110,9 +3192,14 @@ import java.util.UUID;
             throw new SQLiteDataException(Contract.ErrorCode.WALLETS_NOT_FOUND, "No wallet id provided");
         }
         checkWalletsConsistency(walletIds);
+        long[] categoryIds = budgetCategoryIds(contentValues);
         ContentValues cv = new ContentValues();
         cv.put(Schema.Budget.TYPE, contentValues.getAsInteger(Contract.Budget.TYPE));
-        cv.put(Schema.Budget.CATEGORY, contentValues.getAsLong(Contract.Budget.CATEGORY_ID));
+        if (categoryIds == null) {
+            cv.putNull(Schema.Budget.CATEGORY);
+        } else {
+            cv.put(Schema.Budget.CATEGORY, categoryIds[0]);
+        }
         cv.put(Schema.Budget.START_DATE, contentValues.getAsString(Contract.Budget.START_DATE));
         cv.put(Schema.Budget.END_DATE, contentValues.getAsString(Contract.Budget.END_DATE));
         cv.put(Schema.Budget.MONEY, contentValues.getAsLong(Contract.Budget.MONEY));
@@ -3135,6 +3222,7 @@ import java.util.UUID;
                 cvw.put(Schema.BudgetWallet.DELETED, false);
                 getWritableDatabase().insert(Schema.BudgetWallet.TABLE, null, cvw);
             }
+            writeBudgetCategories(budgetId, categoryIds);
         }
         return budgetId;
     }
@@ -3190,9 +3278,14 @@ import java.util.UUID;
             throw new SQLiteDataException(Contract.ErrorCode.WALLETS_NOT_FOUND, "No wallet id provided");
         }
         checkWalletsConsistency(walletIds);
+        long[] categoryIds = budgetCategoryIds(contentValues);
         ContentValues cv = new ContentValues();
         cv.put(Schema.Budget.TYPE, contentValues.getAsInteger(Contract.Budget.TYPE));
-        cv.put(Schema.Budget.CATEGORY, contentValues.getAsLong(Contract.Budget.CATEGORY_ID));
+        if (categoryIds == null) {
+            cv.putNull(Schema.Budget.CATEGORY);
+        } else {
+            cv.put(Schema.Budget.CATEGORY, categoryIds[0]);
+        }
         cv.put(Schema.Budget.START_DATE, contentValues.getAsString(Contract.Budget.START_DATE));
         cv.put(Schema.Budget.END_DATE, contentValues.getAsString(Contract.Budget.END_DATE));
         cv.put(Schema.Budget.MONEY, contentValues.getAsLong(Contract.Budget.MONEY));
@@ -3242,8 +3335,85 @@ import java.util.UUID;
                     getWritableDatabase().update(Schema.BudgetWallet.TABLE, cv, where, whereArgs);
                 }
             }
+            cv = new ContentValues();
+            cv.put(Schema.BudgetCategory.DELETED, true);
+            cv.put(Schema.BudgetCategory.LAST_EDIT, System.currentTimeMillis());
+            where = Schema.BudgetCategory.BUDGET + " = ?";
+            whereArgs = new String[]{String.valueOf(budgetId)};
+            getWritableDatabase().update(Schema.BudgetCategory.TABLE, cv, where, whereArgs);
+            writeBudgetCategories(budgetId, categoryIds);
         }
         return rows;
+    }
+
+    /**
+     * The categories a budget is being written with, and none at all for a budget of a type that
+     * does not cover them. A caller that names them all wins; one that names a single category,
+     * which is every caller that predates a budget covering more than one, is read as a list of
+     * that one. Both {@link #insertBudget(ContentValues)} and
+     * {@link #updateBudget(long, ContentValues)} take the first of whatever comes back as the
+     * value of {@link Schema.Budget#CATEGORY}, so a write leaves the column naming a category
+     * the join table also holds.
+     *
+     * @param contentValues bundle handed to the insert or the update.
+     * @return the category ids, or null on a budget that covers no category at all.
+     */
+    private long[] budgetCategoryIds(ContentValues contentValues) {
+        Integer type = contentValues.getAsInteger(Contract.Budget.TYPE);
+        if (type == null || type != Schema.BudgetType.CATEGORY) {
+            // a budget of any other type covers no category, whatever the caller passed. Without
+            // this, a period rolled forward from a budget that used to cover them hands them to
+            // every period it opens, because the roll copies both keys off the cursor and never
+            // looks at the type.
+            return null;
+        }
+        long[] categoryIds = parseIds(contentValues.getAsString(Contract.Budget.CATEGORY_IDS));
+        if (categoryIds != null && categoryIds.length > 0) {
+            return categoryIds;
+        }
+        Long categoryId = contentValues.getAsLong(Contract.Budget.CATEGORY_ID);
+        return categoryId == null ? null : new long[] {categoryId};
+    }
+
+    /**
+     * Puts one row in the join table per category the budget covers. A row flagged deleted by an
+     * update and named again here comes back instead of being inserted a second time, which is
+     * what the wallets above do and what the composite primary key requires.
+     *
+     * @param budgetId id of the budget being written.
+     * @param categoryIds categories it covers, null on a budget that covers none.
+     */
+    private void writeBudgetCategories(long budgetId, long[] categoryIds) {
+        if (categoryIds == null) {
+            return;
+        }
+        for (long categoryId : categoryIds) {
+            ContentValues cv = new ContentValues();
+            cv.put(Schema.BudgetCategory.BUDGET, budgetId);
+            cv.put(Schema.BudgetCategory.CATEGORY, categoryId);
+            cv.put(Schema.BudgetCategory.UUID, UUID.randomUUID().toString());
+            cv.put(Schema.BudgetCategory.LAST_EDIT, System.currentTimeMillis());
+            cv.put(Schema.BudgetCategory.DELETED, false);
+            long newId;
+            try {
+                newId = getWritableDatabase().insertWithOnConflict(Schema.BudgetCategory.TABLE, null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+            } catch (SQLiteConstraintException e) {
+                // CONFLICT_IGNORE covers the composite key and nothing else, a foreign key is
+                // still enforced and still throws, which happens when the category was deleted
+                // while the editor was open. Dropping that one id leaves the rest of the budget
+                // written, where letting it out would abort the save half way through and take
+                // the categories already restored above with it.
+                continue;
+            }
+            if (newId == -1L) {
+                cv = new ContentValues();
+                cv.put(Schema.BudgetCategory.LAST_EDIT, System.currentTimeMillis());
+                cv.put(Schema.BudgetCategory.DELETED, false);
+                String where = Schema.BudgetCategory.BUDGET + " = ? AND " + Schema.BudgetCategory.CATEGORY + " = ?";
+                String[] whereArgs = new String[]{String.valueOf(budgetId), String.valueOf(categoryId)};
+                getWritableDatabase().update(Schema.BudgetCategory.TABLE, cv, where, whereArgs);
+            }
+        }
     }
 
     /**
@@ -3472,6 +3642,17 @@ import java.util.UUID;
             getWritableDatabase().update(Schema.BudgetWallet.TABLE, cv, where, whereArgs);
         } else {
             getWritableDatabase().delete(Schema.BudgetWallet.TABLE, where, whereArgs);
+        }
+        // remove all BudgetCategory
+        where = Schema.BudgetCategory.BUDGET + " = ?";
+        whereArgs = new String[]{String.valueOf(budgetId)};
+        if (mCacheDeletedObjects) {
+            ContentValues cv = new ContentValues();
+            cv.put(Schema.BudgetCategory.DELETED, true);
+            cv.put(Schema.BudgetCategory.LAST_EDIT, System.currentTimeMillis());
+            getWritableDatabase().update(Schema.BudgetCategory.TABLE, cv, where, whereArgs);
+        } else {
+            getWritableDatabase().delete(Schema.BudgetCategory.TABLE, where, whereArgs);
         }
         // remove the debt item
         where = Schema.Budget.ID + " = ?";
@@ -5241,6 +5422,20 @@ import java.util.UUID;
             return ids;
         }
         return null;
+    }
+
+    /**
+     * The categories one budget covers, as a subquery to match a transaction against. It reads
+     * the join table and not {@link Schema.Budget#CATEGORY}, which holds only the first of them.
+     *
+     * @param budgetAlias alias the enclosing query gave the budgets table.
+     * @return a parenthesised SELECT of category ids, ready to sit on the right of an IN.
+     */
+    private static String budgetCategoriesOf(String budgetAlias) {
+        return "(SELECT bc." + Schema.BudgetCategory.CATEGORY + " FROM " +
+                Schema.BudgetCategory.TABLE + " AS bc WHERE bc." + Schema.BudgetCategory.BUDGET +
+                " = " + budgetAlias + "." + Schema.Budget.ID + " AND bc." +
+                Schema.BudgetCategory.DELETED + " = 0)";
     }
 
     /**

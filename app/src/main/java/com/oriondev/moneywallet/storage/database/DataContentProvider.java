@@ -104,6 +104,7 @@ public class DataContentProvider extends ContentProvider {
     private static final int TRANSFER_PEOPLE = 36;
     private static final int DEBT_PEOPLE = 37;
     private static final int BUDGET_WALLETS = 38;
+    private static final int BUDGET_CATEGORIES = 46;
 
     private static final int CATEGORY_TRANSACTION_LIST = 39;
     private static final int DEBT_TRANSACTION_LIST = 40;
@@ -139,6 +140,7 @@ public class DataContentProvider extends ContentProvider {
         matcher.addURI(AUTHORITY, "budgets", BUDGET_LIST);
         matcher.addURI(AUTHORITY, "budgets/#", BUDGET_ITEM);
         matcher.addURI(AUTHORITY, "budgets/#/wallets", BUDGET_WALLETS);
+        matcher.addURI(AUTHORITY, "budgets/#/categories", BUDGET_CATEGORIES);
         matcher.addURI(AUTHORITY, "budgets/#/transactions", BUDGET_TRANSACTION_LIST);
         matcher.addURI(AUTHORITY, "savings", SAVING_LIST);
         matcher.addURI(AUTHORITY, "savings/#", SAVING_ITEM);
@@ -329,6 +331,11 @@ public class DataContentProvider extends ContentProvider {
                 cursor = new MultiUriCursorWrapper(mDatabase.getBudgetWallets(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
                 cursor.setNotificationUri(getContentResolver(), CONTENT_BUDGETS);
                 cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
+                break;
+            case BUDGET_CATEGORIES:
+                cursor = new MultiUriCursorWrapper(mDatabase.getBudgetCategories(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
+                cursor.setNotificationUri(getContentResolver(), CONTENT_BUDGETS);
+                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
                 break;
             case BUDGET_TRANSACTION_LIST:
                 cursor = new MultiUriCursorWrapper(mDatabase.getBudgetTransactions(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
@@ -533,6 +540,8 @@ public class DataContentProvider extends ContentProvider {
                 return "vnd.android.cursor.item/vnd.com.oriondev.moneywallet.storage.budget";
             case BUDGET_WALLETS:
                 return "vnd.android.cursor.dir/vnd.com.oriondev.moneywallet.storage.wallet";
+            case BUDGET_CATEGORIES:
+                return "vnd.android.cursor.dir/vnd.com.oriondev.moneywallet.storage.category";
             case BUDGET_TRANSACTION_LIST:
                 return "vnd.android.cursor.dir/vnd.com.oriondev.moneywallet.storage.transaction";
             case SAVING_LIST:

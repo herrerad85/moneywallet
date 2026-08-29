@@ -401,6 +401,7 @@ public class LegacyDatabaseImporter implements DatabaseImporter {
                     budget.mLastEdit = getLongSafely(cursor, LegacyDatabaseSchema.Budget.LAST_EDIT);
                     try {
                         long id = SQLDatabaseImporter.insert(contentResolver, budget);
+                        SQLDatabaseImporter.insertBudgetCategory(contentResolver, id, budget.mCategory);
                         // for each linked wallet, insert a link in the new database
                         for (Long legacyId : legacyIds) {
                             BudgetWallet budgetWallet = new BudgetWallet();
@@ -448,6 +449,12 @@ public class LegacyDatabaseImporter implements DatabaseImporter {
     @Override
     public void importBudgetWallets(ContentResolver contentResolver) throws ImportException {
         // not supported in legacy database
+    }
+
+    @Override
+    public void importBudgetCategories(ContentResolver contentResolver) throws ImportException {
+        // a legacy budget names one category on its own row, and importBudgets above puts that
+        // into the join table as it goes, so there is nothing left to read here
     }
 
     @Override

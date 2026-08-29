@@ -26,6 +26,7 @@ import com.oriondev.moneywallet.storage.database.ImportException;
 import com.oriondev.moneywallet.storage.database.SQLDatabaseImporter;
 import com.oriondev.moneywallet.storage.database.model.Attachment;
 import com.oriondev.moneywallet.storage.database.model.Budget;
+import com.oriondev.moneywallet.storage.database.model.BudgetCategory;
 import com.oriondev.moneywallet.storage.database.model.BudgetWallet;
 import com.oriondev.moneywallet.storage.database.model.Category;
 import com.oriondev.moneywallet.storage.database.model.Currency;
@@ -285,6 +286,9 @@ public class JSONDatabaseImporter implements DatabaseImporter {
                     Budget budget = mFactory.getBudget(object);
                     long id = SQLDatabaseImporter.insert(contentResolver, budget);
                     mFactory.cacheBudget(budget.mUUID, id);
+                    if (mVersion < 3) {
+                        SQLDatabaseImporter.insertBudgetCategory(contentResolver, id, budget.mCategory);
+                    }
                 }
                 mReader.endArray();
             } else {
@@ -311,6 +315,28 @@ public class JSONDatabaseImporter implements DatabaseImporter {
             }
         } catch (IOException | JSONException e) {
             throw new ImportException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void importBudgetCategories(ContentResolver contentResolver) throws ImportException {
+        // budget categories are stored starting from backup version >= 3
+        if (mVersion >= 3) {
+            try {
+                if (JSONDatabase.BudgetCategory.ARRAY.equals(mReader.readName())) {
+                    mReader.beginArray();
+                    while (mReader.hasArrayAnotherObject()) {
+                        JSONObject object = mReader.readObject();
+                        BudgetCategory budgetCategory = mFactory.getBudgetCategory(object);
+                        SQLDatabaseImporter.insert(contentResolver, budgetCategory);
+                    }
+                    mReader.endArray();
+                } else {
+                    throw new ImportException("Wrong array name (expected = 'budget_categories')");
+                }
+            } catch (IOException | JSONException e) {
+                throw new ImportException(e.getMessage());
+            }
         }
     }
 
