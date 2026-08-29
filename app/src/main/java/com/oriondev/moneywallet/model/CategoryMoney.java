@@ -41,8 +41,8 @@ public class CategoryMoney {
     }
 
     /**
-     * The child categories that contributed to this total, empty when nothing was spent through
-     * one. A child is only ever added to the parent it rolls up into.
+     * The child categories named under this one, empty when there are none to name. A child is
+     * only ever added to the parent it rolls up into.
      */
     public List<CategoryMoney> getChildren() {
         return mChildren;

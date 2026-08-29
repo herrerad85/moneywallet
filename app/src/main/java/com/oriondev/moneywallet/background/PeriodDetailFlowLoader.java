@@ -246,11 +246,11 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
      * Children sorted by name, because the map they arrive in has no order of its own and rows
      * that move between two loads of the same period read as a defect.
      *
-     * What was filed on the parent itself leads the list, so that the rows under a category always
-     * add up to the total on the category. Without it the money on the parent is on screen in the
-     * total and nowhere in the breakdown, which reads as an error in the arithmetic. Nothing is
-     * added when the category has no children, since there is nothing to expand and the total
-     * already stands on its own.
+     * Whatever did not reach a child this screen can name leads the list under the category's own
+     * name, which is money filed on the category itself plus money on a child hidden from the
+     * reports. It is there so the rows under a category always add up to the total on the
+     * category. Nothing is added when no child could be named, since there is then nothing to
+     * expand.
      */
     private void attachChildren(CategoryMoney parent, Map<Long, CategoryMoney> children, Money direct) {
         if (children == null) {
@@ -274,9 +274,10 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
     }
 
     /**
-     * The children this screen is allowed to name. A child hidden from the reports is left out,
-     * and the caller then counts its money against the parent's own row, so the setting is kept
-     * without the rows under a category ceasing to add up to the category.
+     * The children this screen is allowed to name. A child hidden from the reports is left out and
+     * the caller counts its money against the parent's row instead, which keeps the name off this
+     * screen and keeps the rows under a category adding up to the category. The money itself is
+     * still in the total, as it was before this screen named any child.
      */
     private Map<Long, Category> loadChildCategoryCache() {
         return loadCategories(Contract.Category.PARENT + " IS NOT NULL AND " +
