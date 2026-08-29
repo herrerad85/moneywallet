@@ -25,9 +25,13 @@ package com.oriondev.moneywallet.storage.database.json;
 /*package-local*/ class JSONDatabase {
 
     /*package-local*/ static final int MIN_SUPPORTED_VERSION = 1;
-    /*package-local*/ static final int MAX_SUPPORTED_VERSION = 2;
+    /*package-local*/ static final int MAX_SUPPORTED_VERSION = 3;
 
-    /*package-local*/ static final int VERSION = 2;
+    // version 3 adds the budget_categories array, so that a budget covering more than one
+    // category keeps every one of them through a backup. A release that predates it refuses a
+    // version 3 file by its header instead of failing part way through the arrays, which is what
+    // it would do with an array it does not expect in the middle of the stream.
+    /*package-local*/ static final int VERSION = 3;
 
     /*package-local*/ static class Header {
         /*package-local*/ static final String OBJECT = "header";
@@ -169,6 +173,15 @@ package com.oriondev.moneywallet.storage.database.json;
         /*package-local*/ static final String ID = "id";
         /*package-local*/ static final String BUDGET = "budget";
         /*package-local*/ static final String WALLET = "wallet";
+        /*package-local*/ static final String LAST_EDIT = "last_edit";
+        /*package-local*/ static final String DELETED = "deleted";
+    }
+
+    /*package-local*/ static final class BudgetCategory {
+        /*package-local*/ static final String ARRAY = "budget_categories";
+        /*package-local*/ static final String ID = "id";
+        /*package-local*/ static final String BUDGET = "budget";
+        /*package-local*/ static final String CATEGORY = "category";
         /*package-local*/ static final String LAST_EDIT = "last_edit";
         /*package-local*/ static final String DELETED = "deleted";
     }

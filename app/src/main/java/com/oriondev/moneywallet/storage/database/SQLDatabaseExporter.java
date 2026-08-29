@@ -25,6 +25,7 @@ import android.net.Uri;
 
 import com.oriondev.moneywallet.storage.database.model.Attachment;
 import com.oriondev.moneywallet.storage.database.model.Budget;
+import com.oriondev.moneywallet.storage.database.model.BudgetCategory;
 import com.oriondev.moneywallet.storage.database.model.BudgetWallet;
 import com.oriondev.moneywallet.storage.database.model.Category;
 import com.oriondev.moneywallet.storage.database.model.Currency;
@@ -202,6 +203,16 @@ public class SQLDatabaseExporter {
         object.mUUID = cursor.getString(cursor.getColumnIndex(Schema.Budget.UUID));
         object.mLastEdit = cursor.getLong(cursor.getColumnIndex(Schema.Budget.LAST_EDIT));
         object.mDeleted = cursor.getInt(cursor.getColumnIndex(Schema.Budget.DELETED)) == 1;
+        return object;
+    }
+
+    public static BudgetCategory getBudgetCategory(Cursor cursor) {
+        BudgetCategory object = new BudgetCategory();
+        object.mBudget = cursor.isNull(cursor.getColumnIndex(Schema.BudgetCategory.BUDGET)) ? null : cursor.getLong(cursor.getColumnIndex(Schema.BudgetCategory.BUDGET));
+        object.mCategory = cursor.isNull(cursor.getColumnIndex(Schema.BudgetCategory.CATEGORY)) ? null : cursor.getLong(cursor.getColumnIndex(Schema.BudgetCategory.CATEGORY));
+        object.mUUID = cursor.getString(cursor.getColumnIndex(Schema.BudgetCategory.UUID));
+        object.mLastEdit = cursor.getLong(cursor.getColumnIndex(Schema.BudgetCategory.LAST_EDIT));
+        object.mDeleted = cursor.getInt(cursor.getColumnIndex(Schema.BudgetCategory.DELETED)) == 1;
         return object;
     }
 
@@ -493,6 +504,13 @@ public class SQLDatabaseExporter {
     public static Cursor getAllBudgetWallets(ContentResolver contentResolver) {
         Uri uri = SyncContentProvider.CONTENT_BUDGET_WALLET;
         String selection = Schema.BudgetWallet.DELETED + " = 0";
+        return contentResolver.query(uri, null, selection, null, null);
+    }
+
+
+    public static Cursor getAllBudgetCategories(ContentResolver contentResolver) {
+        Uri uri = SyncContentProvider.CONTENT_BUDGET_CATEGORY;
+        String selection = Schema.BudgetCategory.DELETED + " = 0";
         return contentResolver.query(uri, null, selection, null, null);
     }
 

@@ -162,6 +162,7 @@ public class RecurrenceHandlerIntentService extends JobIntentService {
         contentValues.put(Contract.Budget.TAG, cursor.getString(cursor.getColumnIndex(Contract.Budget.TAG)));
         contentValues.put(Contract.Budget.RULE_START, cursor.getString(cursor.getColumnIndex(Contract.Budget.RULE_START)));
         contentValues.put(Contract.Budget.WALLET_IDS, cursor.getString(cursor.getColumnIndex(Contract.Budget.WALLET_IDS)));
+        contentValues.put(Contract.Budget.CATEGORY_IDS, cursor.getString(cursor.getColumnIndex(Contract.Budget.CATEGORY_IDS)));
         return contentValues;
     }
 

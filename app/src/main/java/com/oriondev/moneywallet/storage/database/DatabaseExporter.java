@@ -51,6 +51,8 @@ public interface DatabaseExporter {
 
     void exportBudgetWallets(Cursor cursor) throws ExportException;
 
+    void exportBudgetCategories(Cursor cursor) throws ExportException;
+
     void exportSavings(Cursor cursor) throws ExportException;
 
     void exportRecurrentTransactions(Cursor cursor) throws ExportException;

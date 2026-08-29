@@ -27,7 +27,7 @@ import com.oriondev.moneywallet.storage.database.Contract;
 /**
  * Created by andrea on 02/03/18.
  */
-public class Category implements Parcelable {
+public class Category implements Parcelable, Identifiable {
 
     private final long mId;
     private final String mName;

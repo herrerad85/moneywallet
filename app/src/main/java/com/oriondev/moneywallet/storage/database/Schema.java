@@ -159,6 +159,12 @@ package com.oriondev.moneywallet.storage.database;
         /*package-local*/ static final String WALLET = "_wallet";
     }
 
+    /*package-local*/ static final class BudgetCategory extends BaseTable {
+        /*package-local*/ static final String TABLE = "budget_categories";
+        /*package-local*/ static final String BUDGET = "_budget";
+        /*package-local*/ static final String CATEGORY = "_category";
+    }
+
     /*package-local*/ static final class Saving extends BaseTable {
         /*package-local*/ static final String TABLE = "savings";
         /*package-local*/ static final String ID = "saving_id";
@@ -507,6 +513,20 @@ package com.oriondev.moneywallet.storage.database;
             "(" + Wallet.ID + ") ON UPDATE NO ACTION ON DELETE CASCADE " +
             ")";
 
+    /*package-local*/ static final String CREATE_TABLE_BUDGET_CATEGORY = "CREATE TABLE IF NOT EXISTS " +
+            BudgetCategory.TABLE + " (" +
+            BudgetCategory.BUDGET + " INTEGER NOT NULL, " +
+            BudgetCategory.CATEGORY + " INTEGER NOT NULL, " +
+            BudgetCategory.UUID + " TEXT NOT NULL UNIQUE, " +
+            BudgetCategory.LAST_EDIT + " INTEGER NOT NULL, " +
+            BudgetCategory.DELETED + " INTEGER NOT NULL DEFAULT 0, " +
+            "PRIMARY KEY (" + BudgetCategory.BUDGET + ", " + BudgetCategory.CATEGORY + ")," +
+            "FOREIGN KEY (" + BudgetCategory.BUDGET + ") REFERENCES " + Budget.TABLE +
+            "(" + Budget.ID + ") ON UPDATE NO ACTION ON DELETE CASCADE, " +
+            "FOREIGN KEY (" + BudgetCategory.CATEGORY + ") REFERENCES " + Category.TABLE +
+            "(" + Category.ID + ") ON UPDATE NO ACTION ON DELETE CASCADE " +
+            ")";
+
     /*package-local*/ static final String CREATE_TABLE_SAVING = "CREATE TABLE " + Saving.TABLE + " (" +
             Saving.ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
             Saving.DESCRIPTION + " TEXT, " +
@@ -782,4 +802,67 @@ package com.oriondev.moneywallet.storage.database;
 
     /*package-local*/ static final String CREATE_BUDGET_RULE_START_COLUMN = "ALTER TABLE " +
             Budget.TABLE + " ADD COLUMN " + Budget.RULE_START + " DATETIME";
+
+    /**
+     * Fills the join table from the single category a budget used to carry. It covers only the
+     * budgets that have no live row yet, which is what makes it safe to run a second time, a
+     * budget that already covers categories keeps them instead of gaining whatever the column
+     * happens to say now. See the upgrade in SQLDatabase for when that second run happens.
+     *
+     * REPLACE and not IGNORE because a budget can hold a row for this very category that is
+     * flagged deleted, which is what changing a budget away from covering categories and back
+     * leaves behind. IGNORE would drop the insert on the composite key and leave the budget with
+     * a column and no live category at all.
+     */
+    /*package-local*/ static final String FILL_BUDGET_CATEGORY_FROM_COLUMN = "INSERT OR REPLACE INTO " +
+            BudgetCategory.TABLE + " (" + BudgetCategory.BUDGET + ", " + BudgetCategory.CATEGORY +
+            ", " + BudgetCategory.UUID + ", " + BudgetCategory.LAST_EDIT + ", " +
+            BudgetCategory.DELETED + ") SELECT b." + Budget.ID + ", b." + Budget.CATEGORY +
+            ", b." + Budget.UUID + " || '-category-' || b." + Budget.CATEGORY +
+            ", strftime('%s','now') * 1000, 0 FROM " + Budget.TABLE + " AS b WHERE b." +
+            Budget.CATEGORY + " IS NOT NULL AND b." + Budget.DELETED + " = 0 AND b." + Budget.ID +
+            " NOT IN (SELECT " + BudgetCategory.BUDGET + " FROM " + BudgetCategory.TABLE +
+            " WHERE " + BudgetCategory.DELETED + " = 0)";
+
+    /**
+     * Points the single column at the first of the categories a budget covers, once the join
+     * table is filled. It corrects a column, and never gives one to a budget that has none:
+     * a budget carrying no category has had its type changed away from covering them, and
+     * writing one back would leave a row saying it covers a category it does not.
+     *
+     * What it corrects is a release that predates the table writing the column while the table
+     * kept the real set. Leaving that would put a category no screen shows behind the budget,
+     * chosen for its icon and refusing to be deleted, with nothing to say why.
+     */
+    /*package-local*/ static final String ALIGN_BUDGET_CATEGORY_COLUMN = "UPDATE " + Budget.TABLE +
+            " SET " + Budget.CATEGORY + " = (SELECT MIN(" + BudgetCategory.CATEGORY + ") FROM " +
+            BudgetCategory.TABLE + " WHERE " + BudgetCategory.BUDGET + " = " + Budget.TABLE + "." +
+            Budget.ID + " AND " + BudgetCategory.DELETED + " = 0) WHERE " + Budget.CATEGORY +
+            " IS NOT NULL AND " + Budget.ID + " IN (SELECT " + BudgetCategory.BUDGET + " FROM " +
+            BudgetCategory.TABLE + " WHERE " + BudgetCategory.DELETED + " = 0)";
+
+    /**
+     * Flags the join rows of any budget that no longer covers categories at all. A release that
+     * predates the table can change a budget's type without seeing them, and rows left live
+     * there hold their categories against deletion while no screen shows the budget covering
+     * anything. Flagged and not deleted, which is what an ordinary edit does to the same rows.
+     * Nothing brings them back on its own, a budget turned back into one that covers categories
+     * is saved through an editor that asks the user to pick them again.
+     */
+    /*package-local*/ static final String CLEAR_BUDGET_CATEGORY_OF_OTHER_TYPES = "UPDATE " +
+            BudgetCategory.TABLE + " SET " + BudgetCategory.DELETED + " = 1, " +
+            BudgetCategory.LAST_EDIT + " = strftime('%s','now') * 1000 WHERE " +
+            BudgetCategory.DELETED + " = 0 AND " + BudgetCategory.BUDGET + " IN (SELECT " +
+            Budget.ID + " FROM " + Budget.TABLE + " WHERE " + Budget.TYPE + " != " +
+            BudgetType.CATEGORY + ")";
+
+    /**
+     * Takes the single column off any budget that no longer covers categories, for the same
+     * reason its rows are flagged. The column carries ON DELETE CASCADE, so one left behind on a
+     * budget of another type both refuses its category deletion and puts that budget behind a
+     * cascade it does not claim.
+     */
+    /*package-local*/ static final String CLEAR_BUDGET_COLUMN_OF_OTHER_TYPES = "UPDATE " +
+            Budget.TABLE + " SET " + Budget.CATEGORY + " = NULL WHERE " + Budget.CATEGORY +
+            " IS NOT NULL AND " + Budget.TYPE + " != " + BudgetType.CATEGORY;
 }

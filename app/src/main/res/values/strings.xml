@@ -100,6 +100,7 @@
     <string name="hint_start_money">"Initial amount"</string>
     <string name="hint_not_exclude_wallet">"Show this wallet in the total count"</string>
     <string name="hint_category">"Category"</string>
+    <string name="hint_categories">"Categories"</string>
     <string name="hint_parent_category">"Parent category"</string>
     <string name="hint_show_category_report">"Show this category inside the reports"</string>
     <string name="hint_show_category_report_on">"This category is included inside the reports"</string>
@@ -297,6 +298,7 @@
     <string name="error_input_missing_end_date">Select an end date</string>
     <string name="error_input_invalid_date_range">"Invalid date range"</string>
     <string name="error_input_missing_category">"Select a category"</string>
+    <string name="error_input_missing_categories">"Select at least one category"</string>
     <string name="error_input_missing_description">"Provide a description"</string>
     <string name="error_input_missing_format">"Select a file format"</string>
     <string name="error_input_missing_input_file">"Select an input file"</string>

@@ -212,7 +212,23 @@ public class Contract {
     public static final class Budget {
         public static final String ID = Schema.Budget.ID;
         public static final String TYPE = Schema.Budget.TYPE;
+        /**
+         * The first of {@link #CATEGORY_IDS}, kept so a release that predates that list still
+         * shows the budget running on one category instead of on none. Nothing matches
+         * transactions on it any more, that is the join table behind {@link #CATEGORY_IDS}.
+         * A write and an upgrade both leave it naming a category the join table also holds; a
+         * release old enough to write it and not the table can put it out of step, and the next
+         * upgrade puts it back.
+         */
         public static final String CATEGORY_ID = Schema.Budget.CATEGORY;
+        /**
+         * Every category the budget covers, in the same angle bracketed form
+         * {@link #WALLET_IDS} uses, written on an insert or an update and read back on a query.
+         * A query hands them over lowest id first, and so does the editor when it reads the
+         * categories of the budget it is opening, which is what keeps {@link #CATEGORY_ID} on
+         * the same category through an edit and through a period rolled forward.
+         */
+        public static final String CATEGORY_IDS = "budget_category_ids";
         public static final String CATEGORY_NAME = "budget_" + Schema.Category.NAME;
         public static final String CATEGORY_ICON = "budget_" + Schema.Category.ICON;
         public static final String CATEGORY_TYPE = "budget_" + Schema.Category.TYPE;

@@ -54,6 +54,7 @@ public class SyncContentProvider extends ContentProvider {
     public static final Uri CONTENT_DEBT_PEOPLE = Uri.parse("content://" + AUTHORITY + "/debt_people");
     public static final Uri CONTENT_BUDGET = Uri.parse("content://" + AUTHORITY + "/budget");
     public static final Uri CONTENT_BUDGET_WALLET = Uri.parse("content://" + AUTHORITY + "/budget_wallets");
+    public static final Uri CONTENT_BUDGET_CATEGORY = Uri.parse("content://" + AUTHORITY + "/budget_categories");
     public static final Uri CONTENT_SAVING = Uri.parse("content://" + AUTHORITY + "/savings");
     public static final Uri CONTENT_RECURRENT_TRANSACTION = Uri.parse("content://" + AUTHORITY + "/recurrent_transactions");
     public static final Uri CONTENT_RECURRENT_TRANSFER = Uri.parse("content://" + AUTHORITY + "/recurrent_transfers");
@@ -78,6 +79,7 @@ public class SyncContentProvider extends ContentProvider {
     private static final int TABLE_DEBT_PEOPLE = 9;
     private static final int TABLE_BUDGETS = 10;
     private static final int TABLE_BUDGET_WALLETS = 11;
+    private static final int TABLE_BUDGET_CATEGORIES = 24;
     private static final int TABLE_SAVINGS = 12;
     private static final int TABLE_RECURRENT_TRANSACTIONS = 13;
     private static final int TABLE_RECURRENT_TRANSFERS = 14;
@@ -106,6 +108,7 @@ public class SyncContentProvider extends ContentProvider {
         matcher.addURI(AUTHORITY, "debt_people", TABLE_DEBT_PEOPLE);
         matcher.addURI(AUTHORITY, "budget", TABLE_BUDGETS);
         matcher.addURI(AUTHORITY, "budget_wallets", TABLE_BUDGET_WALLETS);
+        matcher.addURI(AUTHORITY, "budget_categories", TABLE_BUDGET_CATEGORIES);
         matcher.addURI(AUTHORITY, "savings", TABLE_SAVINGS);
         matcher.addURI(AUTHORITY, "recurrent_transactions", TABLE_RECURRENT_TRANSACTIONS);
         matcher.addURI(AUTHORITY, "recurrent_transfers", TABLE_RECURRENT_TRANSFERS);
@@ -154,6 +157,8 @@ public class SyncContentProvider extends ContentProvider {
                 return Schema.Budget.TABLE;
             case TABLE_BUDGET_WALLETS:
                 return Schema.BudgetWallet.TABLE;
+            case TABLE_BUDGET_CATEGORIES:
+                return Schema.BudgetCategory.TABLE;
             case TABLE_SAVINGS:
                 return Schema.Saving.TABLE;
             case TABLE_RECURRENT_TRANSACTIONS:

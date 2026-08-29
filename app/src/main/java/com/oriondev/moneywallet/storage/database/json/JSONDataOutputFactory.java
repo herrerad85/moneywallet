@@ -21,6 +21,7 @@ package com.oriondev.moneywallet.storage.database.json;
 
 import com.oriondev.moneywallet.storage.database.model.Attachment;
 import com.oriondev.moneywallet.storage.database.model.Budget;
+import com.oriondev.moneywallet.storage.database.model.BudgetCategory;
 import com.oriondev.moneywallet.storage.database.model.BudgetWallet;
 import com.oriondev.moneywallet.storage.database.model.Category;
 import com.oriondev.moneywallet.storage.database.model.Currency;
@@ -211,6 +212,16 @@ import java.util.HashMap;
         object.put(JSONDatabase.Budget.LAST_EDIT, budget.mLastEdit);
         object.put(JSONDatabase.Budget.DELETED, budget.mDeleted);
         mCacheBudgets.put(budget.mId, budget.mUUID);
+        return object;
+    }
+
+    /*package-local*/ JSONObject getObject(BudgetCategory budgetCategory) throws JSONException {
+        JSONObject object = new JSONObject();
+        object.put(JSONDatabase.BudgetCategory.BUDGET, mCacheBudgets.get(budgetCategory.mBudget));
+        object.put(JSONDatabase.BudgetCategory.CATEGORY, mCacheCategories.get(budgetCategory.mCategory));
+        object.put(JSONDatabase.BudgetCategory.ID, budgetCategory.mUUID);
+        object.put(JSONDatabase.BudgetCategory.LAST_EDIT, budgetCategory.mLastEdit);
+        object.put(JSONDatabase.BudgetCategory.DELETED, budgetCategory.mDeleted);
         return object;
     }
 

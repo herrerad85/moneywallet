@@ -238,6 +238,22 @@ public class JSONDatabaseExporter implements DatabaseExporter {
     }
 
     @Override
+    public void exportBudgetCategories(Cursor cursor) throws ExportException {
+        try {
+            mWriter.writeName(JSONDatabase.BudgetCategory.ARRAY);
+            mWriter.beginArray();
+            while (cursor.moveToNext()) {
+                BudgetCategory budgetCategory = SQLDatabaseExporter.getBudgetCategory(cursor);
+                JSONObject object = mFactory.getObject(budgetCategory);
+                mWriter.writeJSONObject(object);
+            }
+            mWriter.endArray();
+        } catch (IOException | JSONException e) {
+            throw new ExportException(e.getMessage());
+        }
+    }
+
+    @Override
     public void exportSavings(Cursor cursor) throws ExportException {
         try {
             mWriter.writeName(JSONDatabase.Saving.ARRAY);

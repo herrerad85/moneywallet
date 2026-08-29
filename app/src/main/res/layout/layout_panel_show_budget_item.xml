@@ -55,7 +55,7 @@
             android:layout_marginTop="@dimen/material_activity_body_edit_text_margin_top"
             android:layout_marginBottom="@dimen/material_activity_body_edit_text_margin_bottom"
             app:mtv_mode="floatingLabel"
-            app:mtv_floatingLabelText="@string/hint_category"
+            app:mtv_floatingLabelText="@string/hint_categories"
             app:mtv_leftIcon="@drawable/ic_table_large_24dp"
             app:mtv_bottomLineEnabled="true"
             tools:text="Category name here" />

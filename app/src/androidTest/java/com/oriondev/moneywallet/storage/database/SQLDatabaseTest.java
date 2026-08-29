@@ -518,6 +518,56 @@ public class SQLDatabaseTest {
         return mDatabase.updateBudget(id, contentValues);
     }
 
+    private long insertBudgetCovering(int type, Long[] categoryIds, Date startDate, Date endDate, long money,
+                              String currency, Long[] walletIds, String tag) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Contract.Budget.TYPE, type);
+        contentValues.put(Contract.Budget.CATEGORY_IDS, getObjectIds(categoryIds));
+        contentValues.put(Contract.Budget.START_DATE, DateUtils.getSQLDateString(startDate));
+        contentValues.put(Contract.Budget.END_DATE, DateUtils.getSQLDateString(endDate));
+        contentValues.put(Contract.Budget.MONEY, money);
+        contentValues.put(Contract.Budget.CURRENCY, currency);
+        contentValues.put(Contract.Budget.WALLET_IDS, getObjectIds(walletIds));
+        contentValues.put(Contract.Budget.TAG, tag);
+        return mDatabase.insertBudget(contentValues);
+    }
+
+    private int updateBudgetCovering(long id, int type, Long[] categoryIds, Date startDate, Date endDate,
+                             long money, String currency, Long[] walletIds, String tag) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Contract.Budget.TYPE, type);
+        contentValues.put(Contract.Budget.CATEGORY_IDS, getObjectIds(categoryIds));
+        contentValues.put(Contract.Budget.START_DATE, DateUtils.getSQLDateString(startDate));
+        contentValues.put(Contract.Budget.END_DATE, DateUtils.getSQLDateString(endDate));
+        contentValues.put(Contract.Budget.MONEY, money);
+        contentValues.put(Contract.Budget.CURRENCY, currency);
+        contentValues.put(Contract.Budget.WALLET_IDS, getObjectIds(walletIds));
+        contentValues.put(Contract.Budget.TAG, tag);
+        return mDatabase.updateBudget(id, contentValues);
+    }
+
+    /**
+     * Reads back what a budget covers, both the way the editor reads it and the way the list row
+     * shows it.
+     *
+     * @param id of the budget.
+     * @param categoryIds every category it should cover, lowest id first, which is the order
+     *                    a query hands them over in.
+     * @param joinedNames the names the list row should show, joined the way the query joins them.
+     * @param progress the figure the budget should now be at.
+     */
+    private void checkBudgetCategories(long id, Long[] categoryIds, String joinedNames, long progress) {
+        Cursor cursor = mDatabase.getBudget(id, null);
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        assertEquals(true, cursor.moveToFirst());
+        assertEquals(getObjectIds(categoryIds), cursor.getString(cursor.getColumnIndex(Contract.Budget.CATEGORY_IDS)));
+        assertEquals(joinedNames, cursor.getString(cursor.getColumnIndex(Contract.Budget.CATEGORY_NAME)));
+        assertEquals((long) categoryIds[0], cursor.getLong(cursor.getColumnIndex(Contract.Budget.CATEGORY_ID)));
+        assertEquals(progress, cursor.getLong(cursor.getColumnIndex(Contract.Budget.PROGRESS)));
+        cursor.close();
+    }
+
     private void checkSavingId(long id, String description, String icon, long startMoney,
                                long endMoney, long walletId, Date exp, boolean completed,
                                String note, String tag) {
@@ -1667,6 +1717,89 @@ public class SQLDatabaseTest {
         checkBudgetId(id7, Schema.BudgetType.INCOMES, null, startDate, endDate, 5000L, "EUR", walletIds1, "tag-1", 0L);
         checkBudgetId(id8, Schema.BudgetType.EXPENSES, null, startDate, endDate, 10000L, "EUR", walletIds2, "tag-2", 0L);
         checkBudgetId(id9, Schema.BudgetType.CATEGORY, id6, startDate, endDate, 13000L, "USD", walletIds3, "tag-3", 0L);
+    }
+
+    @Test
+    public void budgetCoveringSeveralCategoriesCountsThemAll() throws Exception {
+        long wallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long food = insertCategory("Food", "encoded-icon-food", 1, null, true, "tag-food");
+        long rent = insertCategory("Rent", "encoded-icon-rent", 1, null, true, "tag-rent");
+        long petrol = insertCategory("Petrol", "encoded-icon-petrol", 1, null, true, "tag-petrol");
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, -3);
+        Date startDate = calendar.getTime();
+        calendar.add(Calendar.MONTH, 6);
+        Date endDate = calendar.getTime();
+        Long[] wallets = new Long[] {wallet};
+        long budget = insertBudgetCovering(Schema.BudgetType.CATEGORY, new Long[] {food, rent}, startDate, endDate, 5000L, "EUR", wallets, "tag-1");
+        insertTransaction(100, new Date(), null, food, Contract.Direction.EXPENSE, Contract.TransactionType.STANDARD, wallet, null, null, null, null, null, true, true, null, null, "tag");
+        insertTransaction(250, new Date(), null, rent, Contract.Direction.EXPENSE, Contract.TransactionType.STANDARD, wallet, null, null, null, null, null, true, true, null, null, "tag");
+        // the control: a category the budget does not cover, in the same wallet and the same
+        // period, so a budget that matched on the wallet alone would swallow it
+        insertTransaction(700, new Date(), null, petrol, Contract.Direction.EXPENSE, Contract.TransactionType.STANDARD, wallet, null, null, null, null, null, true, true, null, null, "tag");
+        checkBudgetCategories(budget, new Long[] {food, rent}, "Food, Rent", -350L);
+    }
+
+    @Test
+    public void budgetNamingOneCategoryStillFillsTheJoinTable() throws Exception {
+        // every caller that predates a budget covering more than one category writes the single
+        // column, and the queries read the join table, so the two have to meet
+        long wallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long food = insertCategory("Food", "encoded-icon-food", 1, null, true, "tag-food");
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, -3);
+        Date startDate = calendar.getTime();
+        calendar.add(Calendar.MONTH, 6);
+        Date endDate = calendar.getTime();
+        long budget = insertBudget(Schema.BudgetType.CATEGORY, food, startDate, endDate, 5000L, "EUR", new Long[] {wallet}, "tag-1");
+        insertTransaction(100, new Date(), null, food, Contract.Direction.EXPENSE, Contract.TransactionType.STANDARD, wallet, null, null, null, null, null, true, true, null, null, "tag");
+        checkBudgetCategories(budget, new Long[] {food}, "Food", -100L);
+    }
+
+    @Test
+    public void updateBudgetReplacesTheCategoriesItCovers() throws Exception {
+        long wallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long food = insertCategory("Food", "encoded-icon-food", 1, null, true, "tag-food");
+        long rent = insertCategory("Rent", "encoded-icon-rent", 1, null, true, "tag-rent");
+        long petrol = insertCategory("Petrol", "encoded-icon-petrol", 1, null, true, "tag-petrol");
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, -3);
+        Date startDate = calendar.getTime();
+        calendar.add(Calendar.MONTH, 6);
+        Date endDate = calendar.getTime();
+        Long[] wallets = new Long[] {wallet};
+        long budget = insertBudgetCovering(Schema.BudgetType.CATEGORY, new Long[] {food, rent}, startDate, endDate, 5000L, "EUR", wallets, "tag-1");
+        insertTransaction(100, new Date(), null, food, Contract.Direction.EXPENSE, Contract.TransactionType.STANDARD, wallet, null, null, null, null, null, true, true, null, null, "tag");
+        insertTransaction(250, new Date(), null, rent, Contract.Direction.EXPENSE, Contract.TransactionType.STANDARD, wallet, null, null, null, null, null, true, true, null, null, "tag");
+        insertTransaction(700, new Date(), null, petrol, Contract.Direction.EXPENSE, Contract.TransactionType.STANDARD, wallet, null, null, null, null, null, true, true, null, null, "tag");
+        checkBudgetCategories(budget, new Long[] {food, rent}, "Food, Rent", -350L);
+        // food is dropped and petrol is added, so the figure follows the new pair, and the row
+        // that the update flagged deleted for rent comes back instead of being written twice
+        updateBudgetCovering(budget, Schema.BudgetType.CATEGORY, new Long[] {rent, petrol}, startDate, endDate, 5000L, "EUR", wallets, "tag-1");
+        checkBudgetCategories(budget, new Long[] {rent, petrol}, "Petrol, Rent", -950L);
+    }
+
+    @Test(expected = SQLiteDataException.class)
+    public void deleteCategoryReachedOnlyThroughTheJoinTable() throws Exception {
+        // the budget row itself names food, so rent is in the join table and nowhere else
+        long wallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long food = insertCategory("Food", "encoded-icon-food", 1, null, true, "tag-food");
+        long rent = insertCategory("Rent", "encoded-icon-rent", 1, null, true, "tag-rent");
+        insertBudgetCovering(Schema.BudgetType.CATEGORY, new Long[] {food, rent}, new Date(), new Date(), 3000L, "EUR", new Long[] {wallet}, "tag");
+        mDatabase.deleteCategory(rent);
+    }
+
+    @Test
+    public void deleteBudgetTakesItsCategoriesWithIt() throws Exception {
+        long wallet = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long food = insertCategory("Food", "encoded-icon-food", 1, null, true, "tag-food");
+        long rent = insertCategory("Rent", "encoded-icon-rent", 1, null, true, "tag-rent");
+        long budget = insertBudgetCovering(Schema.BudgetType.CATEGORY, new Long[] {food, rent}, new Date(), new Date(), 3000L, "EUR", new Long[] {wallet}, "tag");
+        mDatabase.deleteBudget(budget);
+        checkCursorSize(mDatabase.getBudget(budget, null), 0);
+        // with the join rows gone the categories are free again
+        mDatabase.deleteCategory(rent);
+        mDatabase.deleteCategory(food);
     }
 
     @Test(expected = SQLiteDataException.class)
