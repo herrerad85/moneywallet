@@ -125,9 +125,7 @@ public class PeriodDetailFlowFragment extends Fragment implements PeriodDetailFl
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.setNestedScrollingEnabled(false);
         mRecyclerView.setAdapter(mRecyclerViewAdapter);
-        // A rotation builds a new adapter, so what the user had open comes back from the saved
-        // state. Without this the list collapses under a rotation the same way it used to
-        // collapse on the way back from a category's transactions.
+        // A recreate builds a new adapter, so what the user had open comes back from saved state.
         if (savedInstanceState != null) {
             long[] expanded = savedInstanceState.getLongArray(STATE_EXPANDED);
             if (expanded != null) {

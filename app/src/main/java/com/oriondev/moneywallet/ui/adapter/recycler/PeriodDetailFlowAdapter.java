@@ -91,9 +91,8 @@ public class PeriodDetailFlowAdapter extends RecyclerView.Adapter<PeriodDetailFl
 
     private void bindChildrenToggle(ViewHolder holder, CategoryMoney category) {
         boolean hasChildren = !category.getChildren().isEmpty();
-        // Invisible and not gone, so a category without children still reserves the arrow's width
-        // and every amount in the list keeps the same right edge. A child's amount is read against
-        // the parent total directly above it, so the two have to line up.
+        // Invisible and not gone, so every amount keeps the same right edge. A child's amount is
+        // read against the parent total above it, so the two have to line up.
         holder.mChildrenToggle.setVisibility(hasChildren ? View.VISIBLE : View.INVISIBLE);
         if (hasChildren) {
             boolean expanded = mExpandedCategories.contains(category.getId());
@@ -106,11 +105,7 @@ public class PeriodDetailFlowAdapter extends RecyclerView.Adapter<PeriodDetailFl
         }
     }
 
-    /**
-     * Whether the child at this row is the last one drawn under its category, which is what tells
-     * the indicator to stop its line half way. A category's children are shown or hidden all
-     * together, so the last of them is always the last one on screen.
-     */
+    /** The last child under its category, which tells the indicator to stop its line half way. */
     private boolean isLastChild(int position) {
         ItemWrapper item = mItems.get(position);
         CategoryMoney parent = mData.getCategory(item.mParentIndex);
@@ -128,20 +123,15 @@ public class PeriodDetailFlowAdapter extends RecyclerView.Adapter<PeriodDetailFl
     }
 
     /**
-     * What is expanded is deliberately kept across a reload. The loader redelivers its cached
-     * result whenever this screen is started again, so clearing here would collapse the list every
-     * time the user opened a category's transactions and came back, which is the way through this
-     * feature.
+     * Expansion is deliberately kept. The loader redelivers its cached result whenever this screen
+     * starts again, so clearing here collapsed the list on the way back from a category.
      */
     public void setData(PeriodDetailFlowData data) {
         mData = data;
         rebuildItems();
     }
 
-    /**
-     * Every category is a row, and the children of an expanded one follow it. Categories start
-     * collapsed so that opening a period still shows the list of totals it always did.
-     */
+    /** Categories start collapsed, so opening a period shows the list of totals it always did. */
     private void rebuildItems() {
         mItems.clear();
         if (mData != null) {

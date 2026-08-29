@@ -51,22 +51,6 @@ import java.util.Map;
  */
 public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFlowData> {
 
-    /*
-    private static final int[] mColors = new int[] {
-            Color.rgb(204, 198, 24),
-            Color.rgb(229, 163, 25),
-            Color.rgb(232, 111, 40),
-            Color.rgb(212, 75, 145),
-            Color.rgb(117, 96, 165),
-            Color.rgb(54, 142, 92),
-            Color.rgb(129, 191, 22),
-            Color.rgb(224, 184, 26),
-            Color.rgb(229, 138, 24),
-            Color.rgb(235, 89, 92),
-            Color.rgb(167, 78, 160),
-            Color.rgb(66, 117, 138),
-            Color.rgb(85, 169, 48)
-    };*/
 
     private final Date mStartDate;
     private final Date mEndDate;
@@ -86,7 +70,6 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
         Map<Long, CategoryMoney> categoryMoneyMap = new HashMap<>();
         Map<Long, Map<Long, CategoryMoney>> childMoneyMap = new HashMap<>();
         Map<Long, Money> directMoneyMap = new HashMap<>();
-        // load from content resolver
         Map<Long, Category> categoryCache = loadCategoryCache();
         Map<Long, Category> childCategoryCache = loadChildCategoryCache();
         Uri uri = DataContentProvider.CONTENT_TRANSACTIONS;
@@ -161,8 +144,6 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
             }
             cursor.close();
         }
-        // now we have all the necessary data stored inside the map, we can iterate all the
-        // category and fill the chart data and the total money item
         List<CategoryMoney> categoryMoneyList = new ArrayList<>();
         for (CategoryMoney categoryMoney : categoryMoneyMap.values()) {
             Money money = categoryMoney.getMoney();
@@ -174,37 +155,14 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
                     pieData.add(new PieSlice(categoryMoney.getName(), entry.getValue(), categoryMoney.getIcon().getDrawable(getContext())));
                 } else {
                     PieData pieData = new PieData();
-                    //entries.add(new PieEntry(entry.getValue(), categoryMoney.getName(), categoryMoney.getIcon().getDrawable(getContext())));
                     pieData.add(new PieSlice(categoryMoney.getName(), entry.getValue(), categoryMoney.getIcon().getDrawable(getContext())));
                     pieDataSets.put(currency, pieData);
                 }
-                // --->
-                /* === USE THIS CODE IF MPAndroidChart library is used ===
-                currency = CurrencyManager.getCurrency("USD");
-                if (pieDataSets.containsKey(currency)) {
-                    List<PieEntry> entries = pieDataSets.get(currency);
-                    entries.add(new PieEntry(entry.getValue(), categoryMoney.getName()));
-                } else {
-                    List<PieEntry> entries = new ArrayList<>();
-                    entries.add(new PieEntry(entry.getValue(), categoryMoney.getName()));
-                    pieDataSets.put(currency, entries);
-                }*/
-                // <---
             }
             attachChildren(categoryMoney, childMoneyMap.get(categoryMoney.getId()),
                     directMoneyMap.get(categoryMoney.getId()));
             categoryMoneyList.add(categoryMoney);
         }
-        // buildMaterialDialog the return object
-        /*
-        List<PieData> pieDataList = new ArrayList<>();
-        for (Map.Entry<CurrencyUnit, List<PieEntry>> entry : pieDataSets.entrySet()) {
-            String name = entry.getKey().getName();
-            PieDataSet pieDataSet = new PieDataSet(entry.getValue(), name);
-            pieDataSet.setColors(mColors);
-            pieDataSet.setXValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
-            pieDataList.add(new PieData(pieDataSet));
-        }*/
         List<PieData> pieDataList = new ArrayList<>();
         for (Map.Entry<CurrencyUnit, PieData> entry : pieDataSets.entrySet()) {
             pieDataList.add(entry.getValue());
@@ -212,11 +170,8 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
         return new PeriodDetailFlowData(totalMoney, pieDataList, categoryMoneyList);
     }
 
-    /**
-     * Adds one transaction to the running total of the child category it was filed under. The
-     * caller has already checked that the parent survived the report filter, so a child is only
-     * counted here when its money is also counted in the parent row above it.
-     */
+    /** The caller checked the parent against the report filter, so a child counted here is also
+     * counted in the parent row above it. */
     private void addChildMoney(Map<Long, Map<Long, CategoryMoney>> childMoneyMap,
                                long parentId, long childId, Category child, String iso, long money) {
         Map<Long, CategoryMoney> children = childMoneyMap.get(parentId);
@@ -243,14 +198,10 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
     }
 
     /**
-     * Children sorted by name, because the map they arrive in has no order of its own and rows
-     * that move between two loads of the same period read as a defect.
-     *
-     * Whatever did not reach a child this screen can name leads the list under the category's own
-     * name, which is money filed on the category itself plus money on a child hidden from the
-     * reports. It is there so the rows under a category always add up to the total on the
-     * category. Nothing is added when no child could be named, since there is then nothing to
-     * expand.
+     * Sorted by name, because the map has no order of its own and rows that move between two loads
+     * of one period read as a defect. Whatever reached no child this screen can name leads the
+     * list under the category's own name, which is money filed on the category itself plus money
+     * on a child hidden from the reports, so the rows always add up to the category.
      */
     private void attachChildren(CategoryMoney parent, Map<Long, CategoryMoney> children, Money direct) {
         if (children == null) {
@@ -274,10 +225,9 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
     }
 
     /**
-     * The children this screen is allowed to name. A child hidden from the reports is left out and
-     * the caller counts its money against the parent's row instead, which keeps the name off this
-     * screen and keeps the rows under a category adding up to the category. The money itself is
-     * still in the total, as it was before this screen named any child.
+     * A child hidden from the reports is left out, and the caller counts its money against the
+     * parent's row instead. That keeps the name off this screen and the rows still adding up. The
+     * money stays in the total, as it did before this screen named any child.
      */
     private Map<Long, Category> loadChildCategoryCache() {
         return loadCategories(Contract.Category.PARENT + " IS NOT NULL AND " +

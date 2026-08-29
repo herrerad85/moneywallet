@@ -40,10 +40,6 @@ public class CategoryMoney {
         mMoney = money;
     }
 
-    /**
-     * The child categories named under this one, empty when there are none to name. A child is
-     * only ever added to the parent it rolls up into.
-     */
     public List<CategoryMoney> getChildren() {
         return mChildren;
     }
