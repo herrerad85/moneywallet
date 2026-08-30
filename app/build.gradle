@@ -89,6 +89,16 @@ android {
     useLibrary 'android.test.runner'
     useLibrary 'android.test.base'
     useLibrary 'android.test.mock'
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError true
+        // A baseline entry matches on the message text, and a MissingTranslation
+        // message lists the locales a string is still missing from. Translating one
+        // string rewrites that list, so the entry stops matching and the string is
+        // reported fresh. At error severity that turns a translation contribution
+        // into a red build, so this check reports without failing anything.
+        warning "MissingTranslation"
+    }
 }
 
 configurations {
