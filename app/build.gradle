@@ -89,6 +89,10 @@ android {
     useLibrary 'android.test.runner'
     useLibrary 'android.test.base'
     useLibrary 'android.test.mock'
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError true
+    }
 }
 
 configurations {
