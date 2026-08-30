@@ -19,6 +19,9 @@
 
 package com.oriondev.moneywallet.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by andrea on 13/08/18.
  */
@@ -28,12 +31,21 @@ public class CategoryMoney {
     private final String mName;
     private final Icon mIcon;
     private final Money mMoney;
+    private final List<CategoryMoney> mChildren = new ArrayList<>();
 
     public CategoryMoney(long id, String name, Icon icon, Money money) {
         mId = id;
         mName = name;
         mIcon = icon;
         mMoney = money;
+    }
+
+    public List<CategoryMoney> getChildren() {
+        return mChildren;
+    }
+
+    public void addChild(CategoryMoney child) {
+        mChildren.add(child);
     }
 
     public long getId() {

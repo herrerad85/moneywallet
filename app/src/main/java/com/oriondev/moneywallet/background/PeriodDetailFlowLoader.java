@@ -39,6 +39,8 @@ import com.oriondev.moneywallet.utils.DateUtils;
 import com.oriondev.moneywallet.utils.IconLoader;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -49,22 +51,6 @@ import java.util.Map;
  */
 public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFlowData> {
 
-    /*
-    private static final int[] mColors = new int[] {
-            Color.rgb(204, 198, 24),
-            Color.rgb(229, 163, 25),
-            Color.rgb(232, 111, 40),
-            Color.rgb(212, 75, 145),
-            Color.rgb(117, 96, 165),
-            Color.rgb(54, 142, 92),
-            Color.rgb(129, 191, 22),
-            Color.rgb(224, 184, 26),
-            Color.rgb(229, 138, 24),
-            Color.rgb(235, 89, 92),
-            Color.rgb(167, 78, 160),
-            Color.rgb(66, 117, 138),
-            Color.rgb(85, 169, 48)
-    };*/
 
     private final Date mStartDate;
     private final Date mEndDate;
@@ -82,8 +68,10 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
         Money totalMoney = new Money();
         Map<CurrencyUnit, PieData> pieDataSets = new HashMap<>();
         Map<Long, CategoryMoney> categoryMoneyMap = new HashMap<>();
-        // load from content resolver
+        Map<Long, Map<Long, CategoryMoney>> childMoneyMap = new HashMap<>();
+        Map<Long, Money> directMoneyMap = new HashMap<>();
         Map<Long, Category> categoryCache = loadCategoryCache();
+        Map<Long, Category> childCategoryCache = loadChildCategoryCache();
         Uri uri = DataContentProvider.CONTENT_TRANSACTIONS;
         String[] projection = new String[] {
                 Contract.Transaction.CATEGORY_ID,
@@ -115,14 +103,26 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
+                    long ownId = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.CATEGORY_ID));
                     long categoryId;
+                    long childId;
                     if (cursor.isNull(cursor.getColumnIndex(Contract.Transaction.CATEGORY_PARENT_ID))) {
-                        categoryId = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.CATEGORY_ID));
+                        categoryId = ownId;
+                        childId = 0L;
                     } else {
                         categoryId = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.CATEGORY_PARENT_ID));
+                        childId = ownId;
                     }
                     long money = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY));
                     String iso = cursor.getString(cursor.getColumnIndex(Contract.Transaction.WALLET_CURRENCY));
+                    if (categoryCache.containsKey(categoryId)) {
+                        Category child = childId != 0L ? childCategoryCache.get(childId) : null;
+                        if (child != null) {
+                            addChildMoney(childMoneyMap, categoryId, childId, child, iso, money);
+                        } else {
+                            addDirectMoney(directMoneyMap, categoryId, iso, money);
+                        }
+                    }
                     if (categoryMoneyMap.containsKey(categoryId)) {
                         CategoryMoney categoryMoney = categoryMoneyMap.get(categoryId);
                         categoryMoney.getMoney().addMoney(iso, money);
@@ -144,8 +144,6 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
             }
             cursor.close();
         }
-        // now we have all the necessary data stored inside the map, we can iterate all the
-        // category and fill the chart data and the total money item
         List<CategoryMoney> categoryMoneyList = new ArrayList<>();
         for (CategoryMoney categoryMoney : categoryMoneyMap.values()) {
             Money money = categoryMoney.getMoney();
@@ -157,35 +155,14 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
                     pieData.add(new PieSlice(categoryMoney.getName(), entry.getValue(), categoryMoney.getIcon().getDrawable(getContext())));
                 } else {
                     PieData pieData = new PieData();
-                    //entries.add(new PieEntry(entry.getValue(), categoryMoney.getName(), categoryMoney.getIcon().getDrawable(getContext())));
                     pieData.add(new PieSlice(categoryMoney.getName(), entry.getValue(), categoryMoney.getIcon().getDrawable(getContext())));
                     pieDataSets.put(currency, pieData);
                 }
-                // --->
-                /* === USE THIS CODE IF MPAndroidChart library is used ===
-                currency = CurrencyManager.getCurrency("USD");
-                if (pieDataSets.containsKey(currency)) {
-                    List<PieEntry> entries = pieDataSets.get(currency);
-                    entries.add(new PieEntry(entry.getValue(), categoryMoney.getName()));
-                } else {
-                    List<PieEntry> entries = new ArrayList<>();
-                    entries.add(new PieEntry(entry.getValue(), categoryMoney.getName()));
-                    pieDataSets.put(currency, entries);
-                }*/
-                // <---
             }
+            attachChildren(categoryMoney, childMoneyMap.get(categoryMoney.getId()),
+                    directMoneyMap.get(categoryMoney.getId()));
             categoryMoneyList.add(categoryMoney);
         }
-        // buildMaterialDialog the return object
-        /*
-        List<PieData> pieDataList = new ArrayList<>();
-        for (Map.Entry<CurrencyUnit, List<PieEntry>> entry : pieDataSets.entrySet()) {
-            String name = entry.getKey().getName();
-            PieDataSet pieDataSet = new PieDataSet(entry.getValue(), name);
-            pieDataSet.setColors(mColors);
-            pieDataSet.setXValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
-            pieDataList.add(new PieData(pieDataSet));
-        }*/
         List<PieData> pieDataList = new ArrayList<>();
         for (Map.Entry<CurrencyUnit, PieData> entry : pieDataSets.entrySet()) {
             pieDataList.add(entry.getValue());
@@ -193,8 +170,78 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
         return new PeriodDetailFlowData(totalMoney, pieDataList, categoryMoneyList);
     }
 
+    /** The caller checked the parent against the report filter, so a child counted here is also
+     * counted in the parent row above it. */
+    private void addChildMoney(Map<Long, Map<Long, CategoryMoney>> childMoneyMap,
+                               long parentId, long childId, Category child, String iso, long money) {
+        Map<Long, CategoryMoney> children = childMoneyMap.get(parentId);
+        if (children == null) {
+            children = new HashMap<>();
+            childMoneyMap.put(parentId, children);
+        }
+        CategoryMoney childMoney = children.get(childId);
+        if (childMoney != null) {
+            childMoney.getMoney().addMoney(iso, money);
+        } else {
+            children.put(childId, new CategoryMoney(childId, child.getName(), child.getIcon(),
+                    new Money(iso, money)));
+        }
+    }
+
+    private void addDirectMoney(Map<Long, Money> directMoneyMap, long categoryId, String iso, long money) {
+        Money direct = directMoneyMap.get(categoryId);
+        if (direct == null) {
+            directMoneyMap.put(categoryId, new Money(iso, money));
+        } else {
+            direct.addMoney(iso, money);
+        }
+    }
+
+    /**
+     * Sorted by name, because the map has no order of its own and rows that move between two loads
+     * of one period read as a defect. Whatever reached no child this screen can name leads the
+     * list under the category's own name, which is money filed on the category itself plus money
+     * on a child hidden from the reports, so the rows always add up to the category.
+     */
+    private void attachChildren(CategoryMoney parent, Map<Long, CategoryMoney> children, Money direct) {
+        if (children == null) {
+            return;
+        }
+        if (direct != null) {
+            parent.addChild(new CategoryMoney(parent.getId(), parent.getName(), parent.getIcon(), direct));
+        }
+        List<CategoryMoney> sorted = new ArrayList<>(children.values());
+        Collections.sort(sorted, new Comparator<CategoryMoney>() {
+
+            @Override
+            public int compare(CategoryMoney left, CategoryMoney right) {
+                return String.CASE_INSENSITIVE_ORDER.compare(left.getName(), right.getName());
+            }
+
+        });
+        for (CategoryMoney child : sorted) {
+            parent.addChild(child);
+        }
+    }
+
+    /**
+     * A child hidden from the reports is left out, and the caller counts its money against the
+     * parent's row instead. That keeps the name off this screen and the rows still adding up. The
+     * money stays in the total, as it did before this screen named any child.
+     */
+    private Map<Long, Category> loadChildCategoryCache() {
+        return loadCategories(Contract.Category.PARENT + " IS NOT NULL AND " +
+                Contract.Category.SHOW_REPORT + " = '1'");
+    }
+
     @SuppressLint("UseSparseArrays")
     private Map<Long, Category> loadCategoryCache() {
+        return loadCategories(Contract.Category.PARENT + " IS NULL AND " +
+                Contract.Category.SHOW_REPORT + " = '1'");
+    }
+
+    @SuppressLint("UseSparseArrays")
+    private Map<Long, Category> loadCategories(String selection) {
         Map<Long, Category> cache = new HashMap<>();
         Uri uri = DataContentProvider.CONTENT_CATEGORIES;
         String[] projection = new String[] {
@@ -203,8 +250,6 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
                 Contract.Category.ICON,
                 Contract.Category.TYPE
         };
-        String selection = Contract.Category.PARENT + " IS NULL AND " +
-                Contract.Category.SHOW_REPORT + " = '1'";
         Cursor cursor = getContext().getContentResolver().query(uri, projection, selection, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {

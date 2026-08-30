@@ -61,6 +61,8 @@ public class PeriodDetailFlowFragment extends Fragment implements PeriodDetailFl
     private static final String ARG_END_DATE = "PeriodDetailFlowFragment::Arguments::EndDate";
     private static final String ARG_INCOMES = "PeriodDetailFlowFragment::Arguments::Incomes";
 
+    private static final String STATE_EXPANDED = "PeriodDetailFlowFragment::State::Expanded";
+
     public static PeriodDetailFlowFragment newInstance(Date start, Date end, boolean incomes) {
         Bundle arguments = new Bundle();
         arguments.putSerializable(ARG_START_DATE, start);
@@ -123,8 +125,23 @@ public class PeriodDetailFlowFragment extends Fragment implements PeriodDetailFl
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mRecyclerView.setNestedScrollingEnabled(false);
         mRecyclerView.setAdapter(mRecyclerViewAdapter);
+        // A recreate builds a new adapter, so what the user had open comes back from saved state.
+        if (savedInstanceState != null) {
+            long[] expanded = savedInstanceState.getLongArray(STATE_EXPANDED);
+            if (expanded != null) {
+                mRecyclerViewAdapter.setExpandedCategories(expanded);
+            }
+        }
         // return the view
         return view;
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mRecyclerViewAdapter != null) {
+            outState.putLongArray(STATE_EXPANDED, mRecyclerViewAdapter.getExpandedCategories());
+        }
     }
 
     @Override
