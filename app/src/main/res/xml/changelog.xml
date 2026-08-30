@@ -20,6 +20,19 @@
 
 <changelog>
 
+    <version versionName="1.7.0" versionDate="Aug 30, 2026">
+        <change>[b]New![/b] A home screen widget that shows one wallet's balance.</change>
+        <change>[b]New![/b] A budget can cover more than one category.</change>
+        <change>[b]New![/b] A category's total in the Overview opens into the subcategories it is made of.</change>
+        <change>[b]New![/b] 73 more category icons, filling the six picker groups that had none.</change>
+        <change>Back from a section you opened in the drawer returns to Transactions instead of closing the app.</change>
+        <change>The status bar follows the theme color on Android 15 and later, where it used to stay the window background.</change>
+        <change>A withdrawal dated before the deposit that funds it no longer takes a savings goal below zero.</change>
+        <change>A debt payment can no longer be filed against a wallet in another currency.</change>
+        <change>A savings goal or a debt stays in the currency its money is in.</change>
+        <change>A debt keeps the time of day on its own transaction.</change>
+        <change>The Overview and the screen it opens agree when a category is hidden from the reports.</change>
+    </version>
     <version versionName="1.6.0" versionDate="Aug 26, 2026">
         <change>[b]New![/b] A budget can repeat, opening its next period on its own when the one before it ends.</change>
         <change>[b]New![/b] A transactions list says what came in and what went out over the period it is showing.</change>

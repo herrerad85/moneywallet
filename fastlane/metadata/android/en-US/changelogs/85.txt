@@ -1,0 +1,3 @@
+New: a home screen widget showing one wallet's balance. A budget can cover more than one category. A category's total in the Overview opens into its subcategories. 73 more category icons.
+
+Fixes: Back from a drawer section returns to Transactions instead of closing the app. The status bar follows the theme color on Android 15 and later. A savings goal or a debt stays in the currency its money is in, and a withdrawal dated before its deposit can no longer take a goal below zero.

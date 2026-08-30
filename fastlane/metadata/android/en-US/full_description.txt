@@ -15,6 +15,7 @@ Features:
 * Saving goals
 * Overview charts and reports
 * Calendar view of your activity
+* A home screen widget showing one wallet's balance
 * Transaction templates and scheduled events
 * Local backup and restore, with a local-folder option you can sync using your own tools
 * Backup to your own WebDAV server, such as Nextcloud, ownCloud or a NAS, with no third party account
