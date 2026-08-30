@@ -33,8 +33,10 @@ import android.graphics.Insets;
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Gravity;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
+import android.widget.FrameLayout;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.ui.view.theme.ITheme;
@@ -60,6 +62,8 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
     private static final String THEMED_VIEW_PACKAGE = "com.oriondev.moneywallet.ui.view.theme.Themed";
 
     private static final Map<String, Constructor<?>> sThemedViewConstructors = new HashMap<>();
+
+    private View mStatusBarScrim;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,10 +135,9 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
     // From Android 15 (API 35) edge to edge is enforced for apps targeting SDK 35: the system bars
     // no longer reserve space, so without this the toolbar would sit under the status bar and the
     // bottom controls (first run buttons, keypad, FABs) under the navigation bar. We opt the content
-    // back into the safe area by padding it with the system bar and display cutout insets. The bars
-    // themselves show through to the themed window background, and onThemeStatusBarIcons keeps the
-    // bar icons legible against it. Centralised here so every activity that goes through this base
-    // class inherits the fix.
+    // back into the safe area by padding it with the system bar and display cutout insets, and paint
+    // the strip the status bar leaves behind ourselves, since setStatusBarColor does nothing at this
+    // target. Centralized here so every activity that goes through this base class inherits both.
 
     @Override
     public void setContentView(int layoutResID) {
@@ -166,9 +169,55 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
             Insets bars = insets.getInsets(WindowInsets.Type.systemBars()
                     | WindowInsets.Type.displayCutout());
             view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            setStatusBarScrimBounds(bars);
             return WindowInsets.CONSUMED;
         });
         content.requestApplyInsets();
+    }
+
+    /**
+     * The strip behind the status bar, painted by us because the platform no longer paints it. It
+     * lives in the decor and not in any layout, so it covers the padding applied above on every
+     * screen and needs no change to a layout to reach a new one. It is added last, which puts it
+     * over the navigation drawer the way the platform's own status bar tint used to sit over it.
+     * <p>
+     * Its bounds come from the insets, so it is zero high where the bar takes no space, and the
+     * color comes from onThemeStatusBarScrim. Below API 35 nothing here runs, the platform still
+     * paints the bar from setStatusBarColor, and on the main screen the drawer paints its own.
+     */
+    private View getStatusBarScrim() {
+        if (mStatusBarScrim == null) {
+            View decor = getWindow().getDecorView();
+            if (!(decor instanceof ViewGroup)) {
+                return null;
+            }
+            mStatusBarScrim = new View(this);
+            ((ViewGroup) decor).addView(mStatusBarScrim, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT, 0, Gravity.TOP));
+        }
+        return mStatusBarScrim;
+    }
+
+    /**
+     * Sized and inset by the same insets the content above is padded by, so the band caps the
+     * content exactly. Every edge the content is held out of, the band is held out of too. That
+     * matters on a device with a display cutout down one side, where the content is letterboxed
+     * away from the curve or the notch, and a band run to the full window width would overhang
+     * that letterbox and leave a window background sliver under a colored bar.
+     */
+    private void setStatusBarScrimBounds(Insets bars) {
+        View scrim = getStatusBarScrim();
+        if (scrim == null) {
+            return;
+        }
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) scrim.getLayoutParams();
+        if (params.height != bars.top || params.leftMargin != bars.left
+                || params.rightMargin != bars.right) {
+            params.height = bars.top;
+            params.leftMargin = bars.left;
+            params.rightMargin = bars.right;
+            scrim.setLayoutParams(params);
+        }
     }
 
     @Override
@@ -195,6 +244,7 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
 
     private void setupActivityBaseTheme(ITheme theme) {
         onThemeStatusBar(theme);
+        onThemeStatusBarScrim(theme);
         onThemeStatusBarIcons(theme);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             onThemeTaskDescription(theme);
@@ -208,16 +258,33 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
         }
     }
 
+    /**
+     * Kept apart from onThemeStatusBar because the main screen overrides that one to color the
+     * drawer's own status bar background instead, and does not call through. The strip has to be
+     * painted on every screen, that one included.
+     */
+    protected void onThemeStatusBarScrim(ITheme theme) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            View scrim = getStatusBarScrim();
+            if (scrim != null) {
+                scrim.setBackgroundColor(theme.getColorPrimaryDark());
+            }
+        }
+    }
+
     protected void onThemeStatusBarIcons(ITheme theme) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            // Under enforced edge to edge the system bars sit over the window background rather than
-            // the status bar color, so the icon contrast must follow that background instead.
+            // The status bar sits over the scrim painted above, so its icons follow that color while
+            // the navigation bar, which nothing paints, still follows the window background.
             WindowInsetsController controller = getWindow().getInsetsController();
             if (controller != null) {
-                int mask = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-                        | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
-                boolean lightBackground = Utils.isColorLight(theme.getColorWindowBackground());
-                controller.setSystemBarsAppearance(lightBackground ? mask : 0, mask);
+                int statusMask = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS;
+                int navigationMask = WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                controller.setSystemBarsAppearance(
+                        Utils.isColorLight(theme.getColorPrimaryDark()) ? statusMask : 0, statusMask);
+                controller.setSystemBarsAppearance(
+                        Utils.isColorLight(theme.getColorWindowBackground()) ? navigationMask : 0,
+                        navigationMask);
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             View decorView = getWindow().getDecorView();
