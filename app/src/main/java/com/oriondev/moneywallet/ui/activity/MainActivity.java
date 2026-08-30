@@ -229,12 +229,28 @@ public class MainActivity extends BaseActivity implements DrawerController, Acco
         if (mDrawer != null && mDrawer.isDrawerOpen()) {
             mDrawer.closeDrawer();
         } else if (mCurrentFragment instanceof NavigableFragment) {
-            if (!((NavigableFragment) mCurrentFragment).navigateBack()) {
+            if (!((NavigableFragment) mCurrentFragment).navigateBack() && !selectTransactionsSection()) {
                 super.onBackPressed();
             }
-        } else {
+        } else if (!selectTransactionsSection()) {
             super.onBackPressed();
         }
+    }
+
+    /**
+     * Move back to the transactions section the way a drawer tap does, so the highlighted
+     * drawer entry and the fragment on screen cannot drift apart.
+     * @return true when the section change has been queued, false when transactions is
+     * already showing or the drawer does not exist yet, in which case the caller should
+     * fall back to the default behavior. The fragment transaction is committed, not run,
+     * so the previous section is still on screen when this returns.
+     */
+    private boolean selectTransactionsSection() {
+        if (mDrawer == null || mCurrentSelection == ID_SECTION_TRANSACTIONS) {
+            return false;
+        }
+        mDrawer.setSelection(ID_SECTION_TRANSACTIONS, true);
+        return true;
     }
 
     @Override

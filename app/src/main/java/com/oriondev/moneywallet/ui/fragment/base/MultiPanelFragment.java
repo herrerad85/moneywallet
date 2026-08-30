@@ -360,6 +360,11 @@ public abstract class MultiPanelFragment extends Fragment implements MultiPanelC
 
     @Override
     public boolean navigateBack() {
+        if (mSecondaryPanel == null) {
+            // The view has not been built yet, so there is no panel to close and
+            // nothing for this fragment to do with the back press.
+            return false;
+        }
         if (!mExtendedLayout) {
             boolean visible = mSecondaryPanel.getVisibility() == View.VISIBLE;
             hideSecondaryPanel();
