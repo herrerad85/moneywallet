@@ -88,6 +88,7 @@ public class PeriodDetailSummaryLoader extends AbstractGenericLoader<PeriodDetai
             selectionArgs = new String[] {String.valueOf(currentWallet)};
         }
         selection += " AND " + Contract.Transaction.CONFIRMED + " = '1' AND " + Contract.Transaction.COUNT_IN_TOTAL + " = '1'";
+        selection += " AND " + Contract.Transaction.REPORT_FILTER;
         selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('now', 'localtime')";
         selection += " AND DATETIME(" + Contract.Transaction.DATE + ") >= DATETIME('" + DateUtils.getSQLDateTimeString(mStartDate) + "')";
         selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('" + DateUtils.getSQLDateTimeString(mEndDate) + "')";

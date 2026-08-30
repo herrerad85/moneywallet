@@ -90,6 +90,7 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
             selectionArgs = new String[] {String.valueOf(currentWallet)};
         }
         selection += " AND " + Contract.Transaction.CONFIRMED + " = '1' AND " + Contract.Transaction.COUNT_IN_TOTAL + " = '1'";
+        selection += " AND " + Contract.Transaction.REPORT_FILTER;
         selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('now', 'localtime')";
         selection += " AND " + Contract.Transaction.DIRECTION + " = " + (mIncomes ? Contract.Direction.INCOME : Contract.Direction.EXPENSE);
         if (mStartDate != null) {
@@ -129,8 +130,6 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
                     } else {
                         Category category = categoryCache.get(categoryId);
                         if (category != null) {
-                            // if category is null it means that the category must not be showed
-                            // inside the reports
                             CategoryMoney categoryMoney = new CategoryMoney(
                                     categoryId,
                                     category.getName(),
@@ -170,8 +169,8 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
         return new PeriodDetailFlowData(totalMoney, pieDataList, categoryMoneyList);
     }
 
-    /** The caller checked the parent against the report filter, so a child counted here is also
-     * counted in the parent row above it. */
+    /** The caller checked that the parent has a row, so a child counted here is also counted in
+     * the parent row above it. */
     private void addChildMoney(Map<Long, Map<Long, CategoryMoney>> childMoneyMap,
                                long parentId, long childId, Category child, String iso, long money) {
         Map<Long, CategoryMoney> children = childMoneyMap.get(parentId);
@@ -199,9 +198,8 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
 
     /**
      * Sorted by name, because the map has no order of its own and rows that move between two loads
-     * of one period read as a defect. Whatever reached no child this screen can name leads the
-     * list under the category's own name, which is money filed on the category itself plus money
-     * on a child hidden from the reports, so the rows always add up to the category.
+     * of one period read as a defect. Money filed on the category itself leads the list under the
+     * category's own name, so the rows always add up to the category.
      */
     private void attachChildren(CategoryMoney parent, Map<Long, CategoryMoney> children, Money direct) {
         if (children == null) {
@@ -225,19 +223,16 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
     }
 
     /**
-     * A child hidden from the reports is left out, and the caller counts its money against the
-     * parent's row instead. That keeps the name off this screen and the rows still adding up. The
-     * money stays in the total, as it did before this screen named any child.
+     * Both caches name rows and neither decides what counts. A category hidden from the reports is
+     * already out, because REPORT_FILTER drops its transactions before they reach this loader.
      */
     private Map<Long, Category> loadChildCategoryCache() {
-        return loadCategories(Contract.Category.PARENT + " IS NOT NULL AND " +
-                Contract.Category.SHOW_REPORT + " = '1'");
+        return loadCategories(Contract.Category.PARENT + " IS NOT NULL");
     }
 
     @SuppressLint("UseSparseArrays")
     private Map<Long, Category> loadCategoryCache() {
-        return loadCategories(Contract.Category.PARENT + " IS NULL AND " +
-                Contract.Category.SHOW_REPORT + " = '1'");
+        return loadCategories(Contract.Category.PARENT + " IS NULL");
     }
 
     @SuppressLint("UseSparseArrays")

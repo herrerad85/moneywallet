@@ -187,8 +187,10 @@ public class TransactionHeaderCursor extends AbstractHeaderCursor<TransactionHea
          * that same amount as a plus or a minus.
          *
          * Direction is all that is read here, so the two halves of a transfer land in both, and a
-         * debt taken on lands in the incoming one. That is what PeriodDetailSummaryLoader counts
-         * too, which is the report a reader reaches from this header, so the two agree.
+         * debt taken on lands in the incoming one. PeriodDetailSummaryLoader, the report a reader
+         * reaches from this header, splits a row the same way, so a row lands on the same side in
+         * both. It counts fewer rows than this does, since it drops a category kept out of the
+         * reports and a header counts every row on the list under it.
          */
         /*package-local*/ void add(String currency, long money, int direction) {
             if (direction == Contract.Direction.INCOME) {

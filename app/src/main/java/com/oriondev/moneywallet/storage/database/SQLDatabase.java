@@ -727,6 +727,7 @@ import java.util.UUID;
                 "c." + Schema.Category.TYPE + " AS " + Contract.Transaction.CATEGORY_TYPE + ", " +
                 "c." + Schema.Category.TAG + " AS " + Contract.Transaction.CATEGORY_TAG + ", " +
                 "c." + Schema.Category.SHOW_REPORT + " AS " + Contract.Transaction.CATEGORY_SHOW_REPORT + ", " +
+                "pc." + Schema.Category.SHOW_REPORT + " AS " + Contract.Transaction.CATEGORY_PARENT_SHOW_REPORT + ", " +
                 "t." + Schema.Transaction.DIRECTION + " AS " + Contract.Transaction.DIRECTION + ", " +
                 "t." + Schema.Transaction.TYPE + " AS " + Contract.Transaction.TYPE + ", " +
                 "t." + Schema.Transaction.WALLET + " AS " + Contract.Transaction.WALLET_ID + ", " +
@@ -760,6 +761,8 @@ import java.util.UUID;
                 "GROUP_CONCAT('<' || pe." + Schema.Person.ID + " || '>') AS " + Contract.Transaction.PEOPLE_IDS + " " +
                 "FROM " + Schema.Transaction.TABLE + " AS t LEFT JOIN " + Schema.Category.TABLE +
                 " AS c ON t." + Schema.Transaction.CATEGORY + " = c." + Schema.Category.ID + " AND c." +
+                Schema.Category.DELETED + " = 0 LEFT JOIN " + Schema.Category.TABLE + " AS pc ON c." +
+                Schema.Category.PARENT + " = pc." + Schema.Category.ID + " AND pc." +
                 Schema.Category.DELETED + " = 0 JOIN " + Schema.Wallet.TABLE + " AS w ON t." +
                 Schema.Transaction.WALLET + " = w." + Schema.Wallet.ID + " AND w." +
                 Schema.Wallet.DELETED + " = 0 LEFT JOIN " + Schema.TransactionPeople.TABLE + " AS tp ON t." +

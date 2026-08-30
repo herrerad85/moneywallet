@@ -2547,4 +2547,26 @@ public class SQLDatabaseTest {
         checkCursorSize(mDatabase.getAttachments(null, null, null, null), 0);
     }
 
+    @Test
+    public void reportFilterDropsAHiddenCategoryAndAHiddenParent() throws Exception {
+        long wallet = insertWallet("Wallet", "icon", "EUR", null, true, 0L, false, "tag-wallet");
+        long shown = insertCategory("Shown", "icon", 0, null, true, "tag-shown");
+        long hidden = insertCategory("Hidden", "icon", 0, null, false, "tag-hidden");
+        long shownChild = insertCategory("Shown child", "icon", 0, shown, true, "tag-shown-child");
+        long hiddenChild = insertCategory("Hidden child", "icon", 0, shown, false, "tag-hidden-child");
+        long childOfHidden = insertCategory("Child of hidden", "icon", 0, hidden, true, "tag-child-of-hidden");
+        Date date = new Date();
+        insertTransaction(100L, date, "on a shown category", shown, Contract.Direction.EXPENSE, 0, wallet, null, null, null, null, null, true, true, null, null, "tag-1");
+        insertTransaction(100L, date, "on a hidden category", hidden, Contract.Direction.EXPENSE, 0, wallet, null, null, null, null, null, true, true, null, null, "tag-2");
+        insertTransaction(100L, date, "on a shown child", shownChild, Contract.Direction.EXPENSE, 0, wallet, null, null, null, null, null, true, true, null, null, "tag-3");
+        insertTransaction(100L, date, "on a hidden child", hiddenChild, Contract.Direction.EXPENSE, 0, wallet, null, null, null, null, null, true, true, null, null, "tag-4");
+        insertTransaction(100L, date, "on a shown child of a hidden category", childOfHidden, Contract.Direction.EXPENSE, 0, wallet, null, null, null, null, null, true, true, null, null, "tag-5");
+        // the reports keep the two rows whose own category and parent are both shown
+        String[] projection = new String[] {Contract.Transaction.ID, Contract.Transaction.CATEGORY_ID};
+        checkCursorSize(mDatabase.getTransactions(projection, Contract.Transaction.REPORT_FILTER, null, null), 2);
+        // reading the own flag alone keeps the child of a hidden category, which is the third row
+        checkCursorSize(mDatabase.getTransactions(projection, Contract.Transaction.CATEGORY_SHOW_REPORT + " = 1", null, null), 3);
+        checkCursorSize(mDatabase.getTransactions(projection, null, null, null), 5);
+    }
+
 }
