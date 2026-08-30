@@ -70,6 +70,13 @@ public class Contract {
         public static final String CATEGORY_TYPE = "transaction_" + Schema.Category.TYPE;
         public static final String CATEGORY_TAG = "transaction_" + Schema.Category.TAG;
         public static final String CATEGORY_SHOW_REPORT = "transaction_" + Schema.Category.SHOW_REPORT;
+        public static final String CATEGORY_PARENT_SHOW_REPORT = "transaction_" + Category.PARENT_SHOW_REPORT;
+        /**
+         * A transaction belongs in the reports only when its own category is included and, for a
+         * transaction filed on a subcategory, the parent is included too. Both report screens
+         * filter on this, so a category hidden on one of them cannot still be counted on the other.
+         */
+        public static final String REPORT_FILTER = "(" + CATEGORY_SHOW_REPORT + " = 1 AND IFNULL(" + CATEGORY_PARENT_SHOW_REPORT + ", 1) = 1)";
         public static final String DIRECTION = Schema.Transaction.DIRECTION;
         public static final String TYPE = Schema.Transaction.TYPE;
         public static final String WALLET_ID = Schema.Transaction.WALLET;

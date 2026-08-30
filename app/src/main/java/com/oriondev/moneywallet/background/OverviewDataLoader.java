@@ -96,7 +96,7 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
             selectionArgs = new String[] {String.valueOf(currentWallet)};
         }
         selection += " AND " + Contract.Transaction.CONFIRMED + " = '1' AND " + Contract.Transaction.COUNT_IN_TOTAL + " = '1'";
-        selection += " AND " + Contract.Transaction.CATEGORY_SHOW_REPORT + " = '1'";
+        selection += " AND " + Contract.Transaction.REPORT_FILTER;
         selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('now', 'localtime')";
         selection += " AND DATETIME(" + Contract.Transaction.DATE + ") >= DATETIME('" + DateUtils.getSQLDateTimeString(mOverviewSetting.getStartDate()) + "')";
         selection += " AND DATETIME(" + Contract.Transaction.DATE + ") <= DATETIME('" + DateUtils.getSQLDateTimeString(mOverviewSetting.getEndDate()) + "')";
