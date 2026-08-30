@@ -742,4 +742,5 @@
     <string name="title_activity_widget_configure">"Wallet balance"</string>
     <string name="hint_widget_show_when_locked">"Show the balance even when the app is locked"</string>
 
+    <string name="gate_probe_untranslated">Probe</string>
 </resources>
