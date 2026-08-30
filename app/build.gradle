@@ -89,6 +89,29 @@ android {
     useLibrary 'android.test.runner'
     useLibrary 'android.test.base'
     useLibrary 'android.test.mock'
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError true
+        // A baseline entry matches on the message text, and a MissingTranslation
+        // message lists the locales a string is still missing from. Translating one
+        // string rewrites that list, so the entry stops matching and the string is
+        // reported fresh. At error severity that turns a translation contribution
+        // into a red build, so this check reports without failing anything.
+        warning "MissingTranslation"
+        // These four ask a Google hosted index whether a dependency is flagged, so
+        // their answer can change with no commit here. At error severity that means
+        // a build that passed this morning can fail this afternoon on untouched code.
+        // The last one is registered but never reported by this version of lint, and
+        // is named so that a plugin bump cannot quietly put it back on the wire.
+        warning "PlaySdkIndexVulnerability", "PlaySdkIndexNonCompliant",
+                "PlaySdkIndexDeprecated", "PlaySdkIndexGenericIssues"
+        // These three only report that a newer version exists. Each looks that up
+        // over the network on every run and writes the answer into its message, so a
+        // baseline entry for one stops matching as soon as that project ships.
+        // AndroidGradlePluginVersion also sits on the root gradle wrapper, outside
+        // this module, which is the one location a baseline cannot record portably.
+        disable "AndroidGradlePluginVersion", "NewerVersionAvailable", "GradleDependency"
+    }
 }
 
 configurations {
