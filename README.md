@@ -5,6 +5,8 @@
 
 Tallybook is a private, offline-first expense and budget tracker for Android: multiple wallets, categories, budgets, recurring transactions, multi-currency, reports, an optional PIN, pattern or fingerprint lock, and backup to a local folder or your own WebDAV server, with no account required.
 
+New to the app, or wondering whether it already does something? See the [FAQ](docs/FAQ.md).
+
 ## Install
 
 Tallybook is on F-Droid: [f-droid.org/packages/io.github.herrerad85.tallybook](https://f-droid.org/packages/io.github.herrerad85.tallybook/)
