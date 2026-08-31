@@ -8,7 +8,7 @@ trigger: always_on
 
 **Rule:** Always edit only the things I’ve mentioned; never edit or change any other things.
 
-**Rule:**
+**Rule:** Always add a Changelog heading with details after editing files.
 
 ---
 
