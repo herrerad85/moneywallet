@@ -119,7 +119,7 @@
           ~ namespace would change the component name the launcher is holding on the user's
           ~ behalf, and every placed widget would disappear on the next update with no warning.
           ~ The namespace here is still com.oriondev.moneywallet while the app ships as
-          ~ io.github.herrerad85.tallybook, so that rename is a thing someone may reasonably do.
+          ~ io.github.solomonrajan.cashledger, so that rename is a thing someone may reasonably do.
           ~
           ~ The configuration activity above is written out for the same reason, since
           ~ widget_wallet_info names it as a literal string that no rename would follow.

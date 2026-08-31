@@ -1,6 +1,6 @@
 # Migrating from MoneyWallet to Cash Ledger
 
-Cash Ledger is a **separate app** from the original MoneyWallet. It uses a different application id (`io.github.herrerad85.tallybook`), which means:
+Cash Ledger is a **separate app** from the original MoneyWallet. It uses a different application id (`io.github.solomonrajan.cashledger`), which means:
 
 - Both apps can be installed at the same time, side by side.
 - Installing Cash Ledger does **not** update or replace MoneyWallet, and it does **not** read MoneyWallet's data automatically.

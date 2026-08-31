@@ -24,7 +24,7 @@ Nothing. There is no account, no sign up, no analytics, no crash reporting, and 
 
 ## What is stored on your device
 
-Your records are in a SQLite database in the app's private storage. Attachments are separate files, under `Android/data/io.github.herrerad85.tallybook` on shared storage, which is outside that private storage. In the same shared storage the map caches the tiles it has drawn, which leaves a record of where your places are. Every export also leaves a copy of itself in the app's cache, and every import leaves a copy of the file you imported. The app deletes neither.
+Your records are in a SQLite database in the app's private storage. Attachments are separate files, under `Android/data/io.github.solomonrajan.cashledger` on shared storage, which is outside that private storage. In the same shared storage the map caches the tiles it has drawn, which leaves a record of where your places are. Every export also leaves a copy of itself in the app's cache, and every import leaves a copy of the file you imported. The app deletes neither.
 
 The database, the attachments, the tile cache and those cached copies are not encrypted at rest. Neither are the secrets the app keeps in its settings: the WebDAV username and password, the exchange rate key, the tile server address if you put a key in it, and the PIN or pattern you set, which is stored exactly as you typed it. Anyone who can read the app's storage, which means root or an unlocked bootloader, can read the database and every one of those secrets, and the WebDAV password is the one to your own server.
 
