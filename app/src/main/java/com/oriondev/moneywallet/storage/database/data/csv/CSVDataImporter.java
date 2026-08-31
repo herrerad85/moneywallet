@@ -6,6 +6,7 @@ import com.opencsv.CSVReaderHeaderAware;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.MoneyScale;
 import com.oriondev.moneywallet.storage.database.Contract;
+import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.database.data.AbstractDataImporter;
 import com.oriondev.moneywallet.storage.database.data.Constants;
 import com.oriondev.moneywallet.utils.CurrencyManager;
@@ -127,14 +128,27 @@ public class CSVDataImporter extends AbstractDataImporter {
         try (CSVReaderHeaderAware check = openReader()) {
             readRows(check, false);
         }
-        readRows(mReader, true);
+        // only the saving pass. The transaction holds the one database connection the whole app
+        // has, so reading the file inside it would hold that connection across a full parse for
+        // nothing, twice over on a file that is fine
+        try {
+            DataContentProvider.runInOneTransaction(getContext(), () -> {
+                readRows(mReader, true);
+                return null;
+            });
+        } catch (IOException | RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 
     /**
      * Reads every row and throws on the first bad one. Saves a row only when write is true.
-     * {@link #importData} calls this twice, with write off and then on, so that a bad file is
-     * caught before anything is saved. Saving itself can still fail part way through, and whatever
-     * {@link #insertTransaction} already saved stays.
+     * {@link #importData} calls this twice, with write off and then on. The first pass is what
+     * names the line a bad row is on, and it keeps a file that was never going to work from
+     * opening a write transaction at all. A row the database itself refuses reaches only the
+     * second pass, and the transaction that pass runs in takes the rows before it back out.
      */
     private void readRows(CSVReaderHeaderAware reader, boolean write) throws IOException {
         Map<String, String> lineMap = reader.readMap();

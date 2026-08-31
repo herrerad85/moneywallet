@@ -20,13 +20,19 @@
 package com.oriondev.moneywallet.storage.database;
 
 import android.app.Instrumentation;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
+import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 
 import androidx.test.filters.LargeTest;
@@ -43,6 +49,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -53,6 +60,8 @@ import java.util.concurrent.TimeUnit;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
@@ -1403,27 +1412,304 @@ public class SQLDatabaseTest {
     }
 
     @Test
-    public void inTransactionRefusesToNest() {
-        // outside the transaction, so the count below fails both ways round: on a wrapper that
-        // does not roll the outer transaction back, and on one that rolls back past it
+    public void aNestedInTransactionRollsBackWithTheOuterOne() {
+        // outside the transaction, so the count below fails both ways round: on a nested call that
+        // committed on its own, and on one that rolled back past the wallet written before
         insertWallet("Written before the transaction", "icon", "EUR", "note", true, 0L, false, "tag");
         try {
             mDatabase.<Long>inTransaction(() -> {
-                // and this one inside it, so a refusal that rolled back is told apart from a
-                // refusal that merely threw
                 insertWallet("Written before the nested call", "icon", "EUR", "note", true, 0L, false, "tag");
-                return mDatabase.inTransaction(() ->
+                long nested = mDatabase.inTransaction(() ->
                         insertWallet("Nested", "icon", "EUR", "note", true, 0L, false, "tag"));
+                // the nested call has to have written something for the count below to be
+                // testing a rollback. A build that refused to nest never reaches this line, and
+                // one that ran the body and threw the row away would fail here
+                assertTrue("the nested call inserted nothing", nested > 0L);
+                // its own type. IllegalStateException is what a build that refuses to nest throws
+                // from the line above, and a catch on that type below cannot tell the two apart
+                throw new ImportStopped();
             });
-            fail("a nested inTransaction was allowed");
-        } catch (IllegalStateException expected) {
-            // it has to refuse. Android rolls the whole transaction back when an inner frame ends
-            // unsuccessfully and says nothing, so an outer body that swallowed the inner failure
-            // would reach the end of inTransaction believing it had committed
+            fail("the body's exception did not leave inTransaction");
+        } catch (ImportStopped expected) {
+            // this is the failure the import path has to survive, a row is refused after earlier
+            // rows have gone in through the provider, each of those opening a transaction of its
+            // own. Only the wallet written before the outer transaction may be left
         }
-        // the refusal left the outer body, so the outer transaction rolled back and took the
-        // wallet written inside it with it, and left the one written before it alone
         checkCursorSize(mDatabase.getWallets(null, null, null, null), 1);
+    }
+
+    /** How the case below ends its import, told apart from anything the app itself raises. */
+    private static class ImportStopped extends RuntimeException {
+    }
+
+    /** The values an import builds for a wallet it has to create before it can use one. */
+    private ContentValues walletValues(String name) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Contract.Wallet.NAME, name);
+        contentValues.put(Contract.Wallet.ICON, "icon");
+        contentValues.put(Contract.Wallet.CURRENCY, "EUR");
+        contentValues.put(Contract.Wallet.COUNT_IN_TOTAL, true);
+        contentValues.put(Contract.Wallet.START_MONEY, 0L);
+        contentValues.put(Contract.Wallet.ARCHIVED, false);
+        return contentValues;
+    }
+
+    /**
+     * A transaction naming a wallet and a category that are not there. Every column the table
+     * insists on is filled, so the only thing wrong with this row is the two ids, and the insert
+     * fails on them and not on something left out.
+     */
+    private ContentValues transactionValuesOnMissingRows() {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Contract.Transaction.WALLET_ID, 987654321L);
+        contentValues.put(Contract.Transaction.CATEGORY_ID, 987654321L);
+        contentValues.put(Contract.Transaction.DATE, DateUtils.getSQLDateTimeString(new Date()));
+        contentValues.put(Contract.Transaction.MONEY, 1000L);
+        contentValues.put(Contract.Transaction.DIRECTION, Contract.Direction.EXPENSE);
+        contentValues.put(Contract.Transaction.TYPE, Contract.TransactionType.STANDARD);
+        contentValues.put(Contract.Transaction.CONFIRMED, true);
+        contentValues.put(Contract.Transaction.COUNT_IN_TOTAL, true);
+        return contentValues;
+    }
+
+    /**
+     * The whole of what this change buys an import, driven the way an import drives it: rows in
+     * through the provider, one refused part way, and nothing left behind.
+     */
+    @Test
+    public void aRowTheProviderRefusesTakesEveryRowBeforeItBackOut() throws Exception {
+        ContentResolver contentResolver = mContext.getContentResolver();
+        try {
+            DataContentProvider.runInOneTransaction(mContext, () -> {
+                Uri saved = contentResolver.insert(DataContentProvider.CONTENT_WALLETS,
+                        walletValues("Saved before the refused row"));
+                assertNotNull("the provider refused a wallet that is fine", saved);
+                // foreign keys are on, so this one cannot go in, and the provider says so by
+                // answering nothing. An importer that ignored that answer is what used to let a
+                // refused row disappear while the import reported that it had worked
+                Uri refused = contentResolver.insert(DataContentProvider.CONTENT_TRANSACTIONS,
+                        transactionValuesOnMissingRows());
+                assertNull("the provider took a transaction on a wallet that does not exist, so "
+                        + "this case is no longer testing a refusal", refused);
+                // its own type, and not one the code under test also raises. Catching
+                // IllegalStateException here would swallow the one a provider write throws when
+                // it refuses to run inside a transaction already open, and this case would go
+                // green on a build where no row ever reached the database
+                throw new ImportStopped();
+            });
+            fail("the failure did not leave runInOneTransaction");
+        } catch (ImportStopped expected) {
+            // the importers all end the import here, and the transaction has to go with it
+        }
+        checkCursorSize(mDatabase.getWallets(null, null, null, null), 0);
+    }
+
+    @Test
+    public void everyRowOfAnImportThatFinishesIsThere() throws Exception {
+        ContentResolver contentResolver = mContext.getContentResolver();
+        DataContentProvider.runInOneTransaction(mContext, () -> {
+            contentResolver.insert(DataContentProvider.CONTENT_WALLETS, walletValues("First"));
+            contentResolver.insert(DataContentProvider.CONTENT_WALLETS, walletValues("Second"));
+            return null;
+        });
+        checkCursorSize(mDatabase.getWallets(null, null, null, null), 2);
+    }
+
+    /**
+     * Watches the wallet list the way an open list screen does, descendants included, so it hears
+     * about a write whichever uri that write announces.
+     */
+    private CountDownLatch watchWallets(ContentResolver contentResolver, ContentObserver[] out) {
+        return watch(contentResolver, DataContentProvider.CONTENT_WALLETS, true, out);
+    }
+
+    private CountDownLatch watch(ContentResolver contentResolver, Uri uri, boolean descendants,
+                                 ContentObserver[] out) {
+        CountDownLatch told = new CountDownLatch(1);
+        ContentObserver observer = new ContentObserver(new Handler(Looper.getMainLooper())) {
+
+            @Override
+            public void onChange(boolean selfChange) {
+                told.countDown();
+            }
+        };
+        contentResolver.registerContentObserver(uri, descendants, observer);
+        out[0] = observer;
+        return told;
+    }
+
+    /**
+     * What an import announces, and what that reaches. Both watchers here take descendants off, so
+     * each one hears about exactly one uri: the list watcher only if the list itself was
+     * announced, and the row watcher only if announcing the list reaches the rows under it.
+     *
+     * The second half is the reason an import is allowed to remember one uri per list instead of
+     * one per row, and it is a claim about the framework, so it is checked here and not argued.
+     */
+    @Test
+    public void anImportAnnouncesTheListAndReachesTheRowsUnderIt() throws Exception {
+        ContentResolver contentResolver = mContext.getContentResolver();
+        long existing = insertWallet("Open on a detail screen", "icon", "EUR", "note", true, 0L, false, "tag");
+        ContentObserver[] listObserver = new ContentObserver[1];
+        ContentObserver[] rowObserver = new ContentObserver[1];
+        CountDownLatch listTold = watch(contentResolver, DataContentProvider.CONTENT_WALLETS, false, listObserver);
+        CountDownLatch rowTold = watch(contentResolver,
+                ContentUris.withAppendedId(DataContentProvider.CONTENT_WALLETS, existing), false, rowObserver);
+        try {
+            DataContentProvider.runInOneTransaction(mContext, () -> contentResolver.insert(
+                    DataContentProvider.CONTENT_WALLETS, walletValues("Imported")));
+            assertTrue("the import announced the row it wrote instead of the list it wrote into",
+                    listTold.await(5, TimeUnit.SECONDS));
+            assertTrue("announcing the list did not reach a screen watching a row under it, so "
+                            + "remembering the list instead of the row loses a watcher",
+                    rowTold.await(5, TimeUnit.SECONDS));
+        } finally {
+            contentResolver.unregisterContentObserver(listObserver[0]);
+            contentResolver.unregisterContentObserver(rowObserver[0]);
+        }
+    }
+
+    @Test
+    public void anImportThatFinishesTellsTheOpenScreens() throws Exception {
+        ContentResolver contentResolver = mContext.getContentResolver();
+        ContentObserver[] observer = new ContentObserver[1];
+        CountDownLatch told = watchWallets(contentResolver, observer);
+        try {
+            DataContentProvider.runInOneTransaction(mContext, () -> {
+                assertNotNull("the provider refused a wallet that is fine, so this case is no "
+                                + "longer testing an import that wrote anything",
+                        contentResolver.insert(DataContentProvider.CONTENT_WALLETS, walletValues("Imported")));
+                return null;
+            });
+            // that an import which finished says something at all. It does not pin WHEN, since a
+            // latch that has already counted down reads the same either way, and an import that
+            // announced every row as it went would satisfy this too. What pins the holding back
+            // is anImportThatFailedAnnouncesNothing, where an announcement must never arrive
+            assertTrue("nothing was announced after the import committed",
+                    told.await(5, TimeUnit.SECONDS));
+        } finally {
+            contentResolver.unregisterContentObserver(observer[0]);
+        }
+    }
+
+    @Test
+    public void anImportThatFailedAnnouncesNothing() throws Exception {
+        ContentResolver contentResolver = mContext.getContentResolver();
+        ContentObserver[] observer = new ContentObserver[1];
+        CountDownLatch told = watchWallets(contentResolver, observer);
+        try {
+            DataContentProvider.runInOneTransaction(mContext, () -> {
+                assertNotNull("the provider refused a wallet that is fine, so there is no row for "
+                                + "this case to roll back",
+                        contentResolver.insert(DataContentProvider.CONTENT_WALLETS, walletValues("Rolled back")));
+                throw new ImportStopped();
+            });
+            fail("the failure did not leave runInOneTransaction");
+        } catch (ImportStopped expected) {
+            // the wallet above went in and came back out, and announcing it would send every open
+            // screen to look for a row that is not there. Checked here and not in the finally,
+            // where a failure of its own would replace the one the case was really reporting and
+            // leave the observer registered on the process wide resolver for the rest of the run
+            assertFalse("a row that was rolled back was announced anyway",
+                    told.await(2, TimeUnit.SECONDS));
+        } finally {
+            contentResolver.unregisterContentObserver(observer[0]);
+        }
+    }
+
+    @Test
+    public void anImportInsideAnImportIsOneImport() throws Exception {
+        ContentResolver contentResolver = mContext.getContentResolver();
+        ContentObserver[] observer = new ContentObserver[1];
+        CountDownLatch told = watchWallets(contentResolver, observer);
+        try {
+            DataContentProvider.runInOneTransaction(mContext, () -> {
+                // the inner has to run the body. Every assertion this case makes afterwards is a
+                // negative one, so an inner branch that returned without calling the body at all
+                // would satisfy every one of them
+                assertNotNull("the nested call wrote nothing",
+                        DataContentProvider.runInOneTransaction(mContext, () -> contentResolver.insert(
+                                DataContentProvider.CONTENT_WALLETS, walletValues("Inner"))));
+                // after the inner call returns, and this is the write that matters. An inner call
+                // that cleared what the outer had left on the thread instead of leaving it alone
+                // would send this one straight to the observers, mid transaction
+                assertNotNull("the provider refused a wallet that is fine",
+                        contentResolver.insert(DataContentProvider.CONTENT_WALLETS, walletValues("After the inner")));
+                throw new ImportStopped();
+            });
+            fail("the failure did not leave runInOneTransaction");
+        } catch (ImportStopped expected) {
+            // the inner call must not commit or announce anything of its own. Nothing nests
+            // today, and this is what keeps the first caller that does from announcing rows the
+            // outer transaction then rolls back
+            assertFalse("the inner import announced rows the outer one rolled back",
+                    told.await(2, TimeUnit.SECONDS));
+        } finally {
+            contentResolver.unregisterContentObserver(observer[0]);
+        }
+        checkCursorSize(mDatabase.getWallets(null, null, null, null), 0);
+    }
+
+    /**
+     * The success path of the same nesting, which is where an inner call that kept a set of its
+     * own would show. Its row would go in and the outer commit would announce only what the outer
+     * itself wrote, so an open screen would never hear about the rows the inner call made.
+     */
+    @Test
+    public void anImportInsideAnImportAnnouncesTheInnerRowsToo() throws Exception {
+        ContentResolver contentResolver = mContext.getContentResolver();
+        ContentObserver[] observer = new ContentObserver[1];
+        CountDownLatch told = watch(contentResolver, DataContentProvider.CONTENT_WALLETS, false, observer);
+        try {
+            DataContentProvider.runInOneTransaction(mContext, () -> {
+                assertNotNull("the nested call wrote nothing",
+                        DataContentProvider.runInOneTransaction(mContext, () -> contentResolver.insert(
+                                DataContentProvider.CONTENT_WALLETS, walletValues("Inner"))));
+                return null;
+            });
+            assertTrue("the row the nested call wrote was never announced",
+                    told.await(5, TimeUnit.SECONDS));
+        } finally {
+            contentResolver.unregisterContentObserver(observer[0]);
+        }
+        checkCursorSize(mDatabase.getWallets(null, null, null, null), 1);
+    }
+
+    /**
+     * The two importers both throw a checked exception, and the transaction body cannot declare
+     * one, so runInOneTransaction wraps it on the way in and unwraps it on the way out. Every
+     * other case here throws an unchecked one and never reaches that path.
+     */
+    @Test
+    public void aCheckedFailureLeavesTheImportAsItself() throws Exception {
+        ContentResolver contentResolver = mContext.getContentResolver();
+        IOException thrown = new IOException("the backup file ended early");
+        try {
+            DataContentProvider.runInOneTransaction(mContext, () -> {
+                assertNotNull("the provider refused a wallet that is fine, so there is no row for "
+                                + "this case to roll back",
+                        contentResolver.insert(DataContentProvider.CONTENT_WALLETS, walletValues("Rolled back")));
+                throw thrown;
+            });
+            fail("the failure did not leave runInOneTransaction");
+        } catch (IOException expected) {
+            // the same object, not one that merely reads the same. The screen that reports a
+            // failed import branches on what it caught, and a build that rebuilt the failure from
+            // its message would keep the words and lose the type
+            assertSame("the failure was rebuilt on the way out instead of carried out", thrown, expected);
+        }
+        checkCursorSize(mDatabase.getWallets(null, null, null, null), 0);
+    }
+
+    @Test
+    public void aNestedInTransactionCommitsWithTheOuterOne() {
+        long nestedId = mDatabase.inTransaction(() -> {
+            insertWallet("Written before the nested call", "icon", "EUR", "note", true, 0L, false, "tag");
+            return mDatabase.inTransaction(() ->
+                    insertWallet("Nested", "icon", "EUR", "note", true, 0L, false, "tag"));
+        });
+        assertTrue("the nested call did not insert a row", nestedId > 0L);
+        checkCursorSize(mDatabase.getWallets(null, null, null, null), 2);
     }
 
     @Test
@@ -1453,6 +1739,69 @@ public class SQLDatabaseTest {
         assertFalse("the attachment file outlived a committed delete", file.exists());
         checkCursorSize(mDatabase.getWallets(null, null, null, null), 0);
         assertRowCount(Schema.Attachment.TABLE, null, 0);
+    }
+
+    /**
+     * The attachment names a nested body collects belong to the outer transaction. A nested call
+     * that started a list of its own, or cleared the one already there, would leave this file on
+     * the volume forever with no row naming it, and every count in this case would still be right.
+     */
+    @Test
+    public void aNestedDeleteHandsItsAttachmentFilesToTheOuterCommit() throws Exception {
+        File file = writeAttachmentFile("path1");
+        long walletId = walletWithAnAttachedTransaction("path1");
+        mDatabase.inTransaction(() -> mDatabase.inTransaction(() -> mDatabase.deleteWallet(walletId)));
+        assertFalse("the file removed by the nested body outlived the outer commit", file.exists());
+        assertRowCount(Schema.Attachment.TABLE, null, 0);
+    }
+
+    /**
+     * The rollback half of the case above. A nested body that collected the names into a list of
+     * its own and deleted them itself would pass that one, and would leave this rollback holding
+     * rows that name files already gone from the volume.
+     *
+     * Its own file name, because the attachment folder is not cleaned between cases and another
+     * one deliberately leaves path1 behind, which would make the assertion below pass on its own.
+     */
+    @Test
+    public void aRolledBackNestedDeleteLeavesItsAttachmentFileOnDisk() throws Exception {
+        File file = writeAttachmentFile("pathNestedRollback");
+        long walletId = walletWithAnAttachedTransaction("pathNestedRollback");
+        try {
+            mDatabase.<Integer>inTransaction(() -> {
+                mDatabase.inTransaction(() -> mDatabase.deleteWallet(walletId));
+                throw new ImportStopped();
+            });
+            fail("the body's exception did not leave inTransaction");
+        } catch (ImportStopped expected) {
+            // the delete came back out, so the file the nested body collected has to still be here
+        }
+        assertTrue("the nested body deleted its attachment file before the outer transaction "
+                + "committed, and the rollback has put back rows that name it", file.exists());
+        assertRowCount(Schema.Attachment.TABLE, null, 1);
+    }
+
+    /**
+     * The case the join exists for, and the only one that tells it apart from a real nested pair.
+     * Android rolls the whole transaction back when an inner frame ends unmarked and says nothing,
+     * so under a nested pair the row written after the catch would disappear at the commit while
+     * this method returned as though it had worked.
+     */
+    @Test
+    public void anOuterBodyThatCatchesANestedFailureStillCommits() {
+        mDatabase.inTransaction(() -> {
+            insertWallet("Written before the nested call", "icon", "EUR", "note", true, 0L, false, "tag");
+            try {
+                mDatabase.<Long>inTransaction(() -> {
+                    throw new ImportStopped();
+                });
+                fail("the nested body's exception did not leave inTransaction");
+            } catch (ImportStopped caughtAndCarriedOn) {
+                // exactly what the old refusal made impossible and the join has to survive
+            }
+            return insertWallet("Written after the catch", "icon", "EUR", "note", true, 0L, false, "tag");
+        });
+        checkCursorSize(mDatabase.getWallets(null, null, null, null), 2);
     }
 
     @Test(expected = SQLiteDataException.class)

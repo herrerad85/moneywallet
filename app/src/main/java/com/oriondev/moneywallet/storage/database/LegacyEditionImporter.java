@@ -51,8 +51,41 @@ public class LegacyEditionImporter {
         mDatabaseImporter = new LegacyDatabaseImporter(databaseFile);
     }
 
+    /**
+     * The rows go in inside one transaction, so a failure that reaches this method leaves the
+     * ledger as it was instead of half merged. There is no copy of it to fall back on here, since
+     * this one merges into the database in place and never moves it aside.
+     *
+     * What that does not cover, because it is worth knowing before trusting the sentence above.
+     * A row the current schema will not take throws out of the insert, checked on an emulator and
+     * not reasoned about, and every insert in LegacyDatabaseImporter sits in its own catch that
+     * drops it. So that row is skipped, the upgrade carries on and reports success, and only a
+     * failure that gets past those catches reaches the rollback. Moving the attachment files is a
+     * second step that runs after this one has committed, so its failures cannot be undone either;
+     * the attachment rows are in here with everything else.
+     *
+     * The legacy file is closed and deleted after the transaction and not inside it. Deleting it
+     * is the one step here that cannot be undone, and a commit that failed with the delete already
+     * done would take the data the upgrade was reading from with it.
+     */
     public void importDatabase() throws ImportException {
         ContentResolver contentResolver = mContext.getContentResolver();
+        try {
+            DataContentProvider.runInOneTransaction(mContext, () -> {
+                importRows(contentResolver);
+                return null;
+            });
+        } catch (ImportException | RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ImportException(e.getMessage());
+        }
+        // close the database file in order to delete the file on disk
+        mDatabaseImporter.close();
+        mContext.deleteDatabase(DATABASE_NAME);
+    }
+
+    private void importRows(ContentResolver contentResolver) throws ImportException {
         mDatabaseImporter.importWallets(contentResolver);
         mDatabaseImporter.importCategories(contentResolver);
         mDatabaseImporter.importEvents(contentResolver);
@@ -76,9 +109,6 @@ public class LegacyEditionImporter {
         mDatabaseImporter.importAttachments(contentResolver);
         mDatabaseImporter.importTransactionAttachments(contentResolver);
         mDatabaseImporter.importTransferAttachments(contentResolver);
-        // close the database file in order to delete the file on disk
-        mDatabaseImporter.close();
-        mContext.deleteDatabase(DATABASE_NAME);
     }
 
     public void importAttachments() throws ImportException {

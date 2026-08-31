@@ -87,7 +87,13 @@ public abstract class AbstractDataImporter {
                 .confirmed(true)
                 .countInTotal(true)
                 .build();
-        contentResolver.insert(DataContentProvider.CONTENT_TRANSACTIONS, contentValues);
+        Uri result = contentResolver.insert(DataContentProvider.CONTENT_TRANSACTIONS, contentValues);
+        if (result == null) {
+            // the provider refused the row and says so by answering nothing. Every other insert
+            // here already checks, and this one used to drop the answer, so a refused transaction
+            // was skipped in silence and the import went on to report that it had worked
+            throw new RuntimeException("Failed to save the transaction");
+        }
     }
 
     private long getOrCreateWallet(ContentResolver contentResolver, String name, CurrencyUnit currencyUnit) {
