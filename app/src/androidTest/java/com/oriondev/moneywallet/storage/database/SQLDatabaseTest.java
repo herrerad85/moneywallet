@@ -47,6 +47,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -114,6 +116,19 @@ public class SQLDatabaseTest {
             File external = super.getExternalFilesDir(type);
             return external != null ? new File(external, EXTERNAL_SUBDIR) : null;
         }
+
+        /**
+         * Without this, SQLDatabase.getShared normalizes straight past the wrapper and the shared
+         * helper opens the real ledger, so the whole shared static was untestable. ContextWrapper
+         * answers this from the context it wraps, and every redirect above lives on this object.
+         *
+         * The cost is that the static is process wide, so a case that installs a test helper into
+         * it has to put it back. releaseSharedHelper does that.
+         */
+        @Override
+        public Context getApplicationContext() {
+            return this;
+        }
     }
 
     @Before
@@ -137,6 +152,26 @@ public class SQLDatabaseTest {
         mDatabase = new SQLDatabase(mContext);
         // and ask SQLDatabase which file it actually opened, whichever way it got there
         assertEquals(testDatabase.getPath(), mDatabase.getWritableDatabase().getPath());
+        // point the process wide shared helper at the same test file. These cases run inside the
+        // app's own process, so its providers have already put a helper built on the real context
+        // into that static, and getShared hands back whatever is there. Without this an
+        // inSharedTransaction case reads and writes the real ledger and only its rollback keeps
+        // that from showing. resetShared replaces it unconditionally; releaseSharedHelper puts a
+        // real one back afterwards
+        SQLDatabase.resetShared(mContext);
+        assertEquals(testDatabase.getPath(),
+                SQLDatabase.getShared(mContext).getWritableDatabase().getPath());
+    }
+
+    /**
+     * Puts the process wide shared helper back on the real context. Any case that reached
+     * getShared through the wrapper left a helper pointed at the test database in a static that
+     * outlives this class. The replacement has opened nothing, since SQLiteOpenHelper opens on
+     * first use, so the real ledger is not touched by putting it there.
+     */
+    @After
+    public void releaseSharedHelper() {
+        SQLDatabase.resetShared(InstrumentationRegistry.getInstrumentation().getTargetContext());
     }
 
     @After
@@ -1125,6 +1160,299 @@ public class SQLDatabaseTest {
         checkCursorSize(mDatabase.getSaving(id7, null), 0);
         checkCursorSize(mDatabase.getDebt(id8, null), 0);
         checkBudgetId(id9, Schema.BudgetType.CATEGORY, id3, startDate, endDate, 3000L, "EUR", new Long[] {id2}, null, 0L);
+    }
+
+    /**
+     * Puts a file where SQLDatabase.getAttachmentFolder will look for it, by the same route that
+     * method takes. That is deliberate and it is not the identity a sentinel built from the
+     * wrapper would be, because the pair of cases below differ only in whether the transaction
+     * commits. A wrong folder makes the committed case fail, so the path is under test too.
+     */
+    private File writeAttachmentFile(String name) throws Exception {
+        File folder = new File(mContext.getExternalFilesDir(null), Attachment.FOLDER_NAME);
+        assertTrue("cannot create " + folder, folder.exists() || folder.mkdirs());
+        File file = new File(folder, name);
+        assertTrue("cannot create " + file, file.exists() || file.createNewFile());
+        return file;
+    }
+
+    private long walletWithAnAttachedTransaction(String fileName) {
+        long walletId = insertWallet("Attached", "icon", "EUR", "note", true, 0L, false, "tag");
+        long categoryId = insertCategory("category", "icon", 0, null, true, "tag");
+        long attachmentId = insertAttachment(fileName, "name", "mime-type", 90L, "tag");
+        insertTransaction(10, new Date(), "desc", categoryId, Contract.Direction.EXPENSE, 0,
+                walletId, null, null, null, null, null, true, true, null,
+                new Long[] {attachmentId}, null);
+        return walletId;
+    }
+
+    /**
+     * The four cases below are the two sided proof of the transaction wrapper, and each pair needs
+     * both halves. Without the committing case, a wrapper that rolled everything back and
+     * committed nothing would satisfy the rollback case, and no other case in this class would
+     * see it, because they all call SQLDatabase directly and never open a transaction at all.
+     */
+    @Test
+    public void inTransactionCommitsWhatTheBodyWrote() {
+        long walletId = mDatabase.inTransaction(() ->
+                insertWallet("Committed", "icon", "EUR", "note", true, 0L, false, "tag"));
+        assertTrue(walletId > 0L);
+        checkCursorSize(mDatabase.getWallets(null, null, null, null), 1);
+    }
+
+    @Test
+    public void inTransactionRollsBackEveryWriteWhenTheBodyThrows() {
+        insertWallet("Written before the transaction", "icon", "EUR", "note", true, 0L, false, "tag");
+        try {
+            mDatabase.<Long>inTransaction(() -> {
+                insertWallet("Rolled back", "icon", "EUR", "note", true, 0L, false, "tag");
+                insertPerson("Rolled back too", "icon", "note", "tag");
+                throw new IllegalStateException("forced from the body");
+            });
+            fail("the body's exception did not leave inTransaction");
+        } catch (IllegalStateException expected) {
+            // it has to reach the caller, since that is how a provider learns its write is undone
+        }
+        // both writes inside the transaction are gone, and the one before it is untouched, so
+        // this fails either way round: on a wrapper that does not roll back, and on one that
+        // rolls back more than the transaction
+        checkCursorSize(mDatabase.getWallets(null, null, null, null), 1);
+        checkCursorSize(mDatabase.getPeople(null, null, null, null), 0);
+    }
+
+    /**
+     * The shared helper, its swap, and the lock between them had no coverage at all until the
+     * wrapper started answering getApplicationContext for itself. Removing the lock left every
+     * other case in this class green, which made it a guard nothing could see.
+     */
+    @Test
+    public void theSharedHelperResolvesThroughTheTestWrapper() {
+        // the assertion that everything below rests on. If the wrapper were bypassed here the
+        // shared helper would be the real ledger, and these cases would be writing into it
+        assertEquals(mContext.getDatabasePath(SQLDatabase.DATABASE_NAME).getPath(),
+                SQLDatabase.getShared(mContext).getWritableDatabase().getPath());
+    }
+
+    @Test
+    public void resetSharedReplacesTheInstanceAndGetSharedKeepsIt() {
+        SQLDatabase first = SQLDatabase.getShared(mContext);
+        assertTrue("getShared handed back two helpers for one process",
+                first == SQLDatabase.getShared(mContext));
+        SQLDatabase.resetShared(mContext);
+        assertFalse("resetShared left the old helper installed",
+                first == SQLDatabase.getShared(mContext));
+    }
+
+    @Test
+    public void inSharedTransactionRunsOnTheSharedHelperAndRollsBack() {
+        SQLDatabase shared = SQLDatabase.getShared(mContext);
+        try {
+            SQLDatabase.<Long>inSharedTransaction(mContext, database -> {
+                assertTrue("the body was handed a different helper than the transaction was "
+                        + "opened on", database == shared);
+                ContentValues cv = new ContentValues();
+                cv.put(Schema.Wallet.NAME, "rolled back");
+                cv.put(Schema.Wallet.ICON, "icon");
+                cv.put(Schema.Wallet.CURRENCY, "EUR");
+                cv.put(Schema.Wallet.START_MONEY, 0L);
+                cv.put(Schema.Wallet.COUNT_IN_TOTAL, true);
+                cv.put(Schema.Wallet.ARCHIVED, false);
+                cv.put(Schema.Wallet.INDEX, 0);
+                cv.put(Schema.Wallet.UUID, java.util.UUID.randomUUID().toString());
+                cv.put(Schema.Wallet.LAST_EDIT, System.currentTimeMillis());
+                cv.put(Schema.Wallet.DELETED, false);
+                database.getWritableDatabase().insert(Schema.Wallet.TABLE, null, cv);
+                throw new IllegalStateException("forced from the body");
+            });
+            fail("the body's exception did not leave inSharedTransaction");
+        } catch (IllegalStateException expected) {
+            // as elsewhere
+        }
+        Cursor cursor = shared.getWritableDatabase().query(Schema.Wallet.TABLE, null, null, null,
+                null, null, null);
+        assertNotNull(cursor);
+        try {
+            assertEquals(0, cursor.getCount());
+        } finally {
+            cursor.close();
+        }
+    }
+
+    /**
+     * The only case that fails if the swap lock is deleted, downgraded or inverted. Everything
+     * else in this class is single threaded and stays green without it.
+     */
+    @Test(timeout = 20000)
+    public void resetSharedWaitsForAWriteAlreadyInFlight() throws Exception {
+        final CountDownLatch inside = new CountDownLatch(1);
+        final CountDownLatch release = new CountDownLatch(1);
+        final CountDownLatch resetReturned = new CountDownLatch(1);
+        Thread writer = new Thread(() -> SQLDatabase.inSharedTransaction(mContext, database -> {
+            inside.countDown();
+            try {
+                release.await();
+            } catch (InterruptedException e) {
+                throw new IllegalStateException(e);
+            }
+            return 1L;
+        }));
+        writer.start();
+        assertTrue("the write never entered the transaction", inside.await(10, TimeUnit.SECONDS));
+
+        Thread resetter = new Thread(() -> {
+            SQLDatabase.resetShared(mContext);
+            resetReturned.countDown();
+        });
+        resetter.start();
+        try {
+            // it has to still be waiting. Closing the helper here is what sends the rest of an
+            // unfinished write to a second connection with no transaction on it
+            assertFalse("resetShared swapped the helper while a write was still in flight",
+                    resetReturned.await(1, TimeUnit.SECONDS));
+        } finally {
+            // in a finally for the reason given on the case below
+            release.countDown();
+        }
+        writer.join(10000);
+        assertTrue("resetShared never completed once the write finished",
+                resetReturned.await(10, TimeUnit.SECONDS));
+        resetter.join(10000);
+    }
+
+    /**
+     * The same exclusion for the overload that carries the work. The case above drives the plain
+     * overload, so a version that took the write lock only there would keep it green while every
+     * rename in AbstractBackupImporter ran with a write still open on the file being moved.
+     */
+    @Test(timeout = 20000)
+    public void resetSharedWaitsForAWriteAlreadyInFlightBeforeRunningTheWork() throws Exception {
+        final CountDownLatch inside = new CountDownLatch(1);
+        final CountDownLatch release = new CountDownLatch(1);
+        final CountDownLatch workRan = new CountDownLatch(1);
+        Thread writer = new Thread(() -> SQLDatabase.inSharedTransaction(mContext, database -> {
+            inside.countDown();
+            try {
+                release.await();
+            } catch (InterruptedException e) {
+                throw new IllegalStateException(e);
+            }
+            return 1L;
+        }));
+        writer.start();
+        assertTrue("the write never entered the transaction", inside.await(10, TimeUnit.SECONDS));
+
+        Thread resetter = new Thread(() -> SQLDatabase.resetShared(mContext, workRan::countDown));
+        resetter.start();
+        try {
+            assertFalse("the work ran while a write was still in flight, which is the rename "
+                            + "moving the database file out from under an open transaction",
+                    workRan.await(1, TimeUnit.SECONDS));
+        } finally {
+            // in a finally, or a failed assertion leaves the writer parked forever inside an open
+            // transaction holding the read lock, and the next resetShared waits on it for good.
+            // The suite then hangs instead of reporting, which reads as a broken run and not as a
+            // broken guard
+            release.countDown();
+        }
+        writer.join(10000);
+        assertTrue("the work never ran once the write finished",
+                workRan.await(10, TimeUnit.SECONDS));
+        resetter.join(10000);
+    }
+
+    /**
+     * The slot a restore renames the database file in. If the work ran anywhere else the file
+     * would move with a connection open on it, which strands that connection's journal at the
+     * old path and refuses its next write.
+     */
+    @Test
+    public void resetSharedRunsTheWorkWithTheFileClosedAndReplacesTheHelperAfterIt() {
+        SQLDatabase first = SQLDatabase.getShared(mContext);
+        SQLiteDatabase open = first.getWritableDatabase();
+        assertTrue("the helper was not open before the swap", open.isOpen());
+        final boolean[] ran = new boolean[1];
+        SQLDatabase.resetShared(mContext, () -> {
+            ran[0] = true;
+            assertFalse("the work ran with the database still open", open.isOpen());
+            // and before the replacement, which is what leaves the path free for the rename
+            assertTrue("the helper was replaced before the work ran",
+                    SQLDatabase.getShared(mContext) == first);
+        });
+        assertTrue("the work never ran", ran[0]);
+        assertFalse("resetShared left the old helper installed",
+                SQLDatabase.getShared(mContext) == first);
+    }
+
+    @Test
+    public void resetSharedInstallsAWorkingHelperEvenWhenTheWorkThrows() {
+        SQLDatabase first = SQLDatabase.getShared(mContext);
+        try {
+            SQLDatabase.resetShared(mContext, () -> {
+                throw new IllegalStateException("forced from the work");
+            });
+            fail("the work's exception did not leave resetShared");
+        } catch (IllegalStateException expected) {
+            // it has to leave, since the caller is the one that knows what a failed file swap
+            // means. What must not happen is the helper being left closed behind it
+        }
+        SQLDatabase replacement = SQLDatabase.getShared(mContext);
+        assertFalse("the closed helper was left installed after the work threw",
+                replacement == first);
+        assertTrue("the helper installed after the work threw cannot open the database",
+                replacement.getWritableDatabase().isOpen());
+    }
+
+    @Test
+    public void inTransactionRefusesToNest() {
+        // outside the transaction, so the count below fails both ways round: on a wrapper that
+        // does not roll the outer transaction back, and on one that rolls back past it
+        insertWallet("Written before the transaction", "icon", "EUR", "note", true, 0L, false, "tag");
+        try {
+            mDatabase.<Long>inTransaction(() -> {
+                // and this one inside it, so a refusal that rolled back is told apart from a
+                // refusal that merely threw
+                insertWallet("Written before the nested call", "icon", "EUR", "note", true, 0L, false, "tag");
+                return mDatabase.inTransaction(() ->
+                        insertWallet("Nested", "icon", "EUR", "note", true, 0L, false, "tag"));
+            });
+            fail("a nested inTransaction was allowed");
+        } catch (IllegalStateException expected) {
+            // it has to refuse. Android rolls the whole transaction back when an inner frame ends
+            // unsuccessfully and says nothing, so an outer body that swallowed the inner failure
+            // would reach the end of inTransaction believing it had committed
+        }
+        // the refusal left the outer body, so the outer transaction rolled back and took the
+        // wallet written inside it with it, and left the one written before it alone
+        checkCursorSize(mDatabase.getWallets(null, null, null, null), 1);
+    }
+
+    @Test
+    public void aRolledBackWalletDeleteLeavesItsAttachmentFileOnDisk() throws Exception {
+        File file = writeAttachmentFile("path1");
+        long walletId = walletWithAnAttachedTransaction("path1");
+        try {
+            mDatabase.<Integer>inTransaction(() -> {
+                mDatabase.deleteWallet(walletId);
+                throw new IllegalStateException("forced after the delete");
+            });
+            fail("the body's exception did not leave inTransaction");
+        } catch (IllegalStateException expected) {
+            // as above
+        }
+        // the rows came back, so a file deleted here would be one the restored rows still name
+        assertTrue("the attachment file was deleted before the commit", file.exists());
+        checkCursorSize(mDatabase.getWallets(null, null, null, null), 1);
+        assertRowCount(Schema.Attachment.TABLE, null, 1);
+    }
+
+    @Test
+    public void aCommittedWalletDeleteRemovesItsAttachmentFile() throws Exception {
+        File file = writeAttachmentFile("path1");
+        long walletId = walletWithAnAttachedTransaction("path1");
+        mDatabase.inTransaction(() -> mDatabase.deleteWallet(walletId));
+        assertFalse("the attachment file outlived a committed delete", file.exists());
+        checkCursorSize(mDatabase.getWallets(null, null, null, null), 0);
+        assertRowCount(Schema.Attachment.TABLE, null, 0);
     }
 
     @Test(expected = SQLiteDataException.class)
