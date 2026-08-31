@@ -2,7 +2,7 @@
 ~ translated by haneefi
 -->
 <resources>
-    <string name="app_name">Tallybook</string>
+    <string name="app_name">Cash Ledger</string>
 
     <string name="menu_transaction">"ഇടപാടുകൾ"</string>
     <string name="menu_category">"വിഭാഗങ്ങൾ"</string>
@@ -541,7 +541,7 @@
     <string name="about_hint_translators">"വിവർത്തകർ"</string>
 
     <string name="activity_launcher_legacy_edition_upgrade_title">"നവീകരിക്കുന്നു…"</string>
-    <string name="activity_launcher_first_start_title">"Tallybookിലേക്ക് സ്വാഗതം"</string>
+    <string name="activity_launcher_first_start_title">"Cash Ledger-ലേക്ക് സ്വാഗതം"</string>
     <string name="activity_launcher_first_start_button_first_time">"ആദ്യതവണ"</string>
     <string name="activity_launcher_first_start_button_restore_backup">"ബാക്കപ്പ് പുന ore സ്ഥാപിക്കുക"</string>
 

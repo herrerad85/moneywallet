@@ -221,7 +221,7 @@ public class CSVDataImporterTest {
     }
 
     private static File write(String contents) throws IOException {
-        File file = File.createTempFile("tallybook-import", ".csv");
+        File file = File.createTempFile("cash-ledger-import", ".csv");
         file.deleteOnExit();
         try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), "UTF-8")) {
             writer.write(contents);

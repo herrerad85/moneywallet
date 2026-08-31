@@ -41,7 +41,7 @@ public abstract class AbstractDataExporter {
 
     protected String getDefaultFileName(String extension) {
         String dateTimeString = DateUtils.getFilenameDateTimeString(new Date());
-        return "Tallybook_export_" + dateTimeString + extension;
+        return "Cash_Ledger_export_" + dateTimeString + extension;
     }
 
     public abstract boolean isMultiWalletSupported();

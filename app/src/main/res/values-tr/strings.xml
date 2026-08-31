@@ -18,7 +18,7 @@
   -->
 
 <resources>
-    <string name="app_name">Tallybook</string>
+    <string name="app_name">Cash Ledger</string>
 
     <string name="menu_transaction"> "İşlemler" </string>
     <string name="menu_category"> "Kategoriler" </string>
@@ -539,7 +539,7 @@
     <string name="about_hint_translators"> "Çevirmenler" </string>
 
     <string name="activity_launcher_legacy_edition_upgrade_title"> "Yükseltme…" </string>
-    <string name="activity_launcher_first_start_title"> "Tallybook'e Hoş Geldiniz" </string>
+    <string name="activity_launcher_first_start_title"> "Cash Ledger'a Hoş Geldiniz" </string>
     <string name="activity_launcher_first_start_button_first_time"> "İlk kez" </string>
     <string name="activity_launcher_first_start_button_restore_backup"> "Yedeklemeyi geri yükle" </string>
 

@@ -1,4 +1,4 @@
-# Tallybook FAQ
+# Cash Ledger FAQ
 
 Answers to the questions people actually ask. Every path below is written the way the app spells it.
 
@@ -6,7 +6,7 @@ Answers to the questions people actually ask. Every path below is written the wa
 
 Because the category already says which way the money goes.
 
-Tallybook works out income or expense from the category you pick, not from the sign of the amount. A minus you type is a second answer that contradicts the first, so the keypad refuses it, leaves the amount on the display and tells you. A wallet's starting balance is the exception and does take a negative, since a credit card starts below zero.
+Cash Ledger works out income or expense from the category you pick, not from the sign of the amount. A minus you type is a second answer that contradicts the first, so the keypad refuses it, leaves the amount on the display and tells you. A wallet's starting balance is the exception and does take a negative, since a credit card starts below zero.
 
 Before 1.4.0 the keypad accepted it and stored the amount as typed, which could move a total the wrong way. If you are seeing that, update.
 
@@ -20,7 +20,7 @@ In the transactions list, tap the date header above the transactions, the one na
 
 No. Use Settings, Database, Backup services for anything you would be upset to lose.
 
-A backup holds everything and can be restored into an empty app. An export writes a file for reading somewhere else. Tallybook exports CSV, PDF and XLS, and of those it can only read CSV back. Importing a CSV brings in transactions, creating the wallets, categories, places and people it needs along the way, and a wallet it creates starts from zero. It does not bring back your budgets, savings, debts or recurrences.
+A backup holds everything and can be restored into an empty app. An export writes a file for reading somewhere else. Cash Ledger exports CSV, PDF and XLS, and of those it can only read CSV back. Importing a CSV brings in transactions, creating the wallets, categories, places and people it needs along the way, and a wallet it creates starts from zero. It does not bring back your budgets, savings, debts or recurrences.
 
 Restoring a backup replaces everything currently in the app, so it is not a merge.
 
@@ -30,7 +30,7 @@ Settings, Database, Backup services, then pick where the backups go. Open the me
 
 You can set how often it runs, restrict it to WiFi, and skip a run when nothing has changed. Choose the folder before you turn it on.
 
-There is no built in sync between devices. Point a backup at a folder your own sync tool watches, or at your WebDAV server, which Tallybook supports directly.
+There is no built in sync between devices. Point a backup at a folder your own sync tool watches, or at your WebDAV server, which Cash Ledger supports directly.
 
 ## The currency I want is not in the list
 
@@ -48,7 +48,7 @@ A saving is a place money sits, not a wallet you can pay from, so nothing leaves
 
 ## What are the system categories for?
 
-Tallybook files its own bookkeeping under them. Transfer and Transfer tax appear when you move money between wallets. Debt, Debt paid, Credit and Credit paid come from the Debts screen. Deposit and Withdraw come from Savings.
+Cash Ledger files its own bookkeeping under them. Transfer and Transfer tax appear when you move money between wallets. Debt, Debt paid, Credit and Credit paid come from the Debts screen. Deposit and Withdraw come from Savings.
 
 They are not offered when you enter a transaction, so you cannot file something under one yourself. They are offered in the Overview filter, where you can include or exclude them.
 
@@ -68,7 +68,7 @@ Worth a look if you have never opened them:
 
 ## Which language does the app use?
 
-The one your phone is set to. On Android 13 and later you can give Tallybook its own language in the system settings, under Tallybook, Language.
+The one your phone is set to. On Android 13 and later you can give Cash Ledger its own language in the system settings, under Cash Ledger, Language.
 
 ## Something here is wrong or missing
 
