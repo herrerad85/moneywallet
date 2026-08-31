@@ -12,10 +12,10 @@ import com.oriondev.moneywallet.model.Category;
 import com.oriondev.moneywallet.model.ColorIcon;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.Icon;
-import com.oriondev.moneywallet.picker.IconPicker;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.database.TransactionContentValuesBuilder;
+import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.DateUtils;
 import com.oriondev.moneywallet.utils.Utils;
 
@@ -317,7 +317,7 @@ public abstract class AbstractDataImporter {
 
     private String generateRandomIcon(String name) {
         int randomColor = Utils.getRandomMDColor();
-        String iconText = IconPicker.getColorIconString(name);
+        String iconText = IconLoader.getColorIconString(name);
         Icon icon = new ColorIcon(randomColor, iconText);
         return icon.toString();
     }

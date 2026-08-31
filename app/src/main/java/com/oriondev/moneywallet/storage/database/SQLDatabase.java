@@ -36,7 +36,6 @@ import com.oriondev.moneywallet.model.ColorIcon;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.Icon;
 import com.oriondev.moneywallet.model.RecurrenceSetting;
-import com.oriondev.moneywallet.picker.IconPicker;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.DateUtils;
 import com.oriondev.moneywallet.utils.IconLoader;
@@ -79,22 +78,10 @@ import java.util.UUID;
     private static final String ENABLE_FOREIGN_KEYS = "PRAGMA foreign_keys=ON";
 
     private final Context mContext;
-    private boolean mCacheDeletedObjects;
 
     /*package-local*/ SQLDatabase(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
         mContext = context;
-        mCacheDeletedObjects = true;
-    }
-
-    /**
-     * The delete cache is used to correctly sync deleted objects with a remote backend.
-     * If the sync is not enabled, the database will permanently remove deleted objects
-     * and not simply flag them as deleted.
-     * @param cacheEnabled true if cache is enabled, false otherwise.
-     */
-    /*package-local*/ void setDeletedObjectCacheEnabled(boolean cacheEnabled) {
-        mCacheDeletedObjects = cacheEnabled;
     }
 
     @Override
@@ -417,14 +404,7 @@ import java.util.UUID;
             }
         }
         where = Schema.Currency.ISO + " = ?";
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Currency.DELETED, true);
-            cv.put(Schema.Currency.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.Currency.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.Currency.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.Currency.TABLE, where, whereArgs);
     }
 
     /**
@@ -591,103 +571,40 @@ import java.util.UUID;
         // we can start to delete all the transactions related to this wallet
         String where = Schema.Transaction.WALLET + " = ?";
         String[] whereArgs = new String[]{String.valueOf(walletId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Transaction.DELETED, true);
-            cv.put(Schema.Transaction.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.Transaction.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.Transaction.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.Transaction.TABLE, where, whereArgs);
         // now we can delete all the transaction models
         where = Schema.TransactionModel.WALLET + " = ?";
         whereArgs = new String[]{String.valueOf(walletId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.TransactionModel.DELETED, true);
-            cv.put(Schema.TransactionModel.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.TransactionModel.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.TransactionModel.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.TransactionModel.TABLE, where, whereArgs);
         // now we can delete all the transfer models
         where = Schema.TransferModel.WALLET_FROM + " = ? OR " + Schema.TransferModel.WALLET_TO + " = ?";
         whereArgs = new String[]{String.valueOf(walletId), String.valueOf(walletId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.TransferModel.DELETED, true);
-            cv.put(Schema.TransferModel.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.TransferModel.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.TransferModel.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.TransferModel.TABLE, where, whereArgs);
         // now we can delete all the recurrent transactions
         where = Schema.RecurrentTransaction.WALLET + " = ?";
         whereArgs = new String[]{String.valueOf(walletId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.RecurrentTransaction.DELETED, true);
-            cv.put(Schema.RecurrentTransaction.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.RecurrentTransaction.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.RecurrentTransaction.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.RecurrentTransaction.TABLE, where, whereArgs);
         // now we can delete all the recurrent transfers
         where = Schema.RecurrentTransfer.WALLET_FROM + " = ? OR " + Schema.RecurrentTransfer.WALLET_TO + " = ?";
         whereArgs = new String[]{String.valueOf(walletId), String.valueOf(walletId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.RecurrentTransfer.DELETED, true);
-            cv.put(Schema.RecurrentTransfer.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.RecurrentTransfer.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.RecurrentTransfer.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.RecurrentTransfer.TABLE, where, whereArgs);
         // now we can delete all the savings
         where = Schema.Saving.WALLET + " = ?";
         whereArgs = new String[]{String.valueOf(walletId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Saving.DELETED, true);
-            cv.put(Schema.Saving.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.Saving.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.Saving.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.Saving.TABLE, where, whereArgs);
         // now we can delete all the debts
         where = Schema.Debt.WALLET + " = ?";
         whereArgs = new String[]{String.valueOf(walletId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Debt.DELETED, true);
-            cv.put(Schema.Debt.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.Debt.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.Debt.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.Debt.TABLE, where, whereArgs);
         // now we can delete all the budget wallets
         where = Schema.BudgetWallet.WALLET + " = ?";
         whereArgs = new String[]{String.valueOf(walletId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.BudgetWallet.DELETED, true);
-            cv.put(Schema.BudgetWallet.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.BudgetWallet.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.BudgetWallet.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.BudgetWallet.TABLE, where, whereArgs);
         // TODO: [MEDIUM] A budget that has only this wallet must be removed
         // finally we can delete the wallet itself
         where = Schema.Wallet.ID + " = ?";
         whereArgs = new String[]{String.valueOf(walletId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Wallet.DELETED, true);
-            cv.put(Schema.Wallet.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.Wallet.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.Wallet.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.Wallet.TABLE, where, whereArgs);
     }
 
     /**
@@ -1078,23 +995,20 @@ import java.util.UUID;
                     }
                 }
             }
-            if (!mCacheDeletedObjects) {
-                // remove all deleted TransactionPeople
-                where = Schema.TransactionPeople.TRANSACTION + " = ? AND " + Schema.TransactionPeople.DELETED + " = 1";
-                whereArgs = new String[]{String.valueOf(transactionId)};
-                getWritableDatabase().delete(Schema.TransactionPeople.TABLE, where, whereArgs);
-                // remove all deleted TransactionAttachment
-                where = Schema.TransactionAttachment.TRANSACTION + " = ? AND " + Schema.TransactionAttachment.DELETED + " = 1";
-                whereArgs = new String[]{String.valueOf(transactionId)};
-                getWritableDatabase().delete(Schema.TransactionAttachment.TABLE, where, whereArgs);
-            }
+            // remove all deleted TransactionPeople
+            where = Schema.TransactionPeople.TRANSACTION + " = ? AND " + Schema.TransactionPeople.DELETED + " = 1";
+            whereArgs = new String[]{String.valueOf(transactionId)};
+            getWritableDatabase().delete(Schema.TransactionPeople.TABLE, where, whereArgs);
+            // remove all deleted TransactionAttachment
+            where = Schema.TransactionAttachment.TRANSACTION + " = ? AND " + Schema.TransactionAttachment.DELETED + " = 1";
+            whereArgs = new String[]{String.valueOf(transactionId)};
+            getWritableDatabase().delete(Schema.TransactionAttachment.TABLE, where, whereArgs);
         }
         return rows;
     }
 
     /**
-     * Delete a transaction from the database. If the 'mCacheDeletedObjects' flag is enabled the data
-     * is not removed but simply flagged as deleted. The transaction is NOT removed if part of a transfer.
+     * Delete a transaction from the database. The transaction is NOT removed if part of a transfer.
      * @param transactionId id of the transaction to remove.
      * @return the number of rows affected by the deletion (must be 1 for success).
      * @throws SQLiteDataException if the transaction is part of a transfer.
@@ -1138,36 +1052,15 @@ import java.util.UUID;
         // remove all TransactionPeople
         String where = Schema.TransactionPeople.TRANSACTION + " = ?";
         String[] whereArgs = new String[]{String.valueOf(transactionId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.TransactionPeople.DELETED, true);
-            cv.put(Schema.TransactionPeople.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.TransactionPeople.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.TransactionPeople.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.TransactionPeople.TABLE, where, whereArgs);
         // now remove all TransactionAttachment
         where = Schema.TransactionAttachment.TRANSACTION + " = ?";
         whereArgs = new String[]{String.valueOf(transactionId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.TransactionAttachment.DELETED, true);
-            cv.put(Schema.TransactionAttachment.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.TransactionAttachment.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.TransactionAttachment.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.TransactionAttachment.TABLE, where, whereArgs);
         // finally we can remove the transfer item
         where = Schema.Transaction.ID + " = ?";
         whereArgs = new String[]{String.valueOf(transactionId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Transaction.DELETED, true);
-            cv.put(Schema.Transaction.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.Transaction.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.Transaction.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.Transaction.TABLE, where, whereArgs);
     }
 
     private int deleteTransactionItems(Cursor cursor) {
@@ -1587,14 +1480,7 @@ import java.util.UUID;
             } else {
                 where = Schema.Transaction.ID + " = ?";
                 whereArgs = new String[] {String.valueOf(transactionIds[2])};
-                if (mCacheDeletedObjects) {
-                    cv = new ContentValues();
-                    cv.put(Schema.Transaction.LAST_EDIT, System.currentTimeMillis());
-                    cv.put(Schema.Transaction.DELETED, true);
-                    getWritableDatabase().update(Schema.Transaction.TABLE, cv, where, whereArgs);
-                } else {
-                    getWritableDatabase().delete(Schema.Transaction.TABLE, where, whereArgs);
-                }
+                getWritableDatabase().delete(Schema.Transaction.TABLE, where, whereArgs);
                 transactionIds[2] = null;
             }
         } else if (contentValues.getAsLong(Contract.Transfer.TRANSACTION_TAX_MONEY) != 0L) {
@@ -1702,16 +1588,14 @@ import java.util.UUID;
                     }
                 }
             }
-            if (!mCacheDeletedObjects) {
-                // remove all deleted TransactionPeople
-                where = Schema.TransferPeople.TRANSFER + " = ? AND " + Schema.TransferPeople.DELETED + " = 1";
-                whereArgs = new String[]{String.valueOf(transferId)};
-                getWritableDatabase().delete(Schema.TransferPeople.TABLE, where, whereArgs);
-                // remove all deleted TransactionAttachment
-                where = Schema.TransferAttachment.TRANSFER + " = ? AND " + Schema.TransferAttachment.DELETED + " = 1";
-                whereArgs = new String[]{String.valueOf(transferId)};
-                getWritableDatabase().delete(Schema.TransferAttachment.TABLE, where, whereArgs);
-            }
+            // remove all deleted TransactionPeople
+            where = Schema.TransferPeople.TRANSFER + " = ? AND " + Schema.TransferPeople.DELETED + " = 1";
+            whereArgs = new String[]{String.valueOf(transferId)};
+            getWritableDatabase().delete(Schema.TransferPeople.TABLE, where, whereArgs);
+            // remove all deleted TransactionAttachment
+            where = Schema.TransferAttachment.TRANSFER + " = ? AND " + Schema.TransferAttachment.DELETED + " = 1";
+            whereArgs = new String[]{String.valueOf(transferId)};
+            getWritableDatabase().delete(Schema.TransferAttachment.TABLE, where, whereArgs);
         }
         return rows;
     }
@@ -1741,36 +1625,15 @@ import java.util.UUID;
         // now remove all TransferPeople
         String where = Schema.TransferPeople.TRANSFER + " = ?";
         String[] whereArgs = new String[]{String.valueOf(transferId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.TransferPeople.DELETED, true);
-            cv.put(Schema.TransferPeople.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.TransferPeople.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.TransferPeople.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.TransferPeople.TABLE, where, whereArgs);
         // now remove all TransferAttachment
         where = Schema.TransferAttachment.TRANSFER + " = ?";
         whereArgs = new String[]{String.valueOf(transferId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.TransferAttachment.DELETED, true);
-            cv.put(Schema.TransferAttachment.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.TransferAttachment.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.TransferAttachment.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.TransferAttachment.TABLE, where, whereArgs);
         // finally we can remove the transfer item
         where = Schema.Transfer.ID + " = ?";
         whereArgs = new String[]{String.valueOf(transferId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Transfer.DELETED, true);
-            cv.put(Schema.Transfer.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.Transfer.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.Transfer.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.Transfer.TABLE, where, whereArgs);
     }
 
     /**
@@ -2174,14 +2037,7 @@ import java.util.UUID;
         // if this line has been reached, the category can be removed
         where = Schema.Category.ID + " = ?";
         whereArgs = new String[]{String.valueOf(categoryId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Category.DELETED, true);
-            cv.put(Schema.Category.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.Category.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.Category.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.Category.TABLE, where, whereArgs);
     }
 
     /**
@@ -2547,7 +2403,7 @@ import java.util.UUID;
             if (!(icon instanceof ColorIcon)) {
                 return null;
             }
-            return new ColorIcon((ColorIcon) icon, IconPicker.getColorIconString(description)).toString();
+            return new ColorIcon((ColorIcon) icon, IconLoader.getColorIconString(description)).toString();
         } catch (Exception e) {
             // IconLoader returns null on malformed json and throws on a type it does not know,
             // which is the case this catches. The rename still lands, the icon keeps its letters.
@@ -2593,12 +2449,10 @@ import java.util.UUID;
                 }
             }
         }
-        if (!mCacheDeletedObjects) {
-            // remove all deleted DebtPeople
-            where = Schema.DebtPeople.DEBT + " = ? AND " + Schema.DebtPeople.DELETED + " = 1";
-            whereArgs = new String[]{String.valueOf(debtId)};
-            getWritableDatabase().delete(Schema.DebtPeople.TABLE, where, whereArgs);
-        }
+        // remove all deleted DebtPeople
+        where = Schema.DebtPeople.DEBT + " = ? AND " + Schema.DebtPeople.DELETED + " = 1";
+        whereArgs = new String[]{String.valueOf(debtId)};
+        getWritableDatabase().delete(Schema.DebtPeople.TABLE, where, whereArgs);
     }
 
     /**
@@ -2783,8 +2637,7 @@ import java.util.UUID;
     }
 
     /**
-     * Delete a debt from the database. If the 'mCacheDeletedObjects' flag is enabled the data
-     * is not removed but simply flagged as deleted.
+     * Delete a debt from the database.
      *
      * @param debtId id of the debt to remove.
      * @return the number of rows affected by the deletion (must be 1 for success).
@@ -2795,25 +2648,11 @@ import java.util.UUID;
         // remove all DebtPeople
         String where = Schema.DebtPeople.DEBT + " = ?";
         String[] whereArgs = new String[]{String.valueOf(debtId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.DebtPeople.DELETED, true);
-            cv.put(Schema.DebtPeople.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.DebtPeople.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.DebtPeople.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.DebtPeople.TABLE, where, whereArgs);
         // remove the debt item
         where = Schema.Debt.ID + " = ?";
         whereArgs = new String[]{String.valueOf(debtId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Debt.DELETED, true);
-            cv.put(Schema.Debt.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.Debt.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.Debt.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.Debt.TABLE, where, whereArgs);
     }
 
     /**
@@ -3628,8 +3467,7 @@ import java.util.UUID;
     }
 
     /**
-     * Delete a budget from the database. If the 'mCacheDeletedObjects' flag is enabled the data
-     * is not removed but simply flagged as deleted.
+     * Delete a budget from the database.
      *
      * @param budgetId id of the budget to remove.
      * @return the number of rows affected by the deletion (must be 1 for success).
@@ -3638,36 +3476,15 @@ import java.util.UUID;
         // remove all BudgetWallet
         String where = Schema.BudgetWallet.BUDGET + " = ?";
         String[] whereArgs = new String[]{String.valueOf(budgetId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.BudgetWallet.DELETED, true);
-            cv.put(Schema.BudgetWallet.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.BudgetWallet.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.BudgetWallet.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.BudgetWallet.TABLE, where, whereArgs);
         // remove all BudgetCategory
         where = Schema.BudgetCategory.BUDGET + " = ?";
         whereArgs = new String[]{String.valueOf(budgetId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.BudgetCategory.DELETED, true);
-            cv.put(Schema.BudgetCategory.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.BudgetCategory.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.BudgetCategory.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.BudgetCategory.TABLE, where, whereArgs);
         // remove the debt item
         where = Schema.Budget.ID + " = ?";
         whereArgs = new String[]{String.valueOf(budgetId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Budget.DELETED, true);
-            cv.put(Schema.Budget.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.Budget.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.Budget.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.Budget.TABLE, where, whereArgs);
     }
 
     /**
@@ -3841,8 +3658,7 @@ import java.util.UUID;
     }
 
     /**
-     * Delete a saving from the database. If the 'mCacheDeletedObjects' flag is enabled the data
-     * is not removed but simply flagged as deleted.
+     * Delete a saving from the database.
      *
      * @param savingId id of the saving to remove.
      * @return the number of rows affected by the deletion (must be 1 for success).
@@ -3853,14 +3669,7 @@ import java.util.UUID;
         // delete the saving item
         String where = Schema.Saving.ID + " = ?";
         String[] whereArgs = new String[]{String.valueOf(savingId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Saving.DELETED, true);
-            cv.put(Schema.Saving.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.Saving.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.Saving.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.Saving.TABLE, where, whereArgs);
     }
 
     /**
@@ -3977,8 +3786,7 @@ import java.util.UUID;
     }
 
     /**
-     * Delete a event from the database. If the 'mCacheDeletedObjects' flag is enabled the data
-     * is not removed but simply flagged as deleted.
+     * Delete a event from the database.
      *
      * @param eventId id of the event to remove.
      * @return the number of rows affected by the deletion (must be 1 for success).
@@ -4029,25 +3837,11 @@ import java.util.UUID;
         // remove all EventPeople
         where = Schema.EventPeople.EVENT + " = ?";
         whereArgs = new String[]{String.valueOf(eventId)};
-        if (mCacheDeletedObjects) {
-            cv = new ContentValues();
-            cv.put(Schema.EventPeople.DELETED, true);
-            cv.put(Schema.EventPeople.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.EventPeople.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.EventPeople.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.EventPeople.TABLE, where, whereArgs);
         // finally remove the event item
         where = Schema.Event.ID + " = ?";
         whereArgs = new String[]{String.valueOf(eventId)};
-        if (mCacheDeletedObjects) {
-            cv = new ContentValues();
-            cv.put(Schema.Event.DELETED, true);
-            cv.put(Schema.Event.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.Event.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.Event.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.Event.TABLE, where, whereArgs);
     }
 
     /*package-local*/ Cursor getRecurrentTransaction(long transactionId, String[] projection) {
@@ -4237,9 +4031,8 @@ import java.util.UUID;
     }
 
     /**
-     * Delete a recurrent transaction from the database. If the 'mCacheDeletedObjects' flag is
-     * enabled the data is not removed but simply flagged as deleted. All the related transactions
-     * are updated with the removal of the reference to this recurring transaction.
+     * Delete a recurrent transaction from the database. All the related transactions are updated with
+     * the removal of the reference to this recurring transaction.
      *
      * @param transactionId id of the recurring transaction to remove.
      * @return the number of rows affected by the deletion (must be 1 for success).
@@ -4256,14 +4049,7 @@ import java.util.UUID;
         // now is possible to remove the recurrent transaction itself
         selection = Schema.RecurrentTransaction.ID + " = ?";
         selectionArgs = new String[]{String.valueOf(transactionId)};
-        if (mCacheDeletedObjects) {
-            contentValues = new ContentValues();
-            contentValues.put(Schema.RecurrentTransaction.DELETED, true);
-            contentValues.put(Schema.RecurrentTransaction.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.RecurrentTransaction.TABLE, contentValues, selection, selectionArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.RecurrentTransaction.TABLE, selection, selectionArgs);
-        }
+        return getWritableDatabase().delete(Schema.RecurrentTransaction.TABLE, selection, selectionArgs);
     }
 
     /*package-local*/ Cursor getRecurrentTransfer(long transferId, String[] projection) {
@@ -4521,9 +4307,8 @@ import java.util.UUID;
     }
 
     /**
-     * Delete a recurrent transfer from the database. If the 'mCacheDeletedObjects' flag is
-     * enabled the data is not removed but simply flagged as deleted. All the related transfers
-     * are updated with the removal of the reference to this recurring transfer.
+     * Delete a recurrent transfer from the database. All the related transfers are updated with
+     * the removal of the reference to this recurring transfer.
      *
      * @param transferId id of the recurring transfer to remove.
      * @return the number of rows affected by the deletion (must be 1 for success).
@@ -4540,14 +4325,7 @@ import java.util.UUID;
         // now is possible to remove the recurrent transfer itself
         selection = Schema.RecurrentTransfer.ID + " = ?";
         selectionArgs = new String[]{String.valueOf(transferId)};
-        if (mCacheDeletedObjects) {
-            contentValues = new ContentValues();
-            contentValues.put(Schema.RecurrentTransfer.DELETED, true);
-            contentValues.put(Schema.RecurrentTransfer.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.RecurrentTransfer.TABLE, contentValues, selection, selectionArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.RecurrentTransfer.TABLE, selection, selectionArgs);
-        }
+        return getWritableDatabase().delete(Schema.RecurrentTransfer.TABLE, selection, selectionArgs);
     }
 
     /*package-local*/ long insertRecurrentTransferOccurrence(long transferId, ContentValues contentValues) {
@@ -4683,8 +4461,7 @@ import java.util.UUID;
     }
 
     /**
-     * Delete a transaction model from the database. If the 'mCacheDeletedObjects' flag is enabled the data
-     * is not removed but simply flagged as deleted.
+     * Delete a transaction model from the database.
      *
      * @param modelId id of the transaction model to remove.
      * @return the number of rows affected by the deletion (must be 1 for success).
@@ -4692,14 +4469,7 @@ import java.util.UUID;
     /*package-local*/ int deleteTransactionModel(long modelId) {
         String where = Schema.TransactionModel.ID + " = ?";
         String[] whereArgs = new String[]{String.valueOf(modelId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.TransactionModel.DELETED, true);
-            cv.put(Schema.TransactionModel.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.TransactionModel.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.TransactionModel.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.TransactionModel.TABLE, where, whereArgs);
     }
 
     /**
@@ -4834,8 +4604,7 @@ import java.util.UUID;
     }
 
     /**
-     * Delete a transfer model from the database. If the 'mCacheDeletedObjects' flag is enabled the
-     * data is not removed but simply flagged as deleted.
+     * Delete a transfer model from the database.
      *
      * @param modelId id of the transfer model to remove.
      * @return the number of rows affected by the deletion (must be 1 for success).
@@ -4843,14 +4612,7 @@ import java.util.UUID;
     /*package-local*/ int deleteTransferModel(long modelId) {
         String where = Schema.TransferModel.ID + " = ?";
         String[] whereArgs = new String[]{String.valueOf(modelId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.TransferModel.DELETED, true);
-            cv.put(Schema.TransferModel.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.TransferModel.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.TransferModel.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.TransferModel.TABLE, where, whereArgs);
     }
 
     /**
@@ -4957,8 +4719,7 @@ import java.util.UUID;
     }
 
     /**
-     * Delete a place from the database. If the 'mCacheDeletedObjects' flag is enabled the data
-     * is not removed but simply flagged as deleted.
+     * Delete a place from the database.
      *
      * @param placeId id of the place to remove.
      * @return the number of rows affected by the deletion (must be 1 for success).
@@ -5016,14 +4777,7 @@ import java.util.UUID;
         // finally remove the place item
         where = Schema.Place.ID + " = ?";
         whereArgs = new String[]{String.valueOf(placeId)};
-        if (mCacheDeletedObjects) {
-            cv = new ContentValues();
-            cv.put(Schema.Place.DELETED, true);
-            cv.put(Schema.Place.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.Place.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.Place.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.Place.TABLE, where, whereArgs);
     }
 
     /**
@@ -5126,8 +4880,7 @@ import java.util.UUID;
     }
 
     /**
-     * Delete a person from the database. If the 'mCacheDeletedObjects' flag is enabled the data
-     * is not removed but simply flagged as deleted.
+     * Delete a person from the database.
      *
      * @param personId id of the person to remove.
      * @return the number of rows affected by the deletion (must be 1 for success).
@@ -5136,58 +4889,23 @@ import java.util.UUID;
         // remove all the TransactionPeople
         String where = Schema.TransactionPeople.PERSON + " = ?";
         String[] whereArgs = new String[]{String.valueOf(personId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.TransactionPeople.DELETED, true);
-            cv.put(Schema.TransactionPeople.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.TransactionPeople.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.TransactionPeople.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.TransactionPeople.TABLE, where, whereArgs);
         // remove all the TransferPeople
         where = Schema.TransferPeople.PERSON + " = ?";
         whereArgs = new String[]{String.valueOf(personId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.TransferPeople.DELETED, true);
-            cv.put(Schema.TransferPeople.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.TransferPeople.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.TransferPeople.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.TransferPeople.TABLE, where, whereArgs);
         // remove all the EventPeople
         where = Schema.EventPeople.PERSON + " = ?";
         whereArgs = new String[]{String.valueOf(personId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.EventPeople.DELETED, true);
-            cv.put(Schema.EventPeople.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.EventPeople.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.EventPeople.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.EventPeople.TABLE, where, whereArgs);
         // remove all the DebtPeople
         where = Schema.DebtPeople.PERSON + " = ?";
         whereArgs = new String[]{String.valueOf(personId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.DebtPeople.DELETED, true);
-            cv.put(Schema.DebtPeople.LAST_EDIT, System.currentTimeMillis());
-            getWritableDatabase().update(Schema.DebtPeople.TABLE, cv, where, whereArgs);
-        } else {
-            getWritableDatabase().delete(Schema.DebtPeople.TABLE, where, whereArgs);
-        }
+        getWritableDatabase().delete(Schema.DebtPeople.TABLE, where, whereArgs);
         // finally remove the person item
         where = Schema.Person.ID + " = ?";
         whereArgs = new String[]{String.valueOf(personId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Person.DELETED, true);
-            cv.put(Schema.Person.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.Person.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.Person.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.Person.TABLE, where, whereArgs);
     }
 
     /**
@@ -5266,8 +4984,7 @@ import java.util.UUID;
     }
 
     /**
-     * Delete an attachment from the database. If the 'mCacheDeletedObjects' flag is enabled the data
-     * is not removed but simply flagged as deleted.
+     * Delete an attachment from the database.
      *
      * @param attachmentId id of the attachment to remove.
      * @return the number of rows affected by the deletion (must be 1 for success).
@@ -5275,14 +4992,7 @@ import java.util.UUID;
     /*package-local*/ int deleteAttachment(long attachmentId) {
         String where = Schema.Attachment.ID + " = ?";
         String[] whereArgs = new String[]{String.valueOf(attachmentId)};
-        if (mCacheDeletedObjects) {
-            ContentValues cv = new ContentValues();
-            cv.put(Schema.Attachment.DELETED, true);
-            cv.put(Schema.Attachment.LAST_EDIT, System.currentTimeMillis());
-            return getWritableDatabase().update(Schema.Attachment.TABLE, cv, where, whereArgs);
-        } else {
-            return getWritableDatabase().delete(Schema.Attachment.TABLE, where, whereArgs);
-        }
+        return getWritableDatabase().delete(Schema.Attachment.TABLE, where, whereArgs);
     }
 
     /**

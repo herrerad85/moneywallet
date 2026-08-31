@@ -51,8 +51,8 @@
         errorLine1="                return builder.toUpperCase();"
         errorLine2="                               ~~~~~~~~~~~">
         <location
-            file="src/main/java/com/oriondev/moneywallet/picker/IconPicker.java"
-            line="170"
+            file="src/main/java/com/oriondev/moneywallet/utils/IconLoader.java"
+            line="46"
             column="32"/>
     </issue>
 
@@ -62,8 +62,8 @@
         errorLine1="                return trimmed.substring(0, 1).toUpperCase();"
         errorLine2="                                               ~~~~~~~~~~~">
         <location
-            file="src/main/java/com/oriondev/moneywallet/picker/IconPicker.java"
-            line="172"
+            file="src/main/java/com/oriondev/moneywallet/utils/IconLoader.java"
+            line="48"
             column="48"/>
     </issue>
 

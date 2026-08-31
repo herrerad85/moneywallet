@@ -41,9 +41,9 @@ import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.Category;
 import com.oriondev.moneywallet.model.ColorIcon;
 import com.oriondev.moneywallet.model.Icon;
-import com.oriondev.moneywallet.picker.IconPicker;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.Utils;
 
 import java.util.ArrayList;
@@ -157,7 +157,7 @@ public class TutorialActivity extends AppIntro2 {
 
     private static Category getDefaultCategory(Context context, int nameRes, Contract.CategoryType type, String tag, int color) {
         String name = context.getString(nameRes);
-        String label = IconPicker.getColorIconString(name);
+        String label = IconLoader.getColorIconString(name);
         Icon icon = new ColorIcon(Utils.getHexColor(color), label);
         return new Category(-1L, context.getString(nameRes), icon, type, tag);
     }

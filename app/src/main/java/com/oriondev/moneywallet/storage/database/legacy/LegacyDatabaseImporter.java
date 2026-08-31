@@ -31,7 +31,6 @@ import com.oriondev.moneywallet.model.ColorIcon;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.Icon;
 import com.oriondev.moneywallet.model.RecurrenceSetting;
-import com.oriondev.moneywallet.picker.IconPicker;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.database.DatabaseImporter;
@@ -51,6 +50,7 @@ import com.oriondev.moneywallet.storage.database.model.Transfer;
 import com.oriondev.moneywallet.storage.database.model.Wallet;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.DateUtils;
+import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
 import com.oriondev.moneywallet.utils.Utils;
 
@@ -784,13 +784,13 @@ public class LegacyDatabaseImporter implements DatabaseImporter {
                 String legacyIcon = cursor.getString(index);
                 Icon icon = LegacyIconMapper.getLegacyIcon(legacyIcon, name);
                 if (icon == null) {
-                    icon = new ColorIcon(Utils.getRandomMDColor(), IconPicker.getColorIconString(name));
+                    icon = new ColorIcon(Utils.getRandomMDColor(), IconLoader.getColorIconString(name));
                 }
                 return icon.toString();
             }
         }*/
         int randomColor = Utils.getRandomMDColor();
-        String iconText = IconPicker.getColorIconString(name);
+        String iconText = IconLoader.getColorIconString(name);
         Icon icon = new ColorIcon(randomColor, iconText);
         return icon.toString();
     }

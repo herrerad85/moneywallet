@@ -43,8 +43,6 @@ import java.util.List;
  */
 public class DataContentProvider extends ContentProvider {
 
-    private static final boolean IS_REMOTE_SYNC_ENABLED = false;
-
     /*package-local*/ static final String AUTHORITY = BuildConfig.APPLICATION_ID + ".storage.data";
 
     public static final Uri CONTENT_CURRENCIES = Uri.parse("content://" + AUTHORITY + "/currencies");
@@ -837,7 +835,6 @@ public class DataContentProvider extends ContentProvider {
             mDatabase.close();
         }
         mDatabase = new SQLDatabase(context);
-        mDatabase.setDeletedObjectCacheEnabled(IS_REMOTE_SYNC_ENABLED);
     }
 
     @SuppressLint("Recycle")

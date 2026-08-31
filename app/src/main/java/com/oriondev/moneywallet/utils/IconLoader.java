@@ -19,6 +19,7 @@
 
 package com.oriondev.moneywallet.utils;
 
+import android.text.TextUtils;
 import android.widget.ImageView;
 
 import com.oriondev.moneywallet.model.ColorIcon;
@@ -35,6 +36,20 @@ import org.json.JSONObject;
 public class IconLoader {
 
     public static final Icon UNKNOWN = new ColorIcon("#FFC107", "?");
+
+    public static String getColorIconString(String source) {
+        String trimmed = source != null ? source.trim().replaceAll(" +", " ") : null;
+        if (!TextUtils.isEmpty(trimmed)) {
+            String[] parts = trimmed.split(" ");
+            if (parts.length >= 2 && !parts[0].isEmpty() && !parts[1].isEmpty()) {
+                String builder = String.valueOf(parts[0].charAt(0)) + parts[1].charAt(0);
+                return builder.toUpperCase();
+            } else {
+                return trimmed.substring(0, 1).toUpperCase();
+            }
+        }
+        return "?";
+    }
 
     public static Icon parse(String icon) {
         if (icon != null) {

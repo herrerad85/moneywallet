@@ -29,7 +29,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.widget.EditText;
@@ -43,6 +42,7 @@ import com.oriondev.moneywallet.model.Icon;
 import com.oriondev.moneywallet.model.VectorIcon;
 import com.oriondev.moneywallet.ui.activity.IconListActivity;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
+import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.Utils;
 
 /**
@@ -147,7 +147,7 @@ public class IconPicker extends Fragment implements ColorChooserDialog.ColorCall
             @Override
             public void onTextChanged(CharSequence sequence, int i, int i1, int i2) {
                 if (mCurrentIcon instanceof ColorIcon) {
-                    String text = getColorIconString(sequence.toString());
+                    String text = IconLoader.getColorIconString(sequence.toString());
                     mCurrentIcon = new ColorIcon((ColorIcon) mCurrentIcon, text);
                     fireCallbackSafely();
                 }
@@ -159,20 +159,6 @@ public class IconPicker extends Fragment implements ColorChooserDialog.ColorCall
             }
 
         });
-    }
-
-    public static String getColorIconString(String source) {
-        String trimmed = source != null ? source.trim().replaceAll(" +", " ") : null;
-        if (!TextUtils.isEmpty(trimmed)) {
-            String[] parts = trimmed.split(" ");
-            if (parts.length >= 2 && !parts[0].isEmpty() && !parts[1].isEmpty()) {
-                String builder = String.valueOf(parts[0].charAt(0)) + parts[1].charAt(0);
-                return builder.toUpperCase();
-            } else {
-                return trimmed.substring(0, 1).toUpperCase();
-            }
-        }
-        return "?";
     }
 
     public Icon getCurrentIcon() {
@@ -279,7 +265,7 @@ public class IconPicker extends Fragment implements ColorChooserDialog.ColorCall
     public void onColorSelection(@NonNull ColorChooserDialog dialog, int selectedColor) {
         mLastBackgroundColor = Utils.getHexColor(selectedColor);
         if (mCurrentIcon instanceof ColorIcon) {
-            String text = getColorIconString(mBindEditText != null ? mBindEditText.getText().toString() : null);
+            String text = IconLoader.getColorIconString(mBindEditText != null ? mBindEditText.getText().toString() : null);
             mCurrentIcon = new ColorIcon(mLastBackgroundColor, text);
             fireCallbackSafely();
         }

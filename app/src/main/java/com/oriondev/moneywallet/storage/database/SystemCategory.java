@@ -23,7 +23,7 @@ import android.content.Context;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.ColorIcon;
-import com.oriondev.moneywallet.picker.IconPicker;
+import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.Utils;
 
 import java.util.ArrayList;
@@ -68,7 +68,7 @@ import java.util.List;
     }
 
     /*package-local*/ String getIcon(Context context) {
-        String source = IconPicker.getColorIconString(context.getString(mName));
+        String source = IconLoader.getColorIconString(context.getString(mName));
         return new ColorIcon(mColor, source).toString();
     }
 

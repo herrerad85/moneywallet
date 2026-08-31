@@ -135,7 +135,6 @@ public class SQLDatabaseTest {
         targetContext.deleteDatabase(TestStorageContext.PREFIX + SQLDatabase.DATABASE_NAME);
         // create a new database for testing purposes
         mDatabase = new SQLDatabase(mContext);
-        mDatabase.setDeletedObjectCacheEnabled(false);
         // and ask SQLDatabase which file it actually opened, whichever way it got there
         assertEquals(testDatabase.getPath(), mDatabase.getWritableDatabase().getPath());
     }
@@ -198,6 +197,24 @@ public class SQLDatabaseTest {
         assertEquals(true, cursorSize >= minSize);
         cursor.close();
         return cursorSize;
+    }
+
+    /**
+     * Rows straight from the table, with no deleted = 0 filter on the way. Every accessor this
+     * class otherwise reads through carries that filter, so a row flagged as deleted and a row
+     * that is gone look the same through them, and only a direct read separates the two. The
+     * selection is where a caller names the flag it is asking about.
+     */
+    private void assertRowCount(String table, String selection, int expected) {
+        Cursor cursor = mDatabase.getReadableDatabase()
+                .query(table, null, selection, null, null, null, null);
+        assertNotNull(cursor);
+        try {
+            // named, because every caller passes the same expected count and the same selection
+            assertEquals(table, expected, cursor.getCount());
+        } finally {
+            cursor.close();
+        }
     }
 
     private void checkCursorSize(Cursor cursor, int expectedSize) {
@@ -2646,6 +2663,28 @@ public class SQLDatabaseTest {
         checkDebtId(id7, Contract.DebtType.DEBT.getValue(), "icon", "desc", date, null, id1, null, null, 10000L, false, new Long[] {id6}, null);
         checkTransactionId(id8, 10, date, "desc", id3, Contract.Direction.INCOME, 0, id1, null, null, null, null, null, true, true, new Long[] {id4}, null);
         checkTransferId(id9, "desc", date, id1, id2, null, 10, 10, 0, null, null, null, true, true, null, null);
+        // Every accessor the checks above read through filters on deleted = 0, so a row flagged
+        // as deleted and a row that is gone look identical through all of them. Ask the tables
+        // for the flag instead. The fixture gave person 5 a row in each of the four tables
+        // asserted below.
+        //
+        // The five deletes in deletePerson used to share one boolean and could only go soft
+        // together. That boolean is gone and nothing couples them now, so any subset of the five
+        // can regress on its own, and this sees only the subsets that include the person delete,
+        // because a real delete of the person row cascades every flagged link row away.
+        //
+        // The person table is asserted last on purpose. Put it first and a maintainer fixing the
+        // person delete brings the cascade back, which hides every link delete still writing a
+        // flag and lets the test go green with four of the five wrong. Last, each fix uncovers
+        // the next failure.
+        //
+        // EventPeople is the one other table deletePerson writes, and it is not asserted here
+        // because the fixture never links person 5 to an event, so the count would come back
+        // zero whichever branch ran.
+        assertRowCount(Schema.DebtPeople.TABLE, Schema.DebtPeople.DELETED + " = 1", 0);
+        assertRowCount(Schema.TransactionPeople.TABLE, Schema.TransactionPeople.DELETED + " = 1", 0);
+        assertRowCount(Schema.TransferPeople.TABLE, Schema.TransferPeople.DELETED + " = 1", 0);
+        assertRowCount(Schema.Person.TABLE, Schema.Person.DELETED + " = 1", 0);
     }
 
     @Test

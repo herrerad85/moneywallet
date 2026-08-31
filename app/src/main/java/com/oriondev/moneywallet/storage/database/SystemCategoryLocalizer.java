@@ -31,7 +31,6 @@ import android.util.Log;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.ColorIcon;
 import com.oriondev.moneywallet.model.Icon;
-import com.oriondev.moneywallet.picker.IconPicker;
 import com.oriondev.moneywallet.utils.IconLoader;
 
 import java.util.ArrayList;
@@ -245,7 +244,7 @@ public class SystemCategoryLocalizer {
             if (!(icon instanceof ColorIcon)) {
                 return null;
             }
-            return new ColorIcon((ColorIcon) icon, IconPicker.getColorIconString(currentName)).toString();
+            return new ColorIcon((ColorIcon) icon, IconLoader.getColorIconString(currentName)).toString();
         } catch (Exception e) {
             Log.e(TAG, "unreadable icon on a system category, keeping the old one", e);
             return null;
