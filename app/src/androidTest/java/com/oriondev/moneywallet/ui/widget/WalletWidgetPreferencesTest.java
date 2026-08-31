@@ -20,8 +20,8 @@
 package com.oriondev.moneywallet.ui.widget;
 
 import android.content.Context;
-import android.test.suitebuilder.annotation.LargeTest;
 
+import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.After;

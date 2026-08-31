@@ -22,15 +22,18 @@ package com.oriondev.moneywallet.storage.database;
 import android.app.Instrumentation;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.database.Cursor;
+import android.database.DatabaseErrorHandler;
+import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
-import android.test.RenamingDelegatingContext;
-import android.test.suitebuilder.annotation.LargeTest;
 import android.text.TextUtils;
 
+import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.model.Attachment;
 import com.oriondev.moneywallet.model.ColorIcon;
 import com.oriondev.moneywallet.model.Money;
 import com.oriondev.moneywallet.utils.DateUtils;
@@ -39,13 +42,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
 /**
@@ -56,27 +62,97 @@ public class SQLDatabaseTest {
 
     private Context mContext;
     private SQLDatabase mDatabase;
+    private long mRealDatabaseLength;
+
+    /**
+     * Keeps the suite off the storage of the build it is running against. Database names are
+     * prefixed and the attachment directory moves into a subdirectory, so SQLDatabase opens
+     * test.database.db and deletes attachment files under a test folder, never the real ones
+     * beside them. This replaces android.test.RenamingDelegatingContext, which shipped in the
+     * android.test.runner library that this change removes.
+     */
+    private static class TestStorageContext extends ContextWrapper {
+
+        private static final String PREFIX = "test.";
+        private static final String EXTERNAL_SUBDIR = "test";
+
+        TestStorageContext(Context base) {
+            super(base);
+        }
+
+        @Override
+        public SQLiteDatabase openOrCreateDatabase(String name, int mode,
+                                                   SQLiteDatabase.CursorFactory factory) {
+            return super.openOrCreateDatabase(PREFIX + name, mode, factory);
+        }
+
+        @Override
+        public SQLiteDatabase openOrCreateDatabase(String name, int mode,
+                                                   SQLiteDatabase.CursorFactory factory,
+                                                   DatabaseErrorHandler errorHandler) {
+            return super.openOrCreateDatabase(PREFIX + name, mode, factory, errorHandler);
+        }
+
+        @Override
+        public File getDatabasePath(String name) {
+            return super.getDatabasePath(PREFIX + name);
+        }
+
+        @Override
+        public boolean deleteDatabase(String name) {
+            return super.deleteDatabase(PREFIX + name);
+        }
+
+        /**
+         * SQLDatabase.getAttachmentFolder resolves this and the delete paths then call delete()
+         * on file names taken from a column, and a restored backup can put any name in that
+         * column. The folder need not exist, since nothing lists it and a delete that finds
+         * nothing returns false.
+         */
+        @Override
+        public File getExternalFilesDir(String type) {
+            File external = super.getExternalFilesDir(type);
+            return external != null ? new File(external, EXTERNAL_SUBDIR) : null;
+        }
+    }
 
     @Before
     public void setUp() {
         Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
-        Context baseContext = instrumentation.getTargetContext();
-        mContext = new RenamingDelegatingContext(baseContext, "test.");
-        // load existing databases and files if found
-        if (mContext instanceof RenamingDelegatingContext) {
-            ((RenamingDelegatingContext) mContext).makeExistingFilesAndDbsAccessible();
-        }
-        // remove existing database (if any) before starting the test
-        mContext.deleteDatabase(SQLDatabase.DATABASE_NAME);
+        Context targetContext = instrumentation.getTargetContext();
+        File testDatabase = targetContext.getDatabasePath(
+                TestStorageContext.PREFIX + SQLDatabase.DATABASE_NAME);
+        mRealDatabaseLength = targetContext.getDatabasePath(SQLDatabase.DATABASE_NAME).length();
+        // the prefix has to name a different file, which is what everything below rests on and
+        // is what a check written against the prefix itself cannot tell you
+        assertFalse(targetContext.getDatabasePath(SQLDatabase.DATABASE_NAME).getPath()
+                .equals(testDatabase.getPath()));
+        mContext = new TestStorageContext(targetContext);
+        assertEquals(testDatabase.getPath(),
+                mContext.getDatabasePath(SQLDatabase.DATABASE_NAME).getPath());
+        // remove the previous case's database. Through the unwrapped context, so the delete every
+        // case makes cannot land on the real database when the wrapper is the thing that is broken
+        targetContext.deleteDatabase(TestStorageContext.PREFIX + SQLDatabase.DATABASE_NAME);
         // create a new database for testing purposes
         mDatabase = new SQLDatabase(mContext);
         mDatabase.setDeletedObjectCacheEnabled(false);
+        // and ask SQLDatabase which file it actually opened, whichever way it got there
+        assertEquals(testDatabase.getPath(), mDatabase.getWritableDatabase().getPath());
     }
 
     @After
     public void tearDown() {
+        if (mDatabase == null) {
+            return;
+        }
         mDatabase.close();
-        mContext.deleteDatabase(SQLDatabase.DATABASE_NAME);
+        Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        targetContext.deleteDatabase(TestStorageContext.PREFIX + SQLDatabase.DATABASE_NAME);
+        // the database the build under test owns was not unlinked, and was not replaced by a
+        // smaller one. Against the size setUp saw and not against zero, so a device without that
+        // database reads nothing against nothing and passes instead of failing every case
+        assertTrue(targetContext.getDatabasePath(SQLDatabase.DATABASE_NAME).length()
+                >= mRealDatabaseLength);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -901,6 +977,61 @@ public class SQLDatabaseTest {
     /////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////// START THE TEST /////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Covers the wrapper's other three database methods, which nothing else in here reaches on
+     * the runners this suite is run on. Without this they are three overrides whose loss nothing
+     * would notice.
+     */
+    @Test
+    public void everyDatabaseMethodOnTheWrapperIsPrefixed() {
+        File expected = InstrumentationRegistry.getInstrumentation().getTargetContext()
+                .getDatabasePath(TestStorageContext.PREFIX + SQLDatabase.DATABASE_NAME);
+        // closed first, so the delete at the end is not unlinking a file still open here
+        mDatabase.close();
+        SQLiteDatabase threeArgument = mContext.openOrCreateDatabase(
+                SQLDatabase.DATABASE_NAME, Context.MODE_PRIVATE, null);
+        try {
+            assertEquals(expected.getPath(), threeArgument.getPath());
+        } finally {
+            threeArgument.close();
+        }
+        SQLiteDatabase fourArgument = mContext.openOrCreateDatabase(
+                SQLDatabase.DATABASE_NAME, Context.MODE_PRIVATE, null, null);
+        try {
+            assertEquals(expected.getPath(), fourArgument.getPath());
+        } finally {
+            fourArgument.close();
+        }
+        mContext.deleteDatabase(SQLDatabase.DATABASE_NAME);
+        assertFalse(expected.exists());
+    }
+
+    /**
+     * Proves the attachment deletes land in the wrapper's folder. The file is made under the
+     * wrapper's own external directory, so nothing here writes into the app's attachments, and it
+     * has to be gone afterwards.
+     */
+    @Test
+    public void attachmentFileIsDeletedUnderTheTestFolder() throws Exception {
+        // built from the unwrapped context, never from the wrapper, or an emptied EXTERNAL_SUBDIR
+        // would move this file and the delete together and they would still agree
+        File external = InstrumentationRegistry.getInstrumentation().getTargetContext()
+                .getExternalFilesDir(null);
+        // same reason as the prefix check in setUp, and before anything is written below
+        assertFalse(external.equals(mContext.getExternalFilesDir(null)));
+        File folder = new File(new File(external, TestStorageContext.EXTERNAL_SUBDIR),
+                Attachment.FOLDER_NAME);
+        assertTrue(folder.isDirectory() || folder.mkdirs());
+        File sentinel = new File(folder, "path1");
+        assertTrue(sentinel.isFile() || sentinel.createNewFile());
+        long id1 = insertWallet("Test wallet 1", "encoded-icon-1", "EUR", "note-wallet-1", true, 2000L, false, "tag-wallet-1");
+        long id2 = insertCategory("Test category 1", "encoded-icon-1", Contract.CategoryType.INCOME.getValue(), null, true, "tag-category-1");
+        long id3 = insertAttachment("path1", "name-1", "mime-type-1", 90L, "tag-1");
+        long id4 = insertTransaction(2000L, new Date(), "desc", id2, Contract.Direction.INCOME, 0, id1, null, "note", null, null, null, true, true, null, new Long[] {id3}, "tag");
+        mDatabase.deleteTransaction(id4);
+        assertFalse(sentinel.exists());
+    }
 
     @Test
     public void insertWallet() throws Exception {

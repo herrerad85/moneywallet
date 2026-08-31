@@ -38,7 +38,6 @@ android {
         versionCode 85
         versionName "1.7.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        testInstrumentationRunnerArguments clearPackageData: 'true'
         multiDexEnabled true
         manifestPlaceholders = [
                 DropBoxApiKey: ApiKey_Dropbox.replaceAll('"', ''),
@@ -85,10 +84,6 @@ android {
             dimension "map"
         }
     }
-    // test libraries
-    useLibrary 'android.test.runner'
-    useLibrary 'android.test.base'
-    useLibrary 'android.test.mock'
     lint {
         baseline = file("lint-baseline.xml")
         abortOnError true
@@ -198,12 +193,9 @@ dependencies {
     // floss dependencies
     osmImplementation 'org.osmdroid:osmdroid-android:6.1.1'
     // test dependencies (local tests)
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'org.mockito:mockito-core:3.6.28'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:5.23.0'
     // android test dependencies (on-device tests)
-    androidTestImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test:core:1.6.1'
-    androidTestImplementation 'androidx.test:runner:1.6.2'
-    androidTestImplementation 'androidx.test:rules:1.6.1'
-    androidTestUtil "androidx.test:orchestrator:1.5.1"
+    androidTestImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.7.0'
 }
