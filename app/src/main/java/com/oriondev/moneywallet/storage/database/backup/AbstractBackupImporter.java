@@ -57,6 +57,28 @@ public abstract class AbstractBackupImporter {
      * @param temporaryFolder folder where temporary data can be stored.
      * @param databaseFolder folder where the database is located.
      * @throws ImportException if an error occur while importing the backup file.
+     *
+     * What this does NOT do, because a reader will ask and part of the answer took a device run.
+     * Nothing serializes another thread's DataContentProvider writes against this import. The
+     * recurrence job is the one that needs no user present, it runs off an alarm, and the lock in
+     * BackupHandlerIntentService that serializes backup against restore is not taken anywhere in
+     * that job.
+     *
+     * Such a write is not refused and not held, so it lands wherever the path points at the time.
+     * Between the rename below and the import's first insert that is a database this class has
+     * just emptied. After it, it is the half imported database itself, carrying ids that named
+     * different rows before the restore, and foreign keys are on.
+     *
+     * Refusing them was built and reverted. The refusal reaches the caller as an exception, no
+     * caller on any of these write paths catches it, and injecting that throw into the recurrence
+     * job on an emulator ended the run with FATAL EXCEPTION on the AsyncTask that JobIntentService
+     * dispatches on, with the process gone; the same trigger without it left the process running.
+     * Every component here shares that one process, so the restore dies with it, half written.
+     * Holding the writes instead blocks whichever thread they arrived on, for as long as the
+     * backup is large.
+     *
+     * Closing this properly means never pointing the live path at a database an import is still
+     * filling, which is an import that builds its database elsewhere and swaps it in at the end.
      */
     public void importDatabase(@NonNull File temporaryFolder, @NonNull File databaseFolder) throws ImportException {
         File temporary = createBackupCopyOfCurrentDatabase(databaseFolder);
@@ -67,12 +89,20 @@ public abstract class AbstractBackupImporter {
             // given fresh ids in the order they were read, so the remembered ones now name other
             // categories. Forgetting them leaves every category showing, where the list starts.
             PreferenceManager.setCollapsedCategories(Collections.<String>emptySet());
-        } catch (ImportException e) {
+        } catch (ImportException | RuntimeException e) {
+            // RuntimeException as well. JSONDatabaseImporter converts IOException and
+            // JSONException and catches nothing else, so anything unchecked the provider raises
+            // comes straight through, a full disk being the one to expect. Every one of those
+            // used to skip the rollback and leave the half written import live
             restoreBackupCopyOfDatabase(databaseFolder, temporary);
             throw e;
-        } finally {
-            FileUtils.deleteQuietly(temporary);
         }
+        // deliberately not in a finally. The rollback above deletes the half imported database
+        // before it renames the backup back, so a rollback that throws has already destroyed one
+        // copy, and a finally here would then delete the only one left. Reached only when the
+        // import succeeded, where the copy is the replaced database and is not wanted, or when
+        // the rollback succeeded, where the rename has already consumed it
+        FileUtils.deleteQuietly(temporary);
     }
 
     protected abstract void importDatabase(@NonNull File temporaryFolder) throws ImportException;
@@ -107,13 +137,24 @@ public abstract class AbstractBackupImporter {
         SyncContentProvider.notifyDatabaseIsChanged(mContext);
     }
 
+    /**
+     * Both renames happen with the shared helper closed and no DataContentProvider write in
+     * flight. Moving the database while a connection is open on it strands that connection's
+     * journal at the old path and refuses its next write, and moving it while a transaction is
+     * open is worse, the transaction commits into the file this method is putting aside.
+     */
     private File createBackupCopyOfCurrentDatabase(@NonNull File databaseFolder) throws ImportException {
         File temporary = new File(databaseFolder, TEMP_BACKUP_FILE);
         if (temporary.exists()) {
             FileUtils.deleteQuietly(temporary);
         }
         File database = new File(databaseFolder, SQLDatabaseImporter.DATABASE_NAME);
-        if (database.exists() && !database.renameTo(temporary)) {
+        if (!database.exists()) {
+            return temporary;
+        }
+        boolean[] renamed = new boolean[1];
+        DataContentProvider.replaceDatabaseFile(mContext, () -> renamed[0] = database.renameTo(temporary));
+        if (!renamed[0]) {
             throw new ImportException("Cannot backup the old database file");
         }
         return temporary;
@@ -121,10 +162,14 @@ public abstract class AbstractBackupImporter {
 
     private void restoreBackupCopyOfDatabase(@NonNull File databaseFolder, @NonNull File backup) throws ImportException {
         File database = new File(databaseFolder, SQLDatabaseImporter.DATABASE_NAME);
-        if (database.exists()) {
-            FileUtils.deleteQuietly(database);
-        }
-        if (backup.exists() && !backup.renameTo(database)) {
+        boolean[] restored = new boolean[1];
+        DataContentProvider.replaceDatabaseFile(mContext, () -> {
+            if (database.exists()) {
+                FileUtils.deleteQuietly(database);
+            }
+            restored[0] = !backup.exists() || backup.renameTo(database);
+        });
+        if (!restored[0]) {
             throw new ImportException("Rollback failed, all data is lost");
         }
     }

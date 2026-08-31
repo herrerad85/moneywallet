@@ -19,6 +19,7 @@
 
 package com.oriondev.moneywallet.storage.database;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -63,6 +64,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * This class implements the default SQLite helper class of the Android Framework.
@@ -79,9 +83,183 @@ import java.util.UUID;
 
     private final Context mContext;
 
+    @SuppressLint("StaticFieldLeak")
+    private static SQLDatabase sShared;
+
+    /**
+     * The one helper both content providers use. Two helpers over the same file are two connection
+     * pools, so a transaction opened through one of them would not enclose a write made through
+     * the other, which is the whole point of having a transaction.
+     *
+     * The application context, and not the caller's. A service reaches resetShared below, and this
+     * field outlives any service, so holding that context would keep a destroyed one alive.
+     *
+     * The context reaches three things here. getDatabasePath, through SQLiteOpenHelper, and
+     * getExternalFilesDir at the attachment folder, which answer the same on the application
+     * context as on a service or a provider. And getString, through the system category names
+     * seeded by onCreate and onUpgrade, which is a resource lookup and so the one place the
+     * choice of context could read differently. It does not here, a provider's own context is
+     * already the application context, so this normalization changes nothing about which strings
+     * a fresh database is seeded with.
+     *
+     * That normalization is also what a test has to defeat to reach this at all. ContextWrapper
+     * answers getApplicationContext from the context it wraps, so a wrapper redirecting the
+     * database and the attachment folder is discarded on this line and the real ledger opens
+     * instead. SQLDatabaseTest's own wrapper overrides getApplicationContext to return itself for
+     * that reason, and its setUp asserts which file this actually opened, which is what catches
+     * that override being dropped before a case reaches the real ledger.
+     */
+    /*package-local*/ static synchronized SQLDatabase getShared(Context context) {
+        if (sShared == null) {
+            sShared = new SQLDatabase(context.getApplicationContext());
+        }
+        return sShared;
+    }
+
+    /**
+     * Closes the shared helper and opens a new one, for after a restore has replaced the file on
+     * disk. Both providers reach this through their own notifyDatabaseIsChanged, and calling it
+     * twice in a row is what AbstractBackupImporter does, so it has to be safe to repeat. It is:
+     * the first call leaves a helper that has opened nothing, since SQLiteOpenHelper opens on
+     * first use, and the second discards it at no cost.
+     *
+     * Why the close has to happen. A restore renames the database aside and writes a new one at
+     * the old path. A write that STARTS after that rename is refused, checked on the emulator and
+     * not reasoned about. It fails with "attempt to write a readonly database", the row does not
+     * land, and the journal is left behind at the path the new database is about to take over.
+     * Closing releases that connection and truncates the journal it left.
+     *
+     * Why no write may be in flight while it happens. A transaction belongs to the SQLiteDatabase,
+     * and every write method here asks the helper for it again per statement, nine times in
+     * deleteWallet alone. Closing under one would send the rest of that write to a newly opened
+     * second connection with no transaction on it, so the first half rolls back and the second
+     * half is already committed. That is what the lock makes unreachable, and it is the only
+     * thing the lock makes unreachable.
+     *
+     * What it does NOT cover, stated because it is easy to read the lock as wider than it is.
+     * SyncContentProvider's own writes do not come through inSharedTransaction, so they are
+     * outside the lock, and the restore's own row inserts are exactly those writes.
+     */
+    /*package-local*/ static void resetShared(Context context) {
+        resetShared(context, null);
+    }
+
+    /**
+     * The same swap, with the caller's own work run in the slot where the file is closed. That
+     * slot is what a restore needs. Renaming the database aside outside it leaves a window where
+     * a transaction opens on the old file and commits into it, since SQLite tests for a moved
+     * database when a transaction opens and not per statement.
+     *
+     * The runnable runs under the write lock, so no DataContentProvider write is in flight, and
+     * under the class monitor, so a thread inside getShared cannot be handed the closed helper
+     * while the file is moving. Those are the only two it excludes. SyncContentProvider's writes
+     * and every query take no lock at all, so they can be running while the file moves. The
+     * runnable must not touch the database or call back into this class, and it must be short,
+     * since every thread that enters getShared blocks behind it.
+     */
+    /*package-local*/ static void resetShared(Context context, Runnable whileClosed) {
+        if (sSwapLock.getReadHoldCount() > 0) {
+            // this thread is inside inSharedTransaction and a read hold cannot be upgraded, so
+            // asking for the write lock here would wait on itself forever, holding an open
+            // transaction and wedging every later write and every later reset in the process.
+            // inTransaction refuses its own version of this mistake for the same reason
+            throw new IllegalStateException("resetShared called from inside a transaction");
+        }
+        sSwapLock.writeLock().lock();
+        try {
+            synchronized (SQLDatabase.class) {
+                try {
+                    if (sShared != null) {
+                        sShared.close();
+                    }
+                    if (whileClosed != null) {
+                        whileClosed.run();
+                    }
+                } finally {
+                    // the close is inside the try for the same reason the finally is here at all.
+                    // Either of them throwing would otherwise leave sShared naming a helper that
+                    // is closed or half closed, and every later getShared would hand that out for
+                    // the rest of the process
+                    sShared = new SQLDatabase(context.getApplicationContext());
+                }
+            }
+        } finally {
+            sSwapLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Held for the whole of one provider write, and exclusively while the shared helper is
+     * swapped. Resolving the helper and running the transaction have to be under the same hold,
+     * or a swap landing between the two would run the transaction on a helper that has just been
+     * closed.
+     */
+    private static final ReentrantReadWriteLock sSwapLock = new ReentrantReadWriteLock();
+
+    /**
+     * Resolves the shared helper and runs the body inside one transaction on it. This is how
+     * DataContentProvider starts every write. SyncContentProvider does not come through here, its
+     * three writes are one statement each, which SQLite already runs atomically, so they take no
+     * transaction and no lock.
+     */
+    /*package-local*/ static <T> T inSharedTransaction(Context context, Function<SQLDatabase, T> body) {
+        sSwapLock.readLock().lock();
+        try {
+            SQLDatabase database = getShared(context);
+            return database.inTransaction(() -> body.apply(database));
+        } finally {
+            sSwapLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Attachment file names removed by the body of the transaction currently running on this
+     * thread. Null when this thread is not inside one.
+     */
+    private final ThreadLocal<List<String>> mPendingAttachmentFiles = new ThreadLocal<>();
+
     /*package-local*/ SQLDatabase(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
         mContext = context;
+    }
+
+    /**
+     * Runs a body inside one SQLite transaction and returns what it returned.
+     *
+     * Attachment files the body removed are deleted only once the transaction has committed. A
+     * rollback would otherwise restore rows that point at files already gone from the volume.
+     *
+     * Not reentrant, on purpose. SQLite would reference count the nesting, but Android rolls the
+     * whole transaction back when an inner frame ends without being marked successful and it does
+     * that silently, with no exception at the outer endTransaction. An outer body that caught the
+     * inner failure and carried on would leave here believing it had committed, and would delete
+     * the attachment files of rows the rollback had just restored. Nothing nests today. Whoever
+     * writes the first nested caller has to answer that before this throw comes out.
+     */
+    /*package-local*/ <T> T inTransaction(Supplier<T> body) {
+        if (mPendingAttachmentFiles.get() != null) {
+            throw new IllegalStateException("inTransaction is not reentrant");
+        }
+        SQLiteDatabase database = getWritableDatabase();
+        mPendingAttachmentFiles.set(new ArrayList<>());
+        T result;
+        try {
+            database.beginTransaction();
+            try {
+                result = body.get();
+                database.setTransactionSuccessful();
+            } finally {
+                database.endTransaction();
+            }
+        } catch (RuntimeException | Error e) {
+            // nothing committed, so the names collected on the way here name live rows
+            mPendingAttachmentFiles.remove();
+            throw e;
+        }
+        List<String> pending = mPendingAttachmentFiles.get();
+        mPendingAttachmentFiles.remove();
+        deleteAttachmentFiles(pending);
+        return result;
     }
 
     @Override
@@ -3243,8 +3421,9 @@ import java.util.UUID;
                 // CONFLICT_IGNORE covers the composite key and nothing else, a foreign key is
                 // still enforced and still throws, which happens when the category was deleted
                 // while the editor was open. Dropping that one id leaves the rest of the budget
-                // written, where letting it out would abort the save half way through and take
-                // the categories already restored above with it.
+                // written. Letting it out now rolls the whole save back instead, since both
+                // callers run inside the provider's transaction, so the user would lose the edit
+                // over a category that is already gone.
                 continue;
             }
             if (newId == -1L) {
@@ -5028,20 +5207,42 @@ import java.util.UUID;
         if (attachments.isEmpty()) {
             return;
         }
-        // resolved once, and only once there is something to delete, since it touches the volume.
         // A row goes whether or not its file can be reached: the row is what puts the file into
         // every backup, so keeping the two in step by leaving the row would leave the problem this
         // exists to fix
-        File folder = getAttachmentFolder();
+        List<String> removed = new ArrayList<>();
         for (Map.Entry<Long, String> attachment : attachments.entrySet()) {
             if (isLinkedOutside(attachment.getKey(), linkTable, attachmentColumn, linkSelection,
                     selectionArgs)) {
                 continue;
             }
             deleteAttachment(attachment.getKey());
-            if (folder != null) {
-                deleteAttachmentFile(folder, attachment.getValue());
-            }
+            removed.add(attachment.getValue());
+        }
+        List<String> pending = mPendingAttachmentFiles.get();
+        if (pending != null) {
+            // inside a transaction, so the rows are not committed yet and the files have to wait
+            // for them. inTransaction deletes these once the commit has gone through
+            pending.addAll(removed);
+        } else {
+            deleteAttachmentFiles(removed);
+        }
+    }
+
+    /**
+     * Removes the files behind attachment rows that have already gone. Resolving the folder
+     * touches the volume, so it happens only when there is something to delete.
+     */
+    private void deleteAttachmentFiles(List<String> fileNames) {
+        if (fileNames == null || fileNames.isEmpty()) {
+            return;
+        }
+        File folder = getAttachmentFolder();
+        if (folder == null) {
+            return;
+        }
+        for (String fileName : fileNames) {
+            deleteAttachmentFile(folder, fileName);
         }
     }
 

@@ -124,12 +124,18 @@ public class SyncContentProvider extends ContentProvider {
         return matcher;
     }
 
-    private SQLDatabase mDatabase;
+    /**
+     * The same helper DataContentProvider uses, read on every use instead of held in a field.
+     * One helper means one connection on one file, so the two providers cannot end up with a
+     * transaction on one and a write on the other. A field would be a closed handle after a
+     * restore, since resetShared closes what it replaces.
+     */
+    private SQLDatabase db() {
+        return SQLDatabase.getShared(getContext());
+    }
 
     @Override
     public boolean onCreate() {
-        Context context = getContext();
-        mDatabase = new SQLDatabase(context);
         return true;
     }
 
@@ -193,7 +199,7 @@ public class SyncContentProvider extends ContentProvider {
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         String table = getTable(uri);
         if (table != null) {
-            return mDatabase.getReadableDatabase().query(table, projection, selection, selectionArgs, null, null, sortOrder);
+            return db().getReadableDatabase().query(table, projection, selection, selectionArgs, null, null, sortOrder);
         }
         return null;
     }
@@ -209,7 +215,7 @@ public class SyncContentProvider extends ContentProvider {
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
         String table = getTable(uri);
         if (table != null) {
-            long id = mDatabase.getWritableDatabase().insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+            long id = db().getWritableDatabase().insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_REPLACE);
             return ContentUris.withAppendedId(uri, id);
         }
         return null;
@@ -219,7 +225,7 @@ public class SyncContentProvider extends ContentProvider {
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
         String table = getTable(uri);
         if (table != null) {
-            return mDatabase.getWritableDatabase().delete(table, selection, selectionArgs);
+            return db().getWritableDatabase().delete(table, selection, selectionArgs);
         }
         return 0;
     }
@@ -228,7 +234,7 @@ public class SyncContentProvider extends ContentProvider {
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
         String table = getTable(uri);
         if (table != null) {
-            return mDatabase.getWritableDatabase().update(table, values, selection, selectionArgs);
+            return db().getWritableDatabase().update(table, values, selection, selectionArgs);
         }
         return 0;
     }
@@ -240,10 +246,7 @@ public class SyncContentProvider extends ContentProvider {
         if (client != null) {
             ContentProvider contentProvider = client.getLocalContentProvider();
             if (contentProvider instanceof SyncContentProvider) {
-                if (((SyncContentProvider) contentProvider).mDatabase != null) {
-                    ((SyncContentProvider) contentProvider).mDatabase.close();
-                }
-                ((SyncContentProvider) contentProvider).mDatabase = new SQLDatabase(context);
+                SQLDatabase.resetShared(context);
             }
             client.close();
         }
