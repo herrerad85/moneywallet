@@ -158,7 +158,7 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
     }
 
     private void applySystemBarInsets() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             return;
         }
         final View content = findViewById(android.R.id.content);
@@ -264,7 +264,7 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
      * painted on every screen, that one included.
      */
     protected void onThemeStatusBarScrim(ITheme theme) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             View scrim = getStatusBarScrim();
             if (scrim != null) {
                 scrim.setBackgroundColor(theme.getColorPrimaryDark());

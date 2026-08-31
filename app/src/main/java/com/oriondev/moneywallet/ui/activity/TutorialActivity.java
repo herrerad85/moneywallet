@@ -74,7 +74,7 @@ public class TutorialActivity extends AppIntro2 {
     // the Next and Done actions sits under the navigation bar. Pad the content with the system bar and
     // display cutout insets so those controls stay reachable.
     private void applySystemBarInsets() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             return;
         }
         final View content = findViewById(android.R.id.content);
