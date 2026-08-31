@@ -36,7 +36,10 @@ import com.oriondev.moneywallet.BuildConfig;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.widget.WalletWidgetProvider;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
 
 /**
  * Created by andrea on 17/01/18.
@@ -608,11 +611,8 @@ public class DataContentProvider extends ContentProvider {
         Uri objectUri = SQLDatabase.inSharedTransaction(getContext(),
                 database -> insertInTransaction(database, uri, contentValues));
         if (objectUri != null) {
-            PreferenceManager.setLastTimeDataIsChanged(System.currentTimeMillis());
-            ContentResolver contentResolver = getContentResolver();
-            if (contentResolver != null) {
-                contentResolver.notifyChange(objectUri, null);
-            }
+            // the list, not the row, for the import path. See notifyObservers
+            notifyObservers(objectUri, uri);
         }
         return objectUri;
     }
@@ -691,7 +691,13 @@ public class DataContentProvider extends ContentProvider {
         // it writes a preference and broadcasts to every open screen and neither of those can be
         // rolled back. Reading the preference after the delete is the same read, nothing in the
         // database is what it answers from. Every wallet delete still passes through this point,
-        // which is the reason it lives in the provider and not in the screen that starts one
+        // which is the reason it lives in the provider and not in the screen that starts one.
+        //
+        // Being out here no longer means the delete has committed. A delete made inside
+        // runInOneTransaction commits only when that import does, so an import that deleted the
+        // wallet in use and then failed leaves the wallet back in the ledger with the preference
+        // already moved off it. Nothing deletes inside one today, and whoever writes the first
+        // importer that does has to answer this
         Context context = getContext();
         if (result > 0 && context != null && mUriMatcher.match(uri) == WALLET_ITEM
                 && ContentUris.parseId(uri) == PreferenceManager.getCurrentWallet()) {
@@ -699,10 +705,8 @@ public class DataContentProvider extends ContentProvider {
             // filter reaches keeps filtering on it, so all of them come back with nothing
             PreferenceManager.setCurrentWallet(context, PreferenceManager.TOTAL_WALLET_ID);
         }
-        ContentResolver contentResolver = getContentResolver();
-        if (contentResolver != null && notifyUri[0] != null) {
-            PreferenceManager.setLastTimeDataIsChanged(System.currentTimeMillis());
-            contentResolver.notifyChange(notifyUri[0], null);
+        if (notifyUri[0] != null) {
+            notifyObservers(notifyUri[0], notifyUri[0]);
         }
         return result;
     }
@@ -783,11 +787,7 @@ public class DataContentProvider extends ContentProvider {
         int result = SQLDatabase.inSharedTransaction(getContext(),
                 database -> updateInTransaction(database, uri, values));
         if (result > 0) {
-            PreferenceManager.setLastTimeDataIsChanged(System.currentTimeMillis());
-            ContentResolver contentResolver = getContentResolver();
-            if (contentResolver != null) {
-                contentResolver.notifyChange(uri, null);
-            }
+            notifyObservers(uri, uri);
         }
         return result;
     }
@@ -847,6 +847,115 @@ public class DataContentProvider extends ContentProvider {
     private ContentResolver getContentResolver() {
         Context context = getContext();
         return context != null ? context.getContentResolver() : null;
+    }
+
+    /**
+     * The uris a write on this thread would have announced, while an import holds one transaction
+     * open around it. Null when this thread is not inside one, which is every write outside an
+     * import and so the only path that announces anything the moment it is made.
+     */
+    private static final ThreadLocal<Set<Uri>> sDeferredNotifications = new ThreadLocal<>();
+
+    /**
+     * Tells the observers about a write, or remembers it for {@link #runInOneTransaction} to tell
+     * them once the import it is running has committed. Announcing each row as it goes in would
+     * name rows that are not committed yet, and a failed import rolls every one of them back with
+     * nothing to take the announcements back.
+     *
+     * An import remembers whatToRemember and not the row it wrote. Insert passes the list it
+     * inserted into, so a file of a hundred thousand rows holds one uri instead of a hundred
+     * thousand and fires one announcement at the end instead of a hundred thousand. Nothing is
+     * lost by it, an observer registered on a row below that list is told when the list is
+     * announced, checked on an emulator by anImportAnnouncesTheListAndReachesTheRowsUnderIt and
+     * not reasoned about. Delete and update pass their own uri unchanged, and update's is a row
+     * uri, so an importer that updates rows would go back to one entry each. None does today.
+     */
+    private void notifyObservers(Uri uri, Uri whatToRemember) {
+        Set<Uri> deferred = sDeferredNotifications.get();
+        if (deferred != null) {
+            deferred.add(whatToRemember);
+            return;
+        }
+        PreferenceManager.setLastTimeDataIsChanged(System.currentTimeMillis());
+        ContentResolver contentResolver = getContentResolver();
+        if (contentResolver != null) {
+            contentResolver.notifyChange(uri, null);
+        }
+    }
+
+    /**
+     * Runs an import inside one transaction, so a row it refuses part way through takes every row
+     * before it back out. Each row still goes in through a provider, and each of those opens a
+     * transaction of its own; SQLDatabase runs those inline once one is already open on the
+     * thread, so there is one transaction and one commit.
+     *
+     * This covers SyncContentProvider's writes as well as this provider's. Both resolve the same
+     * shared helper, so a transaction opened on it here encloses whatever either of them writes on
+     * this thread. Of the two only this provider announces anything, and those announcements are
+     * held back until the commit. The one thing that is not held back is the preference a wallet
+     * delete writes, which is out of the database entirely and is described where it happens.
+     *
+     * Joining is decided from what this method itself left on the thread, so it catches another
+     * call to this method and nothing else. Calling it from inside a provider write, or from
+     * inside a body SQLDatabase is already running, would not join and would announce while that
+     * transaction is still open. It is the entry point an importer starts from, not something to
+     * reach for once a write is already running.
+     *
+     * What it costs, and it is more than it looks. The database is opened without write ahead
+     * logging, so SQLite hands the whole app one connection, and an open transaction holds it.
+     * Every other thread that touches the ledger waits for the import to finish, reads as well as
+     * writes, and some of those writes are made on the main thread, where waiting is a frozen
+     * screen. Keep what runs in here down to the writes themselves and keep the caller somewhere
+     * that can wait, which the import service and the legacy upgrade service both are.
+     *
+     * Public, and here, because SQLDatabase is package local and the importers sit in a sub
+     * package, so they cannot name it.
+     */
+    public static <T> T runInOneTransaction(Context context, Callable<T> body) throws Exception {
+        if (sDeferredNotifications.get() != null) {
+            // already inside one on this thread, so join it the way SQLDatabase.inTransaction
+            // does. Opening a second would replace the outer's remembered uris with its own and
+            // then announce them while the outer transaction is still open and can still roll back
+            return body.call();
+        }
+        Set<Uri> deferred = new LinkedHashSet<>();
+        sDeferredNotifications.set(deferred);
+        T result;
+        try {
+            result = SQLDatabase.inSharedTransaction(context, database -> {
+                try {
+                    return body.call();
+                } catch (RuntimeException e) {
+                    throw e;
+                } catch (Exception e) {
+                    // the transaction body cannot declare a checked exception, and the importers
+                    // all throw one. Carried out and rethrown below so the caller still sees the
+                    // failure it knows how to report, and not a wrapper around it
+                    throw new CheckedFailure(e);
+                }
+            });
+        } catch (CheckedFailure e) {
+            throw (Exception) e.getCause();
+        } finally {
+            sDeferredNotifications.remove();
+        }
+        // reached only when the transaction committed, so every uri here names rows that are
+        // really in the ledger
+        ContentResolver contentResolver = context.getContentResolver();
+        if (!deferred.isEmpty()) {
+            PreferenceManager.setLastTimeDataIsChanged(System.currentTimeMillis());
+            for (Uri uri : deferred) {
+                contentResolver.notifyChange(uri, null);
+            }
+        }
+        return result;
+    }
+
+    private static class CheckedFailure extends RuntimeException {
+
+        private CheckedFailure(Exception cause) {
+            super(cause);
+        }
     }
 
     /**

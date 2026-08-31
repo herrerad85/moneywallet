@@ -162,7 +162,8 @@ import java.util.function.Supplier;
             // this thread is inside inSharedTransaction and a read hold cannot be upgraded, so
             // asking for the write lock here would wait on itself forever, holding an open
             // transaction and wedging every later write and every later reset in the process.
-            // inTransaction refuses its own version of this mistake for the same reason
+            // An import holds that read hold for all of its rows, so this is further within reach
+            // than it was when the longest hold was one provider write
             throw new IllegalStateException("resetShared called from inside a transaction");
         }
         sSwapLock.writeLock().lock();
@@ -229,16 +230,28 @@ import java.util.function.Supplier;
      * Attachment files the body removed are deleted only once the transaction has committed. A
      * rollback would otherwise restore rows that point at files already gone from the volume.
      *
-     * Not reentrant, on purpose. SQLite would reference count the nesting, but Android rolls the
-     * whole transaction back when an inner frame ends without being marked successful and it does
-     * that silently, with no exception at the outer endTransaction. An outer body that caught the
-     * inner failure and carried on would leave here believing it had committed, and would delete
-     * the attachment files of rows the rollback had just restored. Nothing nests today. Whoever
-     * writes the first nested caller has to answer that before this throw comes out.
+     * A body already inside one on this thread runs straight through instead of opening a second.
+     * That is what lets an import hold one transaction across every row while each row still goes
+     * in through the provider, which opens one of these per write. Joining and not nesting is the
+     * point. SQLite would reference count a nested pair, but Android rolls the whole transaction
+     * back when an inner frame ends without being marked successful, silently, with no exception
+     * at the outer endTransaction. So an outer body that caught an inner failure and carried on
+     * would leave here believing it had committed. Running inline never opens an inner frame, so
+     * that cannot happen.
+     *
+     * What an outer body still has to answer, since the throw that used to stand here made the
+     * question moot. A provider write is several statements, nine of them in deleteWallet, and
+     * one that fails part way now leaves its earlier statements in the outer transaction. An
+     * outer body that swallows that failure and returns normally commits a half applied write.
+     * Nothing does today, and the first caller that swallows a failure from a DataContentProvider
+     * write has to answer it.
+     *
+     * The attachment names an inline body collects belong to the outer transaction and are
+     * deleted when that one commits, which is the same rule one level up.
      */
     /*package-local*/ <T> T inTransaction(Supplier<T> body) {
         if (mPendingAttachmentFiles.get() != null) {
-            throw new IllegalStateException("inTransaction is not reentrant");
+            return body.get();
         }
         SQLiteDatabase database = getWritableDatabase();
         mPendingAttachmentFiles.set(new ArrayList<>());

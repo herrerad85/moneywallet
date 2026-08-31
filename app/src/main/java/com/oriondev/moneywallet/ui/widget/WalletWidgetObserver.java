@@ -48,9 +48,10 @@ import com.oriondev.moneywallet.storage.database.DataContentProvider;
 public class WalletWidgetObserver extends ContentObserver {
 
     /**
-     * Long enough to fold an import into one redraw and short enough that a save the user just
-     * made looks immediate. A CSV import writes one row at a time and the provider notifies on
-     * each, so without this a file of five thousand rows would ask for five thousand redraws.
+     * Long enough to fold a run of writes into one redraw and short enough that a save the user
+     * just made looks immediate. An import is no longer the case that needs it, since those now
+     * announce once per list after their transaction commits. Anything that writes a row at a
+     * time still is, a wallet delete taking its transactions with it being the one to picture.
      */
     private static final long COALESCE_DELAY_MILLIS = 250L;
 
