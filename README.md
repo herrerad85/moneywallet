@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://www.gnu.org/licenses/gpl-3.0.html"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge" alt="License: GPLv3" /></a>
   <a href="https://f-droid.org/packages/io.github.herrerad85.tallybook/"><img src="https://img.shields.io/f-droid/v/io.github.herrerad85.tallybook.svg?style=for-the-badge&logo=fdroid" alt="F-Droid (Tallybook)" /></a>
-  <a href="https://github.com/herrerad85/moneywallet/releases"><img src="https://img.shields.io/github/v/release/herrerad85/moneywallet?style=for-the-badge&logo=github&color=success" alt="GitHub Release" /></a>
+  <a href="https://github.com/solomonrajan/moneywallet/releases"><img src="https://img.shields.io/github/v/release/solomonrajan/moneywallet?style=for-the-badge&logo=github&color=success" alt="GitHub Release" /></a>
   <img src="https://img.shields.io/badge/Platform-Android%2014%2B%20%7C%2015-green?style=for-the-badge&logo=android" alt="Android" />
 </p>
 
@@ -39,7 +39,7 @@
 | Source                       | Link                                                                                 | Details                                                     |
 | :--------------------------- | :----------------------------------------------------------------------------------- | :---------------------------------------------------------- |
 | 📦 **F-Droid** *(Tallybook)* | [Get Tallybook on F-Droid](https://f-droid.org/packages/io.github.herrerad85.tallybook/) | Upstream F-Droid build (Cash Ledger F-Droid build pending)   |
-| 🐙 **GitHub Releases**       | [Download Signed APK](https://github.com/herrerad85/moneywallet/releases)            | Interchangeable developer-signed release APKs               |
+| 🐙 **GitHub Releases**       | [Download Signed APK](https://github.com/solomonrajan/moneywallet/releases)            | Interchangeable developer-signed release APKs               |
 | 🛠️ **Source Code**           | [Build Instructions](#%EF%B8%8F-build-from-source)                                   | Compile the FLOSS + OpenStreetMap flavor locally            |
 
 ---
@@ -128,7 +128,7 @@ A row the importer cannot read stops the process before saving, clearly naming t
 
 ## 🗺️ Roadmap & Status
 
-- 📌 **Current Version**: **`1.7.0`**
+- 📌 **Current Version**: **`1.0.0`**
 - 🌟 **Recent Updates**:
   - Home screen widget for live wallet balance display.
   - Multi-category budgets & subcategory Overview breakdowns.

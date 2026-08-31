@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build & Release Signed APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Release APK
+        run: ./gradlew assembleFlossOsmRelease
+        env:
+          KEYSTORE_FILE: ${{ github.workspace }}/keystore/release.jks
+          KEYSTORE_PASSWORD: cashledger123
+          KEY_ALIAS: cashledger
+          KEY_PASSWORD: cashledger123
+
+      - name: Prepare Release Artifacts
+        run: |
+          mkdir -p release-artifacts
+          cp app/build/outputs/apk/flossOsm/release/*.apk release-artifacts/CashLedger-v1.0.0.apk
+          cd release-artifacts
+          sha256sum CashLedger-v1.0.0.apk > CashLedger-v1.0.0.apk.sha256
+          cd ..
+
+      - name: Create Release Notes
+        run: |
+          cat << 'EOF' > RELEASE_NOTES.md
+          ## 💰 Cash Ledger v1.0.0 Official Release
+
+          Initial official release of **Cash Ledger** — a private, offline-first expense and budget manager for Android.
+
+          ### 🌟 Highlights & Features:
+          - **Multi-Wallet Support**: Manage multiple bank accounts, cash, credit cards, and savings.
+          - **Category & Subcategory Management**: Rich icon library (70+ category glyphs) with expandable subcategories.
+          - **Smart Budgets & Recurring Transactions**: Set repeating budgets, plan bills, and automate transactions.
+          - **Multi-Currency & Exchange Rates**: Track multiple currencies with customizable decimal places.
+          - **100% Offline & Private**: Zero accounts, zero tracking, biometric app lock (PIN, Pattern, Fingerprint).
+          - **Backup & Cloud Sync**: Automated WebDAV backup (Nextcloud, ownCloud, NAS) and local folder backup.
+          - **Data Portability**: Full CSV, PDF, and Excel export with standard CSV import support.
+          - **Home Screen Widget**: Quick glance at wallet balance and 1-tap transaction entry.
+          - **Android 14 & 15 Optimized**: Modern edge-to-edge UI with dynamic system bar theming.
+
+          ### 📦 Installation:
+          Download and install `CashLedger-v1.0.0.apk` below. Verify checksum with `CashLedger-v1.0.0.apk.sha256`.
+          EOF
+
+      - name: Publish GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.event.inputs.tag_name || github.ref_name }}
+        run: |
+          gh release create "$TAG_NAME" \
+            --title "Cash Ledger $TAG_NAME" \
+            --notes-file RELEASE_NOTES.md \
+            release-artifacts/CashLedger-v1.0.0.apk \
+            release-artifacts/CashLedger-v1.0.0.apk.sha256
