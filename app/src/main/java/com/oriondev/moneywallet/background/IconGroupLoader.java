@@ -45,7 +45,7 @@ import java.util.List;
  *
  * Every icon is either original artwork or an original disc with a glyph from a permissively
  * licensed library composed on top, so a new one is a vector drawable in res/drawable named by an
- * entry in that file. The libraries and their licenses are in THIRD_PARTY_NOTICES.md. Nothing in
+ * entry in that file. The libraries and their licenses are in docs/THIRD_PARTY_NOTICES.md. Nothing in
  * the build checks that a name in the file resolves, so run the instrumented IconGroupLoaderTest
  * on a device after adding one.
  */

@@ -1,7 +1,7 @@
 # 💰 Cash Ledger
 
 <p align="center">
-  <img src="pictures/showcase.png" alt="Cash Ledger Showcase" width="100%" />
+  <img src="docs/pictures/showcase.png" alt="Cash Ledger Showcase" width="100%" />
 </p>
 
 <p align="center">
@@ -65,7 +65,7 @@
 > **Cash Ledger is a separate app, not an in-place update to MoneyWallet.**  
 > It uses its own application ID (`io.github.solomonrajan.cashledger`), allowing it to install side-by-side with original MoneyWallet without overwriting existing data.
 
-Follow the verified step-by-step guide in [MIGRATION.md](MIGRATION.md) to transfer your database seamlessly:
+Follow the verified step-by-step guide in [docs/MIGRATION.md](docs/MIGRATION.md) to transfer your database seamlessly:
 
 | Step  | Action                | Description                                                                  |
 | :---: | :-------------------- | :--------------------------------------------------------------------------- |
@@ -151,7 +151,7 @@ A row the importer cannot read stops the process before saving, clearly naming t
 | **Lucide Icons**             | [ISC](https://github.com/lucide-icons/lucide)             | [Lucide](https://lucide.dev)                                                                                                                      |
 | **Bootstrap Icons**          | [MIT](https://github.com/twbs/icons)                      | [Bootstrap Icons](https://icons.getbootstrap.com)                                                                                                 |
 
-> Complete license texts and attributions can be found in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [LICENSE.md](LICENSE.md).
+> Complete license texts and attributions can be found in [THIRD_PARTY_NOTICES.md](docs/THIRD_PARTY_NOTICES.md) and [LICENSE.md](LICENSE.md).
 
 ---
 
@@ -200,6 +200,6 @@ Heartfelt thanks to the community members who translated and localized the app a
 | Resource                                                                 | Description                                                           |
 | :----------------------------------------------------------------------- | :-------------------------------------------------------------------- |
 | 📖 [**User FAQ**](docs/FAQ.md)                                           | Answers to common questions, navigation guides, and tips              |
-| 🔄 [**Migration Guide**](MIGRATION.md)                                   | Step-by-step instructions to transfer data from MoneyWallet           |
-| 🛡️ [**Privacy Policy**](PRIVACY.md)                                      | Full details on offline storage, network permissions, and data safety |
-| 🐛 [**Issue Tracker**](https://github.com/herrerad85/moneywallet/issues) | Report bugs or submit feature requests                                |
+| 🔄 [**Migration Guide**](docs/MIGRATION.md)                             | Step-by-step instructions to transfer data from MoneyWallet           |
+| 🛡️ [**Privacy Policy**](docs/PRIVACY.md)                                | Full details on offline storage, network permissions, and data safety |
+| 🐛 [**Issue Tracker**](https://github.com/solomonrajan/moneywallet/issues) | Report bugs or submit feature requests                                |

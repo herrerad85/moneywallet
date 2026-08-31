@@ -1,8 +1,31 @@
+# Built application files
+*.apk
+*.aar
+*.aab
+
+# Gradle files
+.gradle/
+build/
+app/build/
+
+# Local configuration file (sdk location, etc)
+local.properties
+
+# Android Studio / IntelliJ IDEA
 *.iml
-.gradle
-/local.properties
-/.idea
+.idea/
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# OS-specific files
 .DS_Store
-/build
-/captures
-.externalNativeBuild
+Thumbs.db
+
+# Log files & profiler outputs
+*.log
+*.hprof
+
+# Release artifacts directory
+release-artifacts/

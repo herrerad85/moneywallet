@@ -1,3 +1,3 @@
-First Cash Ledger release, a maintained fork of MoneyWallet shipped as a separate app with its own application id, so it installs side by side. Move your data across with a manual backup and restore (see MIGRATION.md).
+First Cash Ledger release, a maintained fork of MoneyWallet shipped as a separate app with its own application id, so it installs side by side. Move your data across with a manual backup and restore (see docs/MIGRATION.md).
 
 Also in this release: Android 14 and 15 compatibility with a startup crash fix, scoped-storage import and export fixes, a local folder backup option for file sync tools, Android 15 edge-to-edge UI polish, and original Cash Ledger artwork.
