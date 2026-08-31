@@ -13,7 +13,7 @@ Tallybook is on F-Droid: [f-droid.org/packages/io.github.herrerad85.tallybook](h
 
 Signed APKs are also attached to each [GitHub release](https://github.com/herrerad85/moneywallet/releases). The F-Droid build is reproducible and carries the developer signature, so the two are interchangeable.
 
-**Tallybook is a maintained fork of [MoneyWallet](https://github.com/AndreAle94/moneywallet)** by AndreAle94, a GPL-licensed Android expense manager whose last release was in 2021. This fork modernizes the open-source build, fixes the startup crash that stopped the app launching on recent Android, and continues maintenance under a new name and application id.
+This repository is a fork of [herrerad85/moneywallet](https://github.com/herrerad85/moneywallet), which is a maintained fork of [MoneyWallet](https://github.com/AndreAle94/moneywallet) by AndreAle94, a GPL-licensed Android expense manager whose last release was in 2021. This fork modernizes the open-source build, fixes the startup crash that stopped the app launching on recent Android, and continues maintenance under a new name and application id.
 
 > **Tallybook is a separate app, not an automatic update to MoneyWallet.** It uses a different application id (`io.github.herrerad85.tallybook`), so it installs side by side with the original and does not replace it or migrate its data automatically. See [MIGRATION.md](MIGRATION.md) for the verified manual migration path.
 
@@ -60,6 +60,6 @@ The original plan is complete: Android 14/15 compatibility, the rebrand, backup 
 Current direction, open work and anything under consideration live in the pinned [roadmap issue](https://github.com/herrerad85/moneywallet/issues/15).
 
 ## Upstream and license
-Tallybook is a fork of [AndreAle94/moneywallet](https://github.com/AndreAle94/moneywallet). MoneyWallet is free software licensed under the GNU General Public License v3.0, and Tallybook remains under the same license. See [LICENSE.md](LICENSE.md).
+This repository is a fork of [herrerad85/moneywallet](https://github.com/herrerad85/moneywallet), which is a fork of [AndreAle94/moneywallet](https://github.com/AndreAle94/moneywallet). MoneyWallet is free software licensed under the GNU General Public License v3.0, and Tallybook remains under the same license. See [LICENSE.md](LICENSE.md).
 
 Original work and credits: MoneyWallet was created by its upstream author and contributors. The Tallybook app icon and the intro illustrations are original artwork for this fork, released under the same GPLv3 license. The category icons combine original GPLv3 disc backgrounds with glyphs from Phosphor Icons (MIT), Tabler Icons (MIT), Lucide (ISC), and Bootstrap Icons (MIT); a few category icons remain original artwork. Full copyright and license texts for these icon libraries are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The interface also uses Material Design Icons, licensed under Apache-2.0.
