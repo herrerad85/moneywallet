@@ -273,7 +273,7 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
     }
 
     protected void onThemeStatusBarIcons(ITheme theme) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // The status bar sits over the scrim painted above, so its icons follow that color while
             // the navigation bar, which nothing paints, still follows the window background.
             WindowInsetsController controller = getWindow().getInsetsController();
@@ -286,16 +286,31 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
                         Utils.isColorLight(theme.getColorWindowBackground()) ? navigationMask : 0,
                         navigationMask);
             }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            View decorView = getWindow().getDecorView();
+            int flags = decorView.getSystemUiVisibility();
+            if (Utils.isColorLight(theme.getColorPrimaryDark())) {
+                flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            } else {
+                flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+            }
+            if (Utils.isColorLight(theme.getColorWindowBackground())) {
+                flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            } else {
+                flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            }
+            decorView.setSystemUiVisibility(flags);
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             View decorView = getWindow().getDecorView();
-            int systemUiVisibility = decorView.getSystemUiVisibility();
+            int flags = decorView.getSystemUiVisibility();
             int statusBarColor = theme.getColorPrimaryDark();
             boolean isStatusBarLight = Utils.isColorLight(statusBarColor);
             if (isStatusBarLight) {
-                decorView.setSystemUiVisibility(systemUiVisibility | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
             } else {
-                decorView.setSystemUiVisibility(systemUiVisibility & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
             }
+            decorView.setSystemUiVisibility(flags);
         }
     }
 
