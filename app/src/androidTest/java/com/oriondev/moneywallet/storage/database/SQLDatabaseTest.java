@@ -43,6 +43,7 @@ import com.oriondev.moneywallet.model.Attachment;
 import com.oriondev.moneywallet.model.ColorIcon;
 import com.oriondev.moneywallet.model.Money;
 import com.oriondev.moneywallet.utils.DateUtils;
+import org.apache.commons.io.FileUtils;
 
 import org.junit.After;
 import org.junit.Before;
@@ -158,7 +159,7 @@ public class SQLDatabaseTest {
         // case makes cannot land on the real database when the wrapper is the thing that is broken
         targetContext.deleteDatabase(TestStorageContext.PREFIX + SQLDatabase.DATABASE_NAME);
         // create a new database for testing purposes
-        mDatabase = new SQLDatabase(mContext);
+        mDatabase = new SQLDatabase(mContext, SQLDatabase.DATABASE_NAME);
         // and ask SQLDatabase which file it actually opened, whichever way it got there
         assertEquals(testDatabase.getPath(), mDatabase.getWritableDatabase().getPath());
         // point the process wide shared helper at the same test file. These cases run inside the
@@ -169,7 +170,7 @@ public class SQLDatabaseTest {
         // real one back afterwards
         SQLDatabase.resetShared(mContext);
         assertEquals(testDatabase.getPath(),
-                SQLDatabase.getShared(mContext).getWritableDatabase().getPath());
+                sharedPath());
     }
 
     /**
@@ -180,6 +181,10 @@ public class SQLDatabaseTest {
      */
     @After
     public void releaseSharedHelper() {
+        // the staged import goes first. A case that opened one and failed before closing it would
+        // otherwise leave this thread writing into the staged file for every later case in the
+        // run, since the redirect lives on the thread and the runner reuses it
+        SQLDatabase.closeStaging();
         SQLDatabase.resetShared(InstrumentationRegistry.getInstrumentation().getTargetContext());
     }
 
@@ -191,6 +196,8 @@ public class SQLDatabaseTest {
         mDatabase.close();
         Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         targetContext.deleteDatabase(TestStorageContext.PREFIX + SQLDatabase.DATABASE_NAME);
+        targetContext.deleteDatabase(
+                TestStorageContext.PREFIX + SQLDatabaseImporter.STAGING_DATABASE_NAME);
         // the database the build under test owns was not unlinked, and was not replaced by a
         // smaller one. Against the size setUp saw and not against zero, so a device without that
         // database reads nothing against nothing and passes instead of failing every case
@@ -1239,22 +1246,22 @@ public class SQLDatabaseTest {
         // the assertion that everything below rests on. If the wrapper were bypassed here the
         // shared helper would be the real ledger, and these cases would be writing into it
         assertEquals(mContext.getDatabasePath(SQLDatabase.DATABASE_NAME).getPath(),
-                SQLDatabase.getShared(mContext).getWritableDatabase().getPath());
+                sharedPath());
     }
 
     @Test
     public void resetSharedReplacesTheInstanceAndGetSharedKeepsIt() {
-        SQLDatabase first = SQLDatabase.getShared(mContext);
+        SQLDatabase first = shared();
         assertTrue("getShared handed back two helpers for one process",
-                first == SQLDatabase.getShared(mContext));
+                first == shared());
         SQLDatabase.resetShared(mContext);
         assertFalse("resetShared left the old helper installed",
-                first == SQLDatabase.getShared(mContext));
+                first == shared());
     }
 
     @Test
     public void inSharedTransactionRunsOnTheSharedHelperAndRollsBack() {
-        SQLDatabase shared = SQLDatabase.getShared(mContext);
+        SQLDatabase shared = shared();
         try {
             SQLDatabase.<Long>inSharedTransaction(mContext, database -> {
                 assertTrue("the body was handed a different helper than the transaction was "
@@ -1376,7 +1383,7 @@ public class SQLDatabaseTest {
      */
     @Test
     public void resetSharedRunsTheWorkWithTheFileClosedAndReplacesTheHelperAfterIt() {
-        SQLDatabase first = SQLDatabase.getShared(mContext);
+        SQLDatabase first = shared();
         SQLiteDatabase open = first.getWritableDatabase();
         assertTrue("the helper was not open before the swap", open.isOpen());
         final boolean[] ran = new boolean[1];
@@ -1385,16 +1392,16 @@ public class SQLDatabaseTest {
             assertFalse("the work ran with the database still open", open.isOpen());
             // and before the replacement, which is what leaves the path free for the rename
             assertTrue("the helper was replaced before the work ran",
-                    SQLDatabase.getShared(mContext) == first);
+                    shared() == first);
         });
         assertTrue("the work never ran", ran[0]);
         assertFalse("resetShared left the old helper installed",
-                SQLDatabase.getShared(mContext) == first);
+                shared() == first);
     }
 
     @Test
     public void resetSharedInstallsAWorkingHelperEvenWhenTheWorkThrows() {
-        SQLDatabase first = SQLDatabase.getShared(mContext);
+        SQLDatabase first = shared();
         try {
             SQLDatabase.resetShared(mContext, () -> {
                 throw new IllegalStateException("forced from the work");
@@ -1404,12 +1411,257 @@ public class SQLDatabaseTest {
             // it has to leave, since the caller is the one that knows what a failed file swap
             // means. What must not happen is the helper being left closed behind it
         }
-        SQLDatabase replacement = SQLDatabase.getShared(mContext);
+        SQLDatabase replacement = shared();
         assertFalse("the closed helper was left installed after the work threw",
                 replacement == first);
         assertTrue("the helper installed after the work threw cannot open the database",
                 replacement.getWritableDatabase().isOpen());
     }
+
+    private ContentValues wallet(String name) {
+        ContentValues values = new ContentValues();
+        values.put(Contract.Wallet.NAME, name);
+        values.put(Contract.Wallet.ICON, "icon");
+        values.put(Contract.Wallet.CURRENCY, "EUR");
+        values.put(Contract.Wallet.NOTE, "note");
+        values.put(Contract.Wallet.COUNT_IN_TOTAL, true);
+        values.put(Contract.Wallet.START_MONEY, 0L);
+        values.put(Contract.Wallet.ARCHIVED, false);
+        values.put(Contract.Wallet.TAG, "tag");
+        return values;
+    }
+
+    /**
+     * A wallet row as a restore writes one. SyncContentProvider inserts raw with no defaults of
+     * its own, so the columns SQLDatabase.insertWallet would have generated have to be here.
+     */
+    private ContentValues syncWallet(String name) {
+        ContentValues values = new ContentValues();
+        values.put(Schema.Wallet.NAME, name);
+        values.put(Schema.Wallet.ICON, "icon");
+        values.put(Schema.Wallet.CURRENCY, "EUR");
+        values.put(Schema.Wallet.START_MONEY, 0L);
+        values.put(Schema.Wallet.COUNT_IN_TOTAL, true);
+        values.put(Schema.Wallet.ARCHIVED, false);
+        values.put(Schema.Wallet.INDEX, 0);
+        values.put(Schema.Wallet.NOTE, "note");
+        values.put(Schema.Wallet.TAG, "tag");
+        values.put(Schema.Wallet.UUID, java.util.UUID.randomUUID().toString());
+        values.put(Schema.Wallet.LAST_EDIT, System.currentTimeMillis());
+        values.put(Schema.Wallet.DELETED, false);
+        return values;
+    }
+
+    /** Counts through whichever file this thread is currently resolving. */
+    private long sharedWalletsNamed(String name) {
+        Cursor cursor = SQLDatabase.getShared(mContext).getReadableDatabase().rawQuery(
+                "SELECT COUNT(*) FROM " + Schema.Wallet.TABLE
+                        + " WHERE " + Schema.Wallet.NAME + " = ?", new String[]{name});
+        try {
+            cursor.moveToFirst();
+            return cursor.getLong(0);
+        } finally {
+            cursor.close();
+        }
+    }
+
+    /** The helper this thread resolves, which is the staged one while a staged import is open. */
+    private SQLDatabase shared() {
+        return SQLDatabase.getShared(mContext);
+    }
+
+    /** The file this thread is open on. */
+    private String sharedPath() {
+        return SQLDatabase.getShared(mContext).getWritableDatabase().getPath();
+    }
+
+    /**
+     * The claim the whole redesign rests on, and the reason the redirect is per thread. The
+     * importing thread has to write into the staged file, and every other thread has to go on
+     * writing into the live ledger, because that is what keeps the live file name still and lets
+     * every read in the app run with no lock at all.
+     *
+     * The first assertion is the one that matters. A staged name resolving to the live file
+     * would make everything below pass without testing anything.
+     */
+    @Test
+    public void aStagedImportRedirectsItsOwnThreadAndNoOther() throws InterruptedException {
+        final String onImporter = "Written on the importing thread";
+        final String onOther = "Written on another thread";
+        File live = mContext.getDatabasePath(SQLDatabase.DATABASE_NAME);
+        File staged = mContext.getDatabasePath(SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        assertFalse("the staged name resolves to the live file, so nothing below can fail",
+                live.getPath().equals(staged.getPath()));
+        assertEquals(live.getPath(), sharedPath());
+
+        final String[] otherPath = new String[1];
+        final Throwable[] otherFailure = new Throwable[1];
+        SQLDatabase.openStaging(mContext, SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        try {
+            assertEquals("the importing thread did not follow the staged name",
+                    staged.getPath(), sharedPath());
+            SQLDatabase.inSharedTransaction(mContext,
+                    database -> database.insertWallet(wallet(onImporter)));
+
+            Thread other = new Thread(() -> {
+                try {
+                    otherPath[0] = sharedPath();
+                    SQLDatabase.inSharedTransaction(mContext,
+                            database -> database.insertWallet(wallet(onOther)));
+                } catch (Throwable t) {
+                    otherFailure[0] = t;
+                }
+            });
+            other.start();
+            other.join();
+        } finally {
+            SQLDatabase.closeStaging();
+        }
+        assertNull("the other thread failed: " + otherFailure[0], otherFailure[0]);
+        assertEquals("another thread was redirected to the staged file too",
+                live.getPath(), otherPath[0]);
+        assertEquals("the importing thread did not come back to the live database",
+                live.getPath(), sharedPath());
+
+        assertEquals("the other thread row is not in the live ledger",
+                1, sharedWalletsNamed(onOther));
+        assertEquals("the staged row reached the live ledger",
+                0, sharedWalletsNamed(onImporter));
+
+        // and the staged row really is in the staged file. Without this the assertion above
+        // passes just as well when the insert wrote nowhere at all
+        SQLDatabase.openStaging(mContext, SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        try {
+            assertEquals("the staged row never reached the staged database",
+                    1, sharedWalletsNamed(onImporter));
+            assertEquals("the other thread row reached the staged database",
+                    0, sharedWalletsNamed(onOther));
+        } finally {
+            SQLDatabase.closeStaging();
+        }
+    }
+
+    /**
+     * The path a restore actually writes on. Every row an import puts in goes ContentResolver to
+     * SyncContentProvider, which resolves the helper on each call and takes no transaction, so a
+     * redirect that only reached inSharedTransaction would leave every restored row in the live
+     * ledger. inSharedTransaction is DataContentProvider entry point and no restore uses it.
+     *
+     * The provider is used against the live ledger first on purpose, and that is what gives this
+     * case its teeth. SyncContentProvider.db resolves the helper on every use instead of holding
+     * it in a field, and its own javadoc says so; hold it in a field instead and the read below
+     * fills that field with the live helper, so the staged insert goes into the ledger and this
+     * case fails. Without the read first, a field would be filled by the staged insert itself and
+     * the same broken provider would pass.
+     */
+    @Test
+    public void aRowWrittenThroughTheSyncProviderFollowsTheStagedRedirect() {
+        final String viaProvider = "Written through the sync provider";
+        ContentResolver resolver = mContext.getContentResolver();
+
+        Cursor warmUp = resolver.query(SyncContentProvider.CONTENT_WALLETS, null, null, null, null);
+        assertNotNull("the sync provider answered nothing on the live ledger", warmUp);
+        warmUp.close();
+
+        SQLDatabase.openStaging(mContext, SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        try {
+            resolver.insert(SyncContentProvider.CONTENT_WALLETS, syncWallet(viaProvider));
+            assertEquals("the row did not reach the staged database",
+                    1, sharedWalletsNamed(viaProvider));
+        } finally {
+            SQLDatabase.closeStaging();
+        }
+        assertEquals("the row written through the sync provider landed in the live ledger",
+                0, sharedWalletsNamed(viaProvider));
+    }
+
+    /**
+     * closeStaging is called from a finally on a path where the open may never have happened, so
+     * calling it with nothing staged, and calling it twice, both have to be no ops. If either
+     * moved this thread off the live database the whole suite after it would read the wrong file.
+     *
+     * The second close here runs against a helper with a connection really open on it, since
+     * openStaging opens the staged file instead of leaving it to the first row.
+     */
+    @Test
+    public void closingAStagedImportIsSafeWithoutOneAndTwiceOver() {
+        File live = mContext.getDatabasePath(SQLDatabase.DATABASE_NAME);
+        SQLDatabase.closeStaging();
+        assertEquals("closing with nothing staged moved this thread", live.getPath(), sharedPath());
+
+        SQLDatabase.openStaging(mContext, SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        SQLDatabase.closeStaging();
+        SQLDatabase.closeStaging();
+        assertEquals("a second close moved this thread off the live database",
+                live.getPath(), sharedPath());
+    }
+
+    /**
+     * An import that writes no rows still has to leave a file behind for the promote to rename.
+     * SQLiteOpenHelper creates the file on first use, so openStaging opens the staged database
+     * itself; without that, a backup whose arrays are all empty writes nothing, the rename finds
+     * no source and the restore reports a failure for a backup with nothing wrong with it. A
+     * legacy backup of an empty install is the reachable one, since that importer reads no
+     * currencies and so has no table that is always written.
+     */
+    @Test
+    public void openingAStagedImportCreatesTheFileBeforeAnyRowIsWritten() {
+        File staged = mContext.getDatabasePath(SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        staged.delete();
+        assertFalse("the precondition failed, a staged file was already on disk", staged.exists());
+
+        SQLDatabase.openStaging(mContext, SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        try {
+            assertTrue("openStaging left no file for the promote to rename", staged.exists());
+        } finally {
+            SQLDatabase.closeStaging();
+        }
+        assertTrue("the staged file went away when the helper closed", staged.exists());
+    }
+
+    /**
+     * Two staged imports on one thread would leak the first helper, leaving a connection open on
+     * a file the promote is about to rename, so the second is refused instead. Nothing does this
+     * today and the refusal is what keeps it that way.
+     */
+    @Test
+    public void aSecondStagedImportOnOneThreadIsRefused() {
+        SQLDatabase.openStaging(mContext, SQLDatabaseImporter.STAGING_DATABASE_NAME);
+        try {
+            SQLDatabase.openStaging(mContext, SQLDatabaseImporter.STAGING_DATABASE_NAME);
+            fail("a second staged import was allowed on one thread");
+        } catch (IllegalStateException expected) {
+            assertTrue("refused for the wrong reason: " + expected.getMessage(),
+                    expected.getMessage().contains("already open"));
+        } finally {
+            SQLDatabase.closeStaging();
+        }
+    }
+
+    /**
+     * What promoteStagedDatabase rests on. It renames the staged file straight over the live one
+     * and deletes nothing ahead of it, so that a rename which fails leaves the user's ledger
+     * where it was. That is only safe if a rename replaces an existing target instead of
+     * refusing it, which is a platform promise and not one this code can make.
+     */
+    @Test
+    public void aRenameOverAnExistingFileReplacesItInOneStep() throws IOException {
+        File live = new File(mContext.getCacheDir(), "rename-live.db");
+        File staged = new File(mContext.getCacheDir(), "rename-staged.db");
+        try {
+            FileUtils.write(live, "the ledger", "UTF-8");
+            FileUtils.write(staged, "the import", "UTF-8");
+            assertTrue("the rename refused an existing target, so a promote would have to delete "
+                            + "the live database first and a failure there would destroy both",
+                    staged.renameTo(live));
+            assertEquals("the import", FileUtils.readFileToString(live, "UTF-8"));
+            assertFalse("the staged file outlived its own rename", staged.exists());
+        } finally {
+            FileUtils.deleteQuietly(live);
+            FileUtils.deleteQuietly(staged);
+        }
+    }
+
 
     @Test
     public void aNestedInTransactionRollsBackWithTheOuterOne() {

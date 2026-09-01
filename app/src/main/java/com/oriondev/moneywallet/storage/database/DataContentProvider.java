@@ -972,13 +972,32 @@ public class DataContentProvider extends ContentProvider {
 
     /**
      * Runs a replacement of the database file with the shared helper closed and no write of this
-     * provider's in flight. The runnable does the file work and nothing else.
+     * provider in flight. The runnable does the file work and nothing else.
      *
      * Public, and here, because SQLDatabase is package local and the importers that replace the
      * database file sit in a sub package, so they cannot name it.
      */
     public static void replaceDatabaseFile(Context context, Runnable swap) {
         SQLDatabase.resetShared(context, swap);
+    }
+
+    /**
+     * Sends the calling thread database work to a file of its own until the matching close. A
+     * restore uses it to build its import somewhere other than the live ledger.
+     *
+     * No other thread is affected and no lock is taken, which is the whole reason the restore
+     * redirect is per thread. Public for the same reason as the method above.
+     */
+    public static void openStagingDatabase(Context context, String name) {
+        SQLDatabase.openStaging(context, name);
+    }
+
+    /**
+     * Closes the calling thread staging database and sends its work back to the live ledger.
+     * Does nothing when there is no staging database, so it is safe in a finally.
+     */
+    public static void closeStagingDatabase() {
+        SQLDatabase.closeStaging();
     }
 
     @SuppressLint("Recycle")

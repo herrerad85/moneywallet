@@ -79,6 +79,24 @@ import java.util.function.Supplier;
     /*package-local*/ static final String DATABASE_NAME = "database.db";
     private static final int DATABASE_VERSION = 5;
 
+    /**
+     * The helper a restore builds its import in, set only on the thread running that import.
+     *
+     * It is per thread and not per process so that the live database keeps its name for everyone
+     * else while a restore runs, which is what makes the swap safe without any lock on readers.
+     * The name a thread outside the restore resolves is always DATABASE_NAME, that file always
+     * exists, and a caller still holding an older helper after the promote reopens it and gets
+     * the file the restore just put there. Pointing the whole app at the staging file instead
+     * would make the live name movable, and a caller holding a helper across the promote would
+     * then reopen a name that had been renamed away, which SQLiteOpenHelper creates empty.
+     *
+     * What it costs is that a write from another thread during a restore goes into the live
+     * database and is replaced with it, so that write is lost. That is what this app already
+     * did. The alternative was not keeping the write, it was landing it in a half imported
+     * database whose ids name different rows, with foreign keys on.
+     */
+    private static final ThreadLocal<SQLDatabase> sStaging = new ThreadLocal<>();
+
     private static final String ENABLE_FOREIGN_KEYS = "PRAGMA foreign_keys=ON";
 
     private final Context mContext;
@@ -110,24 +128,34 @@ import java.util.function.Supplier;
      * that override being dropped before a case reaches the real ledger.
      */
     /*package-local*/ static synchronized SQLDatabase getShared(Context context) {
+        SQLDatabase staging = sStaging.get();
+        if (staging != null) {
+            // a restore is running on this thread and its rows belong in the file it is building,
+            // not in the ledger it is about to replace. Every other thread falls through to the
+            // shared helper and keeps reading and writing the live database while that happens
+            return staging;
+        }
         if (sShared == null) {
-            sShared = new SQLDatabase(context.getApplicationContext());
+            sShared = new SQLDatabase(context.getApplicationContext(), DATABASE_NAME);
         }
         return sShared;
     }
 
     /**
      * Closes the shared helper and opens a new one, for after a restore has replaced the file on
-     * disk. Both providers reach this through their own notifyDatabaseIsChanged, and calling it
-     * twice in a row is what AbstractBackupImporter does, so it has to be safe to repeat. It is:
-     * the first call leaves a helper that has opened nothing, since SQLiteOpenHelper opens on
-     * first use, and the second discards it at no cost.
+     * disk. It has to be safe to call twice in a row, and one restore does exactly that. The
+     * promote comes through here, and the announcement BackupHandlerIntentService makes once
+     * importDatabase returns comes through here again. A file delete and a preference write run
+     * in between, so the helper the first call installed has normally opened nothing by the time
+     * the second discards it, SQLiteOpenHelper opening on first use. A thread that did reach it
+     * in that window has its connection closed under it, which is the same thing every query on
+     * this database already risks, since queries take no lock.
      *
-     * Why the close has to happen. A restore renames the database aside and writes a new one at
-     * the old path. A write that STARTS after that rename is refused, checked on the emulator and
-     * not reasoned about. It fails with "attempt to write a readonly database", the row does not
-     * land, and the journal is left behind at the path the new database is about to take over.
-     * Closing releases that connection and truncates the journal it left.
+     * Why the close has to happen. A restore renames its staged file over the live one. A write
+     * that STARTS after that rename, on a connection opened before it, is refused; checked on the
+     * emulator and not reasoned about. It fails with "attempt to write a readonly database", the
+     * row does not land, and the journal is left behind at the path the new database has taken
+     * over. Closing releases that connection and truncates the journal it left.
      *
      * Why no write may be in flight while it happens. A transaction belongs to the SQLiteDatabase,
      * and every write method here asks the helper for it again per statement, nine times in
@@ -138,7 +166,8 @@ import java.util.function.Supplier;
      *
      * What it does NOT cover, stated because it is easy to read the lock as wider than it is.
      * SyncContentProvider's own writes do not come through inSharedTransaction, so they are
-     * outside the lock, and the restore's own row inserts are exactly those writes.
+     * outside the lock. A restore's rows travel that path too, and they are not what this leaves
+     * open, since they go into its own staging file and it closes that before any rename here.
      */
     /*package-local*/ static void resetShared(Context context) {
         resetShared(context, null);
@@ -181,11 +210,54 @@ import java.util.function.Supplier;
                     // Either of them throwing would otherwise leave sShared naming a helper that
                     // is closed or half closed, and every later getShared would hand that out for
                     // the rest of the process
-                    sShared = new SQLDatabase(context.getApplicationContext());
+                    sShared = new SQLDatabase(context.getApplicationContext(), DATABASE_NAME);
                 }
             }
         } finally {
             sSwapLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Sends this thread database work to a file of its own, from here until closeStaging. A
+     * restore calls this before its first row, and every row it then writes through either
+     * provider goes into that file instead of into the ledger.
+     *
+     * No lock is taken and none is needed. Nothing outside this thread can reach this helper,
+     * and opening it does not touch the live database, so the rest of the app carries on
+     * against the ledger as if no restore were running.
+     */
+    /*package-local*/ static void openStaging(Context context, String name) {
+        if (sStaging.get() != null) {
+            throw new IllegalStateException("a staging database is already open on this thread");
+        }
+        SQLDatabase staging = new SQLDatabase(context.getApplicationContext(), name);
+        // opened here instead of being left to the first row. SQLiteOpenHelper creates the file on
+        // first use, so an import that writes no rows at all would leave nothing on disk to put in
+        // place, and the promote would report a failure for a backup with nothing wrong with it. A
+        // legacy backup of an empty install is the reachable one, since that importer reads no
+        // currencies and so has no table that is always written
+        staging.getWritableDatabase();
+        // set last. A helper that failed to open must not be left on this thread
+        sStaging.set(staging);
+    }
+
+    /**
+     * Closes this thread staging helper and sends its work back to the live database. Safe to
+     * call when there is none, so it belongs in a finally.
+     *
+     * A restore calls it before putting the staged file in place, and again on the way out of a
+     * failure. Neither call affects any other thread. The rename would succeed with the file
+     * still open, since it only replaces a directory entry; what has to be avoided is a
+     * connection that survives INTO the new file, which resetShared describes.
+     */
+    /*package-local*/ static void closeStaging() {
+        SQLDatabase staging = sStaging.get();
+        if (staging != null) {
+            // cleared before the close. A close that threw would otherwise leave this thread
+            // pointed at a helper it can no longer use, for as long as the thread lives
+            sStaging.remove();
+            staging.close();
         }
     }
 
@@ -219,8 +291,8 @@ import java.util.function.Supplier;
      */
     private final ThreadLocal<List<String>> mPendingAttachmentFiles = new ThreadLocal<>();
 
-    /*package-local*/ SQLDatabase(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    /*package-local*/ SQLDatabase(Context context, String name) {
+        super(context, name, null, DATABASE_VERSION);
         mContext = context;
     }
 
