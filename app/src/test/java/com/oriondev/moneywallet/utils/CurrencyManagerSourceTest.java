@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -73,7 +74,10 @@ public class CurrencyManagerSourceTest {
     };
 
     private static String readSource() {
-        String path = "src/main/java/com/oriondev/moneywallet/utils/CurrencyManager.java";
+        return readSource("src/main/java/com/oriondev/moneywallet/utils/CurrencyManager.java");
+    }
+
+    private static String readSource(String path) {
         File file = new File(path);
         if (!file.exists()) {
             // a runner rooted at the repo root instead of the module, which the precedent
@@ -81,13 +85,13 @@ public class CurrencyManagerSourceTest {
             file = new File("app/" + path);
         }
         if (!file.exists()) {
-            fail("Cannot find CurrencyManager.java at " + file.getAbsolutePath());
+            fail("Cannot find " + path + " at " + file.getAbsolutePath());
         }
         try {
             String source = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
             return STRIPPED.matcher(source).replaceAll(" ").replaceAll("\\s+", " ");
         } catch (IOException e) {
-            fail("Cannot read CurrencyManager.java: " + e.getMessage());
+            fail("Cannot read " + path + ": " + e.getMessage());
             return null;
         }
     }
@@ -135,6 +139,102 @@ public class CurrencyManagerSourceTest {
             "public static ExchangeRateCache getExchangeRateCache() {",
             "public static int getDecimals(CurrencyUnit currency) {",
     };
+
+    /**
+     * CurrencyManager.getExchangeRate is one of the READERS below and hands straight to
+     * ExchangeRateCache, so the rule that a reader takes no lock has to hold one file down too.
+     * These two cases are what holds it, since every case here reads CurrencyManager.java alone.
+     */
+    @Test
+    public void theExchangeRateCacheIsAConcurrentMapAndNotAPlainOne() {
+        String source = readSource(
+                "src/main/java/com/oriondev/moneywallet/storage/cache/ExchangeRateCache.java");
+        assertTrue("the exchange rate cache is no longer a ConcurrentHashMap. It is written by "
+                        + "the rate download thread and read from the main thread on every "
+                        + "keystroke, so a plain map can answer null for a rate it holds and can "
+                        + "hand back a CacheObj whose fields are still at their defaults",
+                source.contains("mCacheMemory = new ConcurrentHashMap<>();"));
+        assertFalse("something in ExchangeRateCache builds a plain HashMap again",
+                source.contains("new HashMap"));
+        // the price of a map that refuses a null key, paid at all three places a key touches it.
+        // A currency row can carry a null iso and CurrencyManager.getExchangeRate does not check
+        // for one, so without these the throw replaces the null the plain map used to answer, and
+        // on the load path it would take the app down at startup instead of on that row
+        String reader = bodyOf(source,
+                "public ExchangeRate getExchangeRate(String currency1, String currency2) {");
+        assertTrue("getExchangeRate no longer refuses a null iso before the lookup. A "
+                        + "ConcurrentHashMap throws on a null key where the map it replaced "
+                        + "answered null and this method returned null",
+                reader.contains("if (currency1 == null || currency2 == null) { return null; }"));
+        // Boxed in from both sides. Above the equal check, two null isos stop taking that branch
+        // and a currency converted to itself answers nothing instead of a rate of one. Below the
+        // lookup it is simply too late, and the string reads the same wherever it sits, so
+        // presence alone pins nothing
+        assertTrue("the null iso guard moved above the equality check, so getExchangeRate answers "
+                        + "nothing for two null isos where it used to answer a rate of one",
+                reader.indexOf("TextUtils.equals") < reader.indexOf("currency1 == null"));
+        assertTrue("the null iso guard sits below the lookup it exists to come before, so a null "
+                        + "iso reaches ConcurrentHashMap.get and throws",
+                reader.indexOf("currency1 == null") < reader.indexOf("mCacheMemory.get"));
+        // and on the method's own path, not tucked inside the equality branch above it. Nested
+        // there it reads as being in the right place and between the right two lines, and a
+        // single null iso never reaches it at all. Depth 1 is a statement of the method
+        assertEquals("the null iso guard is nested inside a block, so the case it exists for takes "
+                        + "the branch around it and throws on the lookup",
+                1, depthOf(reader, reader.indexOf("currency1 == null")));
+        String writer = bodyOf(source,
+                "public void setExchangeRate(String currency, double rate, long timestamp) {");
+        assertTrue("setExchangeRate no longer refuses a null iso, so a rate filed under none "
+                        + "throws on the put instead of being dropped",
+                writer.contains("if (currency == null) { return; }"));
+        assertTrue("setExchangeRate refuses a null iso only after storing it, which is the throw "
+                        + "the guard exists to avoid",
+                writer.indexOf("currency == null") < writer.indexOf("mCacheMemory.put"));
+        assertEquals("setExchangeRate's null iso guard is nested inside a block instead of "
+                        + "standing on the method's own path", 1,
+                depthOf(writer, writer.indexOf("currency == null")));
+        String load = bodyOf(source, "private void loadCacheInMemory() {");
+        assertTrue("loadCacheInMemory no longer skips a row with no iso, so one in cache.db throws "
+                        + "while the cache is being built and takes the app down at startup",
+                load.contains("if (iso == null) { continue; }"));
+        assertTrue("loadCacheInMemory skips a row with no iso only after putting it, so the row it "
+                        + "means to drop still throws during startup",
+                load.indexOf("iso == null") < load.indexOf("mCacheMemory.put"));
+        // depth 3 is inside the cursor check and inside the row loop, which is where a per row
+        // skip has to sit. Anywhere shallower it runs once or not at all
+        assertEquals("loadCacheInMemory's skip is not inside the row loop, so it does not run per "
+                        + "row", 3, depthOf(load, load.indexOf("iso == null")));
+        // and the reader must not reach the storage at all. Every mCacheStorage call enters
+        // SQLiteOpenHelper.getReadableDatabase, which is synchronized, so a fallback read here
+        // would put a monitor AND a disk read on the keystroke path that takes nothing. The token
+        // scan below cannot see that lock, because it is spelled in another file
+        assertFalse("getExchangeRate reaches mCacheStorage. Every call on it enters a "
+                        + "synchronized SQLiteOpenHelper method, so the reader this file pins as "
+                        + "lock free would take one, and wait on a disk read on the main thread",
+                reader.contains("mCacheStorage"));
+    }
+
+    /**
+     * Over the whole file and not one method body, for the reason the reload case below gives: a
+     * reader that took its lock inside a helper it calls would pass a per body check. Four of the
+     * five spellings open no block either, so counting is the only way to see them.
+     *
+     * A lock here would not deadlock an importer, since cache.db is its own helper and shares no
+     * connection with database.db. It would stall a main thread keystroke behind a disk write,
+     * and it would put a monitor under a method this file pins as taking nothing.
+     */
+    @Test
+    public void nothingInTheExchangeRateCacheTakesALock() {
+        String source = readSource(
+                "src/main/java/com/oriondev/moneywallet/storage/cache/ExchangeRateCache.java");
+        for (String lock : WAYS_TO_TAKE_A_LOCK) {
+            assertEquals("ExchangeRateCache takes a lock through " + lock.trim() + ". "
+                            + "CurrencyManager.getExchangeRate is listed below as a reader that "
+                            + "takes nothing and it hands straight to this class, so a lock "
+                            + "anywhere in the file can end up on the read path",
+                    0, count(source, lock));
+        }
+    }
 
     @Test
     public void noReaderOfTheCacheTakesALock() {
