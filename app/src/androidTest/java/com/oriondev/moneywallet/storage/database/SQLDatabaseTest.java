@@ -1973,6 +1973,205 @@ public class SQLDatabaseTest {
         return contentValues;
     }
 
+    /**
+     * Every query of the currency table filters DELETED = 0, so a row carrying a 1 is one the app
+     * does not serve while its iso still holds the primary key. A backup restored through
+     * SyncContentProvider writes that column straight through, so an installation can hold every
+     * currency and offer none, and the default set written to repair that collided with those rows
+     * and landed nothing.
+     */
+    @Test
+    public void insertCurrencyBringsBackARowThatIsThereAndNotServed() {
+        assertEquals("TST", mDatabase.insertCurrency(currencyValues("TST")));
+        markDeleted("TST");
+        assertEquals("marking the row deleted did not stop it being served, so what follows is "
+                + "not being asked anything", 0, servedCount("TST"));
+
+        assertEquals("TST", mDatabase.insertCurrency(seedValues("TST")));
+
+        assertEquals("the row is still not served, so the default set cannot be written back over "
+                + "a table that holds it and offers nothing", 1, servedCount("TST"));
+    }
+
+    /**
+     * The editor creates a currency through the same method and must not be given the revive. A
+     * row that came from a backup as deleted holds that backup's name, symbol and decimals, so
+     * answering the editor with it would discard everything the user typed and report success.
+     */
+    @Test
+    public void insertCurrencyDoesNotBringBackARowForACallerThatDidNotAsk() {
+        assertEquals("TST", mDatabase.insertCurrency(currencyValues("TST")));
+        markDeleted("TST");
+
+        assertNull("an insert that did not ask for the revive was answered with an existing row",
+                mDatabase.insertCurrency(currencyValues("TST")));
+
+        assertEquals("a caller that did not ask for the revive brought the row back anyway",
+                0, servedCount("TST"));
+    }
+
+    /** The revive is for the iso it was asked about, not for every row that is not served. */
+    @Test
+    public void insertCurrencyBringsBackOnlyTheIsoItWasAskedAbout() {
+        assertEquals("TST", mDatabase.insertCurrency(currencyValues("TST")));
+        assertEquals("TSU", mDatabase.insertCurrency(currencyValues("TSU")));
+        markDeleted("TST");
+        markDeleted("TSU");
+
+        assertEquals("TST", mDatabase.insertCurrency(seedValues("TST")));
+
+        assertEquals(1, servedCount("TST"));
+        assertEquals("reviving one currency brought back another the caller said nothing about",
+                0, servedCount("TSU"));
+    }
+
+    /**
+     * The scale is the reason this writes as little as it does. Money is stored as a long scaled
+     * by the currency's decimals, which is why updateCurrency reads the old value first and sends
+     * every amount held in that currency through fixCurrencyAmounts before it changes them.
+     */
+    @Test
+    public void insertCurrencyLeavesTheScaleOfTheRowItBringsBack() {
+        ContentValues owned = currencyValues("TST");
+        owned.put(Contract.Currency.DECIMALS, 2);
+        assertEquals("TST", mDatabase.insertCurrency(owned));
+        markDeleted("TST");
+        // the default set's own idea of this currency, at a different scale from the owner's
+        ContentValues fromTheAssetFile = seedValues("TST");
+        fromTheAssetFile.put(Contract.Currency.DECIMALS, 0);
+
+        fromTheAssetFile.put(Contract.Currency.NAME, "From the asset file");
+        fromTheAssetFile.put(Contract.Currency.SYMBOL, "A");
+
+        assertEquals("TST", mDatabase.insertCurrency(fromTheAssetFile));
+
+        assertEquals("bringing the row back moved its decimals, so every amount already stored in "
+                        + "that currency now means something else, with nothing rescaled and "
+                        + "nothing said", 2, servedDecimals("TST"));
+        // the same rule one size down. These are the owner's, and the asset file is not entitled
+        // to them either
+        assertEquals("bringing the row back renamed the owner's currency from the asset file",
+                "Currency TST", servedString("TST", Contract.Currency.NAME));
+        assertEquals("bringing the row back took the owner's symbol from the asset file",
+                "T", servedString("TST", Contract.Currency.SYMBOL));
+        // the uuid is the row's identity in the backup it came from, and the column is NOT NULL
+        // UNIQUE, so writing a computed one over it can also collide and raise out of update,
+        // where the insert above would have answered a quiet -1
+        assertEquals("bringing the row back rewrote the uuid it arrived with",
+                "from-the-backup-TST", storedValue("TST", Schema.Currency.UUID));
+        assertEquals("bringing the row back cleared the owner's favourite flag",
+                "1", storedValue("TST", Schema.Currency.FAVOURITE));
+        // and it is a write, so it says when it happened
+        assertFalse("bringing the row back left the timestamp of the backup it came from, so an "
+                        + "export carries the wrong last edit for it",
+                "1".equals(storedValue("TST", Schema.Currency.LAST_EDIT)));
+    }
+
+    /**
+     * The revive is for a row that is not served. Asking for it against one that is has to be
+     * refused, or a caller that meant to insert is told it did and a row nobody edited has its
+     * timestamp moved. The case below covers a caller that did not ask, and returns at the gate
+     * before this clause is reached, so it cannot stand in for this one.
+     */
+    @Test
+    public void insertCurrencyDoesNotBringBackARowThatIsAlreadyServed() {
+        assertEquals("TST", mDatabase.insertCurrency(currencyValues("TST")));
+        String beforeTheSecondInsert = storedValue("TST", Schema.Currency.LAST_EDIT);
+
+        assertNull("an insert that asked for the revive was answered with a row that is already "
+                        + "served, so a collision reads as a success",
+                mDatabase.insertCurrency(seedValues("TST")));
+
+        assertEquals("the refused insert moved the timestamp of a row it did not change",
+                beforeTheSecondInsert, storedValue("TST", Schema.Currency.LAST_EDIT));
+    }
+
+    @Test
+    public void insertCurrencyStillRefusesOneThatIsAlreadyServed() {
+        assertEquals("TST", mDatabase.insertCurrency(currencyValues("TST")));
+
+        assertNull("a second insert of a currency that is already there was accepted, so the "
+                        + "currency editor can take over one that exists",
+                mDatabase.insertCurrency(currencyValues("TST")));
+    }
+
+    /** What the default set sends, which is the only caller that asks for a revive. */
+    private ContentValues seedValues(String iso) {
+        ContentValues contentValues = currencyValues(iso);
+        contentValues.put(Contract.Currency.REVIVE_IF_DELETED, true);
+        return contentValues;
+    }
+
+    private String servedString(String iso, String column) {
+        Cursor cursor = mDatabase.getCurrencies(new String[] {column},
+                Contract.Currency.ISO + " = ?", new String[] {iso}, null);
+        assertNotNull(cursor);
+        try {
+            assertTrue("no served row for " + iso, cursor.moveToFirst());
+            return cursor.getString(cursor.getColumnIndex(column));
+        } finally {
+            cursor.close();
+        }
+    }
+
+    /**
+     * The state a restore leaves, and not merely a deleted row. A row that arrived from a backup
+     * carries that backup's uuid, which is nothing this build would compute, and whatever the
+     * owner had set on it. A ghost built by deleting one of our own inserts holds exactly the
+     * values a fresh insert would write, so it cannot tell a revive that keeps them from one that
+     * writes them again.
+     */
+    private void markDeleted(String iso) {
+        ContentValues values = new ContentValues();
+        values.put(Schema.Currency.DELETED, true);
+        values.put(Schema.Currency.UUID, "from-the-backup-" + iso);
+        values.put(Schema.Currency.FAVOURITE, true);
+        // a timestamp from the backup and not one this run produced. Left as the insert wrote it,
+        // the case below compares two readings of the clock taken a few statements apart and can
+        // fail on a fast run for a defect that is not there
+        values.put(Schema.Currency.LAST_EDIT, 1L);
+        mDatabase.getWritableDatabase().update(Schema.Currency.TABLE, values,
+                Schema.Currency.ISO + " = ?", new String[] {iso});
+    }
+
+    /** Straight off the table, for the columns the served view does not carry. */
+    private String storedValue(String iso, String column) {
+        Cursor cursor = mDatabase.getWritableDatabase().query(Schema.Currency.TABLE,
+                new String[] {column}, Schema.Currency.ISO + " = ?", new String[] {iso},
+                null, null, null);
+        assertNotNull(cursor);
+        try {
+            assertTrue("no row at all for " + iso, cursor.moveToFirst());
+            return cursor.getString(0);
+        } finally {
+            cursor.close();
+        }
+    }
+
+    private int servedCount(String iso) {
+        Cursor cursor = mDatabase.getCurrencies(new String[] {Contract.Currency.ISO},
+                Contract.Currency.ISO + " = ?", new String[] {iso}, null);
+        try {
+            return cursor == null ? 0 : cursor.getCount();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+    private int servedDecimals(String iso) {
+        Cursor cursor = mDatabase.getCurrencies(new String[] {Contract.Currency.DECIMALS},
+                Contract.Currency.ISO + " = ?", new String[] {iso}, null);
+        assertNotNull(cursor);
+        try {
+            assertTrue("no served row for " + iso, cursor.moveToFirst());
+            return cursor.getInt(cursor.getColumnIndex(Contract.Currency.DECIMALS));
+        } finally {
+            cursor.close();
+        }
+    }
+
     private ContentValues currencyValues(String iso) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(Contract.Currency.ISO, iso);

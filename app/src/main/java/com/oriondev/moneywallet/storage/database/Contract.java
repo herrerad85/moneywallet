@@ -42,6 +42,11 @@ public class Contract {
         public static final String DECIMALS = Schema.Currency.DECIMALS;
         public static final String FAVOURITE = Schema.Currency.FAVOURITE;
         public static final String FIX_MONEY_DECIMALS = "action_fix_money_decimals";
+        /**
+         * Asks an insert to bring back a row that is present and not served instead of being
+         * refused by it. Only the default set sets this. See SQLDatabase.insertCurrency.
+         */
+        public static final String REVIVE_IF_DELETED = "action_revive_if_deleted";
     }
 
     public static final class Wallet {

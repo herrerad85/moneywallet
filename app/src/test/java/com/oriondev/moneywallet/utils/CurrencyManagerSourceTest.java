@@ -236,6 +236,28 @@ public class CurrencyManagerSourceTest {
         }
     }
 
+    /**
+     * The revive in SQLDatabase.insertCurrency is dead code unless a caller asks for it, and this
+     * is the only line in the app that does. Every case that exercises the revive calls
+     * insertCurrency directly with a flag it builds itself, so deleting this line leaves all of
+     * them green and quietly puts the behaviour back to what it was.
+     */
+    @Test
+    public void theDefaultSetAsksForARowThatIsThereToBeBroughtBack() {
+        String body = bodyOf(readSource(),
+                "private static Map<String, CurrencyUnit> loadDefaultCurrencies(Context context) {");
+        assertTrue("the default set no longer asks for a row that is present and not served to be "
+                        + "brought back, so its inserts collide with those rows and land nothing, "
+                        + "which is the whole of what this repairs",
+                body.contains("put(Contract.Currency.REVIVE_IF_DELETED, true)"));
+        // and it answers with the table and not with the file it just tried to write. Without
+        // this, a revive that stops working goes back to publishing currencies the provider
+        // serves none of, which is the failure the revive exists to end
+        assertTrue("the default set answers with the map it built from the asset file again, so a "
+                        + "seed that lands nothing still publishes every currency in that file",
+                body.contains("return loadUserCurrencies(context);"));
+    }
+
     @Test
     public void noReaderOfTheCacheTakesALock() {
         String source = readSource();

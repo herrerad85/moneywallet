@@ -212,9 +212,18 @@ public class CurrencyManager {
         return currencies;
     }
 
+    /**
+     * Seeds the currency table from the asset file and answers what the table holds
+     * afterwards, which is not always what was written. An insert that collides on the ISO
+     * primary key is refused, and a refused insert returns a null uri and raises nothing, so
+     * a table holding every currency already but with all of them deleted reads empty here and
+     * used to publish the whole file anyway, naming currencies the provider answers nothing for.
+     * insertCurrency brings such a row back now, and this answers with what the table holds
+     * afterwards so the two cannot disagree. It costs one more query every time a seed runs,
+     * which invalidateCache above reaches from the main thread.
+     */
     private static Map<String, CurrencyUnit> loadDefaultCurrencies(Context context) {
         final List<ContentValues> rows = new ArrayList<>();
-        Map<String, CurrencyUnit> currencies = new HashMap<>();
         try {
             // open assets file and load all the default currencies into a JSONArray
             StringBuilder jsonBuilder = new StringBuilder();
@@ -234,15 +243,11 @@ public class CurrencyManager {
                 contentValues.put(Contract.Currency.NAME, currency.getString("name"));
                 contentValues.put(Contract.Currency.SYMBOL, currency.optString("symbol", null));
                 contentValues.put(Contract.Currency.DECIMALS, currency.optInt("decimals", 2));
+                // bring back a row this installation holds and does not serve, which is the state
+                // that made this seed land nothing at all. The currency editor inserts without
+                // this and a collision stays a refusal for it
+                contentValues.put(Contract.Currency.REVIVE_IF_DELETED, true);
                 rows.add(contentValues);
-                // directly store the currency inside the local cache
-                CurrencyUnit currencyUnit = new CurrencyUnit(
-                        contentValues.getAsString(Contract.Currency.ISO),
-                        contentValues.getAsString(Contract.Currency.NAME),
-                        contentValues.getAsString(Contract.Currency.SYMBOL),
-                        contentValues.getAsInteger(Contract.Currency.DECIMALS)
-                );
-                currencies.put(currencyUnit.getIso(), currencyUnit);
             }
         } catch (IOException | JSONException e) {
             throw new RuntimeException("Exception while reading currencies file from assets: " + e.getMessage(), e);
@@ -262,7 +267,9 @@ public class CurrencyManager {
         } catch (Exception e) {
             throw new RuntimeException("Exception while storing the default currencies: " + e.getMessage(), e);
         }
-        return currencies;
+        // read back rather than answering with the file, so the cache holds what the
+        // provider will serve and never more than it
+        return loadUserCurrencies(context);
     }
 
     /**

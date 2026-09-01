@@ -581,8 +581,50 @@ import java.util.function.Supplier;
         cv.put(Schema.Currency.UUID, "currency_" + contentValues.getAsString(Contract.Currency.ISO));
         cv.put(Schema.Currency.LAST_EDIT, System.currentTimeMillis());
         cv.put(Schema.Currency.DELETED, false);
+        String iso = contentValues.getAsString(Contract.Currency.ISO);
         if (getWritableDatabase().insert(Schema.Currency.TABLE, null, cv) > 0) {
-            return contentValues.getAsString(Contract.Currency.ISO);
+            return iso;
+        }
+        // The insert is refused when the iso is already there, and it answers -1 without raising,
+        // so nothing above here can tell that apart from any other failure. A row that is present
+        // and deleted is one getCurrencies will not return, so the currency is gone as far as the
+        // app is concerned while its iso still holds the primary key against the row that would
+        // bring it back. Revive it.
+        //
+        // This is what makes the default set loadable again. That set is written exactly when
+        // nothing is being served, and every insert of it collided with such a row and landed
+        // nothing, so the table stayed empty and the app had no currency to offer.
+        //
+        // NOTHING BUT THE DELETED FLAG IS WRITTEN, and that is the whole of the care here. The
+        // decimals on the row are the scale every amount held in that currency is already stored
+        // at. The other path that changes them, updateCurrency, at least asks: it reads the old
+        // value first and rescales every wallet, transaction, debt, saving and budget through
+        // fixCurrencyAmounts, though only when the caller sets FIX_MONEY_DECIMALS, which the
+        // editor decides by a dialog the user answers. Copying the caller's decimals onto an
+        // existing row here would move that scale under money nobody rescaled and nobody was
+        // asked about, so a currency the owner had set to two decimals would read a hundred times
+        // over once the default set claimed it back. The name, the symbol, the favourite flag and
+        // the uuid are left for the same reason in miniature: they are the owner's, not the asset
+        // file's, and the uuid is the row's identity in the backup it came from.
+        //
+        // Only when the caller asked, which is the default set and nothing else. The editor
+        // creates a currency through this same method, and for it a collision has to stay a
+        // refusal: a row that arrived from a backup as deleted carries that backup's name, symbol
+        // and decimals, so reviving one on the editor's behalf would answer a typed 8 decimal
+        // Bitcoin with whatever that row happened to hold, report success, and throw away
+        // everything typed. On master that create was a silent no op and the user knew to look
+        // again. The two callers want opposite things from a collision, so they have to say which.
+        if (!contentValues.containsKey(Contract.Currency.REVIVE_IF_DELETED)
+                || !contentValues.getAsBoolean(Contract.Currency.REVIVE_IF_DELETED)) {
+            return null;
+        }
+        // A row that is already served is refused either way.
+        ContentValues revived = new ContentValues();
+        revived.put(Schema.Currency.DELETED, false);
+        revived.put(Schema.Currency.LAST_EDIT, System.currentTimeMillis());
+        String where = Schema.Currency.ISO + " = ? AND " + Schema.Currency.DELETED + " = 1";
+        if (getWritableDatabase().update(Schema.Currency.TABLE, revived, where, new String[] {iso}) > 0) {
+            return iso;
         }
         return null;
     }
