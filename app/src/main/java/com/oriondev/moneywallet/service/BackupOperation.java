@@ -69,9 +69,15 @@ class BackupOperation {
 
     /**
      * Held for the length of a backup or a restore, so the two do not run at once. A restore
-     * renames the live database away and empties the attachment folder, and the auto backup no
-     * longer shares the serial service queue that used to keep them apart. It guards these two
-     * against each other only: attachment writes elsewhere in the app are outside it.
+     * renames its staged file over the live database and empties the attachment folder, and the
+     * auto backup no longer shares the serial service queue that used to keep them apart. It
+     * guards these two against each other only: attachment writes elsewhere in the app are
+     * outside it.
+     *
+     * Both halves still need it. The export is twenty four separate queries, not one snapshot, so
+     * a rename landing in the middle of it would put the old wallets and the new transactions in
+     * one file, and a cursor being read across the swap meets a closed database. The attachment
+     * folder is worse still, importAttachments empties it before it extracts anything.
      */
     static final Object LOCK = new Object();
 

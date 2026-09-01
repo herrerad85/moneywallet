@@ -97,7 +97,7 @@ public class LegacyBackupImporter extends AbstractBackupImporter {
             if (header.isEncrypted()) {
                 header.setPassword(LEGACY_BACKUP_PASSWORD);
             }
-            notifyImportStarted();
+            beginStagedImport();
             // extract the database file inside the temporary folder
             zipFile.extractFile(header, temporaryFolder.getPath(), null, TEMPORARY_DATABASE_FILE);
             // import everything from the legacy database

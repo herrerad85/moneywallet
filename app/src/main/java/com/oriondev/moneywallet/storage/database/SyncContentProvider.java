@@ -129,6 +129,10 @@ public class SyncContentProvider extends ContentProvider {
      * One helper means one connection on one file, so the two providers cannot end up with a
      * transaction on one and a write on the other. A field would be a closed handle after a
      * restore, since resetShared closes what it replaces.
+     *
+     * A restore resolves its own staging helper through here. Its rows travel through this
+     * provider on the one thread the import runs on, and getShared answers that thread with the
+     * file the import is building instead of with the live ledger.
      */
     private SQLDatabase db() {
         return SQLDatabase.getShared(getContext());

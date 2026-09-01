@@ -219,9 +219,7 @@ public class BackupHandlerIntentService extends IntentService {
                     restoreLocalBackupFile(backup, password);
                 }
                 notifyTaskProgress(ACTION_RESTORE, STATUS_BACKUP_RESTORING, 100);
-                DataContentProvider.notifyDatabaseIsChanged(this);
                 PreferenceManager.setLastTimeDataIsChanged(0L);
-                CurrencyManager.invalidateCache(this);
                 RecurrenceBroadcastReceiver.scheduleRecurrenceTask(this);
                 AutoBackupBroadcastReceiver.scheduleAutoBackupTask(this);
                 notifyTaskFinished(ACTION_RESTORE);
@@ -246,6 +244,20 @@ public class BackupHandlerIntentService extends IntentService {
         try {
             File databaseFile = getDatabasePath(SQLDatabaseImporter.DATABASE_NAME);
             importer.importDatabase(temporaryFolder, databaseFile.getParentFile());
+            // Announced here, between the two, and nowhere else. The ledger is live from the
+            // rename inside importDatabase, so waiting until after the attachments would leave
+            // the current wallet and every widget binding naming rows out of the database that
+            // has just been replaced whenever the attachment pass fails. Announcing in both
+            // places instead is worse. This call writes user state, the current wallet preference
+            // and every widget wallet binding, the app stays interactive for the whole attachment
+            // extraction, and a second announcement would silently undo whatever the user set
+            // during it.
+            //
+            // The currency cache goes with it. It is held in memory and only this reloads it, so
+            // announcing without it makes every screen redraw the restored rows through the
+            // replaced database currencies.
+            DataContentProvider.notifyDatabaseIsChanged(this);
+            CurrencyManager.invalidateCache(this);
             importer.importAttachments(BackupOperation.getAttachmentFolder(this));
         } finally {
             FileUtils.cleanDirectory(temporaryFolder);

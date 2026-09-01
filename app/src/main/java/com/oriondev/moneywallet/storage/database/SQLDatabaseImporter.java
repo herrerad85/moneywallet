@@ -34,6 +34,12 @@ public class SQLDatabaseImporter {
 
     public static final String DATABASE_NAME = SQLDatabase.DATABASE_NAME;
 
+    /**
+     * The file a restore builds its import in, beside the live database so that putting it in
+     * place is a rename within one folder and not a copy across volumes.
+     */
+    public static final String STAGING_DATABASE_NAME = "database.staging";
+
     public static long insert(ContentResolver contentResolver, Currency currency) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(Schema.Currency.ISO, currency.mIso);
