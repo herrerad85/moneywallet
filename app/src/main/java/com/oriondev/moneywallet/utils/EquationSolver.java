@@ -76,8 +76,10 @@ public class EquationSolver {
     }
 
     public void setValue(CurrencyUnit currency, long money) {
-        if (currency != null && money != 0L && currency.hasDecimals()) {
-            mFirstNumber = MoneyScale.toHumanAmount(money, currency.getDecimals()).toPlainString();
+        // Scale taken through CurrencyManager for the reason getResult gives.
+        int decimals = CurrencyManager.getDecimals(currency);
+        if (money != 0L && decimals > 0) {
+            mFirstNumber = MoneyScale.toHumanAmount(money, decimals).toPlainString();
         } else {
             mFirstNumber = String.valueOf(money);
         }
@@ -225,17 +227,19 @@ public class EquationSolver {
             return 0L;
         }
         BigDecimal parsedNumber = parseNumber(mFirstNumber);
-        if (mCurrency != null) {
-            if (mComputed) {
-                // An answer is rounded to the currency scale, so 20.00 / 3 stores 667, which is
-                // what master stored for it when it rounded the quotient at the dividend's scale.
-                // A typed number falls through to toMinorUnits, which truncates what will not fit:
-                // 64.9 on a zero decimal currency stays 64, as the entry tests pin.
-                parsedNumber = parsedNumber.setScale(mCurrency.getDecimals(), RoundingMode.HALF_EVEN);
-            }
-            return MoneyScale.toMinorUnits(parsedNumber, mCurrency.getDecimals());
+        // A currency this installation cannot resolve is worth two decimals here, which is what
+        // CurrencyManager.getDecimals answers for a null one and what MoneyFormatter divides the
+        // same row by when it cannot resolve it either. This used to return the typed number as
+        // if it were already minor units, so a wallet naming a missing currency stored a typed
+        // 12.50 as 12, which MoneyFormatter then renders as 0.12.
+        int decimals = CurrencyManager.getDecimals(mCurrency);
+        if (mComputed) {
+            // An answer is rounded to the currency scale, so 20.00 / 3 stores 667. A typed
+            // number falls through to toMinorUnits, which truncates what will not fit: 64.9 on a
+            // zero decimal currency stays 64, as the entry tests pin.
+            parsedNumber = parsedNumber.setScale(decimals, RoundingMode.HALF_EVEN);
         }
-        return parsedNumber.longValue();
+        return MoneyScale.toMinorUnits(parsedNumber, decimals);
     }
 
     /**

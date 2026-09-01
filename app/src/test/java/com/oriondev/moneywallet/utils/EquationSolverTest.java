@@ -771,4 +771,125 @@ public class EquationSolverTest {
 
         assertEquals(250L, result);
     }
+
+    // Unresolvable currency. mCurrency is null when the wallet on the screen names a currency
+    // this installation does not have, which CurrencyManager.getCurrency answers null for. The
+    // keypad reads and writes those rows at two decimals, the same scale MoneyFormatter renders
+    // them at, instead of treating the typed number as minor units already.
+
+    @Test
+    public void testGetResult_unresolvableCurrencyAndTypedValue() {
+        equationSolver.mFirstNumber = "12.50";
+
+        long result = equationSolver.getResult();
+
+        assertEquals(1250L, result);
+    }
+
+    @Test
+    public void testGetResult_unresolvableCurrencyAndNegativeValue() {
+        equationSolver.mFirstNumber = "-12.50";
+
+        long result = equationSolver.getResult();
+
+        assertEquals(-1250L, result);
+    }
+
+    @Test
+    public void testGetResult_unresolvableCurrencyAndWholeValue() {
+        equationSolver.mFirstNumber = "12";
+
+        long result = equationSolver.getResult();
+
+        assertEquals(1200L, result);
+    }
+
+    @Test
+    public void testGetResult_unresolvableCurrencyTruncatesATypedThirdDecimal() {
+        equationSolver.mFirstNumber = "12.509";
+
+        long result = equationSolver.getResult();
+
+        assertEquals(1250L, result);
+    }
+
+    @Test
+    public void testGetResult_unresolvableCurrencyRoundsAComputedAnswer() {
+        enter("20.00", EquationSolver.Operation.DIVISION, "3");
+
+        long result = equationSolver.getResult();
+
+        assertEquals(667L, result);
+    }
+
+    @Test
+    public void testSetValue_unresolvableCurrencyReadsAStoredAmountBackWhole() {
+        equationSolver.setValue(null, 1250L);
+
+        assertEquals("12.50", equationSolver.mFirstNumber);
+        assertEquals(1250L, equationSolver.getResult());
+    }
+
+    // setValue with a currency that does resolve. Without these, the scale it reads a stored
+    // amount back at is pinned only where the currency is null, so replacing the lookup with a
+    // literal 2 passes every other test in this class.
+
+    @Test
+    public void testSetValue_zeroDecimalCurrencyReadsAStoredAmountBackWhole() {
+        equationSolver.setValue(new CurrencyUnit("", "", "", 0), 1250L);
+
+        assertEquals("1250", equationSolver.mFirstNumber);
+        assertEquals(1250L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testSetValue_twoDecimalCurrencyReadsAStoredAmountBackWhole() {
+        equationSolver.setValue(new CurrencyUnit("", "", "", 2), 1250L);
+
+        assertEquals("12.50", equationSolver.mFirstNumber);
+        assertEquals(1250L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testSetValue_threeDecimalCurrencyReadsAStoredAmountBackWhole() {
+        equationSolver.setValue(new CurrencyUnit("", "", "", 3), 1250L);
+
+        assertEquals("1.250", equationSolver.mFirstNumber);
+        assertEquals(1250L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testSetValue_oneDecimalCurrencyReadsAStoredAmountBackWhole() {
+        equationSolver.setValue(new CurrencyUnit("", "", "", 1), 1250L);
+
+        assertEquals("125.0", equationSolver.mFirstNumber);
+        assertEquals(1250L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testSetValue_aNegativeStoredAmountReadsBackWhole() {
+        // A wallet may open on a negative balance, and NewEditWalletActivity is the one screen
+        // that hands the keypad a real currency with negatives allowed. Were this to fall to the
+        // bare number, confirming without pressing a key would multiply the balance by a hundred.
+        equationSolver.setValue(new CurrencyUnit("", "", "", 2), -1250L);
+
+        assertEquals("-12.50", equationSolver.mFirstNumber);
+        assertEquals(-1250L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testSetValue_anEmptyAmountStartsOnABareZero() {
+        // CalculatorActivity passes 0 every time the keypad opens on an empty field, and
+        // appendNumber only replaces the display when it reads exactly "0". Were this to arrive
+        // as "0.00", the first digit typed would append to it, so a 5 would read "0.005" and
+        // reach the ledger as nothing.
+        equationSolver.setValue(new CurrencyUnit("", "", "", 2), 0L);
+
+        assertEquals("0", equationSolver.mFirstNumber);
+
+        equationSolver.appendNumber("5");
+
+        assertEquals("5", equationSolver.mFirstNumber);
+        assertEquals(500L, equationSolver.getResult());
+    }
 }
