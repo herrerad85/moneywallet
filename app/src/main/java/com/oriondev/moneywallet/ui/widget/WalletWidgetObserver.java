@@ -21,15 +21,13 @@ package com.oriondev.moneywallet.ui.widget;
 
 import android.content.Context;
 import android.database.ContentObserver;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 
 /**
- * Pushes a redraw to the placed widgets whenever anything that can move a wallet balance is
- * written.
+ * Pushes a redraw to the placed widgets whenever DataContentProvider announces a write.
  *
  * A balance does not only move when a transaction row is written, and the provider notifies the
  * URI a write came through. A transfer notifies transfers, a debt with a master transaction
@@ -38,9 +36,8 @@ import com.oriondev.moneywallet.storage.database.DataContentProvider;
  * from. Listening to transactions alone would leave a widget showing the figure from before a
  * transfer until something unrelated was saved.
  *
- * The first four are what the wallet list cursor is registered on in DataContentProvider. Savings
- * is the one this needs and that cursor does not, since a goal is deleted from a screen that
- * rebuilds the wallet list on its way back anyway.
+ * Naming those uris here is a list that has to be kept in step with what every write announces,
+ * so this watches the whole provider instead and is told about all of them.
  *
  * This is what keeps the widget level with the app. The slow period in widget_wallet_info covers
  * the other half, a transaction dated ahead coming due, which no write announces.
@@ -51,17 +48,9 @@ public class WalletWidgetObserver extends ContentObserver {
      * Long enough to fold a run of writes into one redraw and short enough that a save the user
      * just made looks immediate. An import is no longer the case that needs it, since those now
      * announce once per list after their transaction commits. Anything that writes a row at a
-     * time still is, a wallet delete taking its transactions with it being the one to picture.
+     * time still is, the recurrence job posting a backlog being the one to picture.
      */
     private static final long COALESCE_DELAY_MILLIS = 250L;
-
-    private static final Uri[] OBSERVED_URIS = new Uri[] {
-            DataContentProvider.CONTENT_WALLETS,
-            DataContentProvider.CONTENT_TRANSACTIONS,
-            DataContentProvider.CONTENT_TRANSFERS,
-            DataContentProvider.CONTENT_DEBTS,
-            DataContentProvider.CONTENT_SAVINGS
-    };
 
     private static volatile Handler sHandler;
     private static volatile Runnable sUpdate;
@@ -94,10 +83,11 @@ public class WalletWidgetObserver extends ContentObserver {
         thread.start();
         sHandler = new Handler(thread.getLooper());
         WalletWidgetObserver observer = new WalletWidgetObserver(sHandler);
-        for (Uri uri : OBSERVED_URIS) {
-            // Descendants too, because the provider notifies the row it wrote and not the list.
-            applicationContext.getContentResolver().registerContentObserver(uri, true, observer);
-        }
+        // Descendants, because no write names CONTENT_ALL itself and an observer that did not
+        // ask for what sits below it would be told about nothing at all. The whole registration
+        // rests on that flag.
+        applicationContext.getContentResolver()
+                .registerContentObserver(DataContentProvider.CONTENT_ALL, true, observer);
     }
 
     /**

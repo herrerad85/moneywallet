@@ -25,7 +25,6 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.net.Uri;
-import android.os.Build;
 
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
@@ -34,6 +33,11 @@ import java.util.LinkedHashSet;
 /**
  * This class works as wrapper on top of {@link Cursor}.
  * This allow to register multiple notification uri instead of a single one.
+ *
+ * Nothing registers more than one on it now. What it is still here for is the replay in
+ * registerContentObserver, which hands a newly registered observer the changes this cursor was
+ * already told about. AbstractCursor drops those, and a loader registers after the query it is
+ * loading has returned, so that window is a real one.
  *
  * Credits to: https://gist.github.com/chalup/4201307da02b9cfe4f40
  */
@@ -98,17 +102,18 @@ public class MultiUriCursorWrapper extends CursorWrapper {
         onDeactivateOrClose();
     }
 
-    @SuppressWarnings("deprecation")
+    /**
+     * Under the same lock onChange takes, because this walks the set that method adds to and it
+     * adds from whichever binder thread the notification arrived on. Without the lock a loader
+     * registering here can walk the set while it is being written, and a change that lands
+     * between onChange's dispatch and its add reaches neither the dispatch nor this replay.
+     */
     @Override
     public void registerContentObserver(ContentObserver observer) {
-        mContentObservable.registerObserver(observer);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+        synchronized (mSelfObserverLock) {
+            mContentObservable.registerObserver(observer);
             for (Uri changedByUri : mChangedByUris) {
                 observer.dispatchChange(false, changedByUri);
-            }
-        } else {
-            if (!mChangedByUris.isEmpty()) {
-                observer.dispatchChange(false);
             }
         }
     }
@@ -121,20 +126,9 @@ public class MultiUriCursorWrapper extends CursorWrapper {
         }
     }
 
-    @SuppressWarnings("deprecation")
     private void onChange(boolean selfChange, Uri uri) {
         synchronized (mSelfObserverLock) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                mContentObservable.dispatchChange(selfChange, uri);
-            } else {
-                mContentObservable.dispatchChange(selfChange);
-            }
-
-            if (selfChange) {
-                for (Uri notifyUri : mNotifyUris) {
-                    mContentResolver.notifyChange(notifyUri, mSelfObserver);
-                }
-            }
+            mContentObservable.dispatchChange(selfChange, uri);
 
             if (!selfChange) {
                 mChangedByUris.add(uri);

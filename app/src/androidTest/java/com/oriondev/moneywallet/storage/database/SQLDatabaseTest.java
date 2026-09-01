@@ -33,6 +33,7 @@ import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.text.TextUtils;
 
 import androidx.test.filters.LargeTest;
@@ -51,11 +52,15 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.Assert.assertEquals;
@@ -1712,16 +1717,7 @@ public class SQLDatabaseTest {
      * fails on them and not on something left out.
      */
     private ContentValues transactionValuesOnMissingRows() {
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(Contract.Transaction.WALLET_ID, 987654321L);
-        contentValues.put(Contract.Transaction.CATEGORY_ID, 987654321L);
-        contentValues.put(Contract.Transaction.DATE, DateUtils.getSQLDateTimeString(new Date()));
-        contentValues.put(Contract.Transaction.MONEY, 1000L);
-        contentValues.put(Contract.Transaction.DIRECTION, Contract.Direction.EXPENSE);
-        contentValues.put(Contract.Transaction.TYPE, Contract.TransactionType.STANDARD);
-        contentValues.put(Contract.Transaction.CONFIRMED, true);
-        contentValues.put(Contract.Transaction.COUNT_IN_TOTAL, true);
-        return contentValues;
+        return transactionValues(987654321L, 987654321L);
     }
 
     /**
@@ -1925,6 +1921,322 @@ public class SQLDatabaseTest {
             contentResolver.unregisterContentObserver(observer[0]);
         }
         checkCursorSize(mDatabase.getWallets(null, null, null, null), 1);
+    }
+
+    /**
+     * The sixteen top level lists, which is every one of them and not a sample of them. The other
+     * thirty branches of the switch are fourteen lists that hang off a row and sixteen single row
+     * uris, and two of those are the case after this one.
+     */
+    private static final Uri[] LIST_URIS = new Uri[] {
+            DataContentProvider.CONTENT_CURRENCIES,
+            DataContentProvider.CONTENT_WALLETS,
+            DataContentProvider.CONTENT_TRANSACTIONS,
+            DataContentProvider.CONTENT_TRANSFERS,
+            DataContentProvider.CONTENT_CATEGORIES,
+            DataContentProvider.CONTENT_DEBTS,
+            DataContentProvider.CONTENT_BUDGETS,
+            DataContentProvider.CONTENT_SAVINGS,
+            DataContentProvider.CONTENT_EVENTS,
+            DataContentProvider.CONTENT_RECURRENT_TRANSACTIONS,
+            DataContentProvider.CONTENT_RECURRENT_TRANSFERS,
+            DataContentProvider.CONTENT_TRANSACTION_MODELS,
+            DataContentProvider.CONTENT_TRANSFER_MODELS,
+            DataContentProvider.CONTENT_PLACES,
+            DataContentProvider.CONTENT_PEOPLE,
+            DataContentProvider.CONTENT_ATTACHMENTS
+    };
+
+    /**
+     * Every column the table insists on, so a row built from two ids that are really there cannot
+     * be refused at all.
+     */
+    private ContentValues transactionValues(long walletId, long categoryId) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Contract.Transaction.WALLET_ID, walletId);
+        contentValues.put(Contract.Transaction.CATEGORY_ID, categoryId);
+        contentValues.put(Contract.Transaction.DATE, DateUtils.getSQLDateTimeString(new Date()));
+        contentValues.put(Contract.Transaction.MONEY, 1000L);
+        contentValues.put(Contract.Transaction.DIRECTION, Contract.Direction.EXPENSE);
+        contentValues.put(Contract.Transaction.TYPE, Contract.TransactionType.STANDARD);
+        contentValues.put(Contract.Transaction.CONFIRMED, true);
+        contentValues.put(Contract.Transaction.COUNT_IN_TOTAL, true);
+        return contentValues;
+    }
+
+    private ContentValues categoryValues(String name) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Contract.Category.NAME, name);
+        contentValues.put(Contract.Category.ICON, "encoded-icon");
+        contentValues.put(Contract.Category.TYPE, Contract.CategoryType.EXPENSE.getValue());
+        contentValues.put(Contract.Category.SHOW_REPORT, true);
+        return contentValues;
+    }
+
+    private ContentValues currencyValues(String iso) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Contract.Currency.ISO, iso);
+        contentValues.put(Contract.Currency.NAME, "Currency " + iso);
+        contentValues.put(Contract.Currency.SYMBOL, "T");
+        // the column is NOT NULL with no default, so a currency without it is refused
+        contentValues.put(Contract.Currency.DECIMALS, 2);
+        return contentValues;
+    }
+
+    /**
+     * Watches a cursor the way a CursorLoader does, by registering on the cursor itself. An
+     * observer put on the resolver by hand instead would prove that the framework delivers a
+     * notification and say nothing about the uri the provider registered the cursor on, which is
+     * the whole of what these cases are about.
+     *
+     * It keeps the uris it is told about instead of counting. A case that only counts cannot tell
+     * its own write from any other write in the process, and these run in the live app, where the
+     * recurrence alarm can fire and a widget observer is already registered. That was harmless
+     * while a cursor only heard about the entities it named and is not now.
+     */
+    private BlockingQueue<Uri> watchCursor(Cursor cursor) {
+        final BlockingQueue<Uri> heard = new LinkedBlockingQueue<>();
+        cursor.registerContentObserver(new ContentObserver(new Handler(Looper.getMainLooper())) {
+
+            @Override
+            public void onChange(boolean selfChange, Uri uri) {
+                heard.add(uri != null ? uri : Uri.EMPTY);
+            }
+
+        });
+        return heard;
+    }
+
+    /**
+     * The same, for an observer put on the resolver instead of on a cursor.
+     */
+    private BlockingQueue<Uri> watchUris(ContentResolver contentResolver, Uri uri,
+                                         boolean descendants, ContentObserver[] out) {
+        final BlockingQueue<Uri> heard = new LinkedBlockingQueue<>();
+        ContentObserver observer = new ContentObserver(new Handler(Looper.getMainLooper())) {
+
+            @Override
+            public void onChange(boolean selfChange, Uri changed) {
+                heard.add(changed != null ? changed : Uri.EMPTY);
+            }
+
+        };
+        contentResolver.registerContentObserver(uri, descendants, observer);
+        out[0] = observer;
+        return heard;
+    }
+
+    /**
+     * Two seconds of nothing at all, and not two seconds of anything but one named uri. A write
+     * that announced the bare authority would reach this observer as that uri and not as the row
+     * it wrote, so a case that only refused the row uri would let it through. Call it after
+     * something else has been shown to have heard the write, or it is two seconds of waiting for
+     * a notification that has not been sent yet and it passes whatever the truth is.
+     */
+    private void assertHeardNothing(BlockingQueue<Uri> heard, String message)
+            throws InterruptedException {
+        Uri uri = heard.poll(2000L, TimeUnit.MILLISECONDS);
+        assertNull(message + ", it was told about " + uri, uri);
+    }
+
+    /**
+     * Waits for one named uri and ignores anything else that arrives. Five seconds in total and
+     * not five seconds per uri, so a run of unrelated announcements cannot stretch it.
+     */
+    private void assertHeard(BlockingQueue<Uri> heard, Uri expected, String message)
+            throws InterruptedException {
+        long deadline = SystemClock.uptimeMillis() + 5000L;
+        for (long left = 5000L; left > 0L; left = deadline - SystemClock.uptimeMillis()) {
+            Uri uri = heard.poll(left, TimeUnit.MILLISECONDS);
+            if (uri == null) {
+                break;
+            }
+            if (expected.equals(uri)) {
+                return;
+            }
+        }
+        fail(message);
+    }
+
+    /**
+     * Two writes of two entities, and the second one is what makes this a check. A single write
+     * cannot tell a cursor registered on the whole provider apart from one registered on whatever
+     * that write happens to announce, so a provider that put every cursor on the currency list
+     * would pass a currency only version of this on its own.
+     *
+     * A currency is the first, because it is the entity the fewest queries read. A provider that
+     * registered each cursor on the entities its own query names would leave every cursor here
+     * except the currency one hearing nothing about it.
+     */
+    @Test
+    public void everyListCursorIsToldAboutAWriteToAnyEntity() throws Exception {
+        ContentResolver contentResolver = mContext.getContentResolver();
+        assertEveryListCursorIsToldAbout(contentResolver, DataContentProvider.CONTENT_CURRENCIES,
+                currencyValues("TSA"));
+        assertEveryListCursorIsToldAbout(contentResolver, DataContentProvider.CONTENT_WALLETS,
+                walletValues("Written while every list is open"));
+    }
+
+    /**
+     * Opens its own cursors each time it is called. Watching one cursor twice would not work,
+     * since the wrapper replays what it has already been told to an observer that registers after
+     * it, so the second round would start with its latch already down.
+     */
+    private void assertEveryListCursorIsToldAbout(ContentResolver contentResolver, Uri listUri,
+                                                  ContentValues values) throws Exception {
+        Cursor[] cursors = new Cursor[LIST_URIS.length];
+        List<BlockingQueue<Uri>> heard = new ArrayList<>();
+        try {
+            for (int i = 0; i < LIST_URIS.length; i++) {
+                cursors[i] = contentResolver.query(LIST_URIS[i], null, null, null, null);
+                assertNotNull("the provider answered nothing for " + LIST_URIS[i], cursors[i]);
+                heard.add(watchCursor(cursors[i]));
+            }
+            Uri written = contentResolver.insert(listUri, values);
+            assertNotNull("the provider refused a row that is fine, so nothing was written for "
+                    + "these cursors to hear about", written);
+            for (int i = 0; i < LIST_URIS.length; i++) {
+                assertHeard(heard.get(i), written, "the cursor on " + LIST_URIS[i] + " was not "
+                        + "told about " + written + ", so a screen holding it goes on showing "
+                        + "what was true before that write");
+            }
+        } finally {
+            for (Cursor cursor : cursors) {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+        }
+    }
+
+    /**
+     * The two kinds of branch the case above does not open, a list that hangs off a row and a
+     * single row.
+     *
+     * Two writes on the first, and for the same reason as above. A transaction because that is the
+     * relation this cursor was given a uri for by hand, saving a debt's master transaction writes
+     * the debt's people. A category because nothing about a debt's people reads one, so a provider
+     * registering this cursor on what its own query names would fail there and pass the
+     * transaction on its own. The single row uri takes a currency for the same job, since the debt
+     * row reads a wallet, a category, a transaction, a person and a place and never a currency.
+     */
+    @Test
+    public void aSubListAndASingleRowCursorAreToldAboutAWriteToAnotherEntity() throws Exception {
+        ContentResolver contentResolver = mContext.getContentResolver();
+        long walletId = insertWallet("Wallet the debt is against", "encoded-icon", "EUR", null,
+                true, 0L, false, null);
+        long debtId = insertDebt(Contract.DebtType.DEBT.getValue(), "encoded-icon", "desc",
+                new Date(), null, walletId, null, null, 2000L, false, null, null, false);
+        long categoryId = insertCategory("Category the transaction is in", "encoded-icon",
+                Contract.CategoryType.EXPENSE.getValue(), null, true, null);
+        Uri people = Uri.withAppendedPath(
+                ContentUris.withAppendedId(DataContentProvider.CONTENT_DEBTS, debtId), "people");
+        assertCursorIsToldAbout(contentResolver, people,
+                DataContentProvider.CONTENT_TRANSACTIONS, transactionValues(walletId, categoryId));
+        assertCursorIsToldAbout(contentResolver, people,
+                DataContentProvider.CONTENT_CATEGORIES, categoryValues("Written somewhere else"));
+        assertCursorIsToldAbout(contentResolver,
+                ContentUris.withAppendedId(DataContentProvider.CONTENT_DEBTS, debtId),
+                DataContentProvider.CONTENT_CURRENCIES, currencyValues("TSD"));
+    }
+
+    /**
+     * Its own cursor each time, for the reason the list helper opens its own.
+     */
+    private void assertCursorIsToldAbout(ContentResolver contentResolver, Uri cursorUri,
+                                         Uri listUri, ContentValues values)
+            throws Exception {
+        Cursor cursor = contentResolver.query(cursorUri, null, null, null, null);
+        try {
+            assertNotNull("the provider answered nothing for " + cursorUri, cursor);
+            BlockingQueue<Uri> heard = watchCursor(cursor);
+            Uri written = contentResolver.insert(listUri, values);
+            assertNotNull("the provider refused a row that is fine, so nothing was written for "
+                    + "this cursor to hear about", written);
+            assertHeard(heard, written, "the cursor on " + cursorUri + " was not told about "
+                    + written + ", so the detail screen holding it goes on showing what was true "
+                    + "before that write");
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+    /**
+     * The replay, which is the one thing MultiUriCursorWrapper still does that the platform cursor
+     * does not, and the reason it is still wrapped now that there is one uri to register. A loader
+     * registers on its cursor after the query it is loading has returned, and on a real screen the
+     * time between the two is the first window filling. AbstractCursor drops a change that lands
+     * in there.
+     *
+     * Writing and then registering proves nothing on its own, since the announcement is delivered
+     * asynchronously and would reach the second watcher through the ordinary path if it had not
+     * arrived yet. What rules that out is the lock: registerContentObserver takes the one onChange
+     * holds across both its dispatch and its add, so the second registration cannot run until the
+     * change has been stored. Waiting for the first watcher only says the dispatch happened, and
+     * that dispatch is a post the main thread can drain before the add has run.
+     */
+    @Test
+    public void aCursorHandsAChangeItWasAlreadyToldAboutToALateObserver() throws Exception {
+        ContentResolver contentResolver = mContext.getContentResolver();
+        Cursor cursor = contentResolver.query(DataContentProvider.CONTENT_WALLETS, null, null,
+                null, null);
+        try {
+            assertNotNull("the provider answered nothing for the wallet list", cursor);
+            BlockingQueue<Uri> early = watchCursor(cursor);
+            Uri written = contentResolver.insert(DataContentProvider.CONTENT_WALLETS,
+                    walletValues("Written before the late observer"));
+            assertNotNull("the provider refused a wallet that is fine, so nothing was written for "
+                    + "this cursor to be told about", written);
+            assertHeard(early, written, "the cursor was never told about " + written
+                    + ", so this case cannot say anything about what a later observer gets");
+            assertHeard(watchCursor(cursor), written, "a change the cursor had already been told "
+                    + "about was not handed to an observer that registered after it, so a loader "
+                    + "registering after its query would hold what was true before that write");
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+    /**
+     * The registration the widget makes, made here rather than by calling the widget, since
+     * nothing can read back what the framework was asked to watch. So this pins the mechanism and
+     * not WalletWidgetObserver's own two lines, which no case reaches.
+     *
+     * The second half is the part worth having. Nothing ever announces CONTENT_ALL itself, so an
+     * observer that did not ask for the uris below it hears none of these writes, and that is what
+     * carries the whole registration.
+     */
+    @Test
+    public void anObserverOnTheWholeProviderIsToldWhicheverUriTheWriteAnnounces() throws Exception {
+        ContentResolver contentResolver = mContext.getContentResolver();
+        Uri[] lists = {DataContentProvider.CONTENT_CURRENCIES, DataContentProvider.CONTENT_WALLETS};
+        ContentValues[] values = {currencyValues("TSB"), walletValues("Watched by the widget")};
+        for (int i = 0; i < lists.length; i++) {
+            ContentObserver[] wide = new ContentObserver[1];
+            ContentObserver[] narrow = new ContentObserver[1];
+            BlockingQueue<Uri> wideHeard =
+                    watchUris(contentResolver, DataContentProvider.CONTENT_ALL, true, wide);
+            BlockingQueue<Uri> narrowHeard =
+                    watchUris(contentResolver, DataContentProvider.CONTENT_ALL, false, narrow);
+            try {
+                Uri written = contentResolver.insert(lists[i], values[i]);
+                assertNotNull("the provider refused a row that is fine, so nothing was written "
+                        + "for this observer to hear about", written);
+                assertHeard(wideHeard, written, "an observer on the whole provider was not told "
+                        + "about " + written + ", which is how the widget would go stale after a "
+                        + "write");
+                assertHeardNothing(narrowHeard, "an observer that did not ask for the uris below "
+                        + "CONTENT_ALL was told about a write. Either the descendants flag is not "
+                        + "what carries this, or something now announces the bare authority");
+            } finally {
+                contentResolver.unregisterContentObserver(wide[0]);
+                contentResolver.unregisterContentObserver(narrow[0]);
+            }
+        }
     }
 
     /**

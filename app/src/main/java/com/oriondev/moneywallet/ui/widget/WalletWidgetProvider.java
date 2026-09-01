@@ -55,8 +55,14 @@ import com.oriondev.moneywallet.utils.MoneyFormatter;
 public class WalletWidgetProvider extends AppWidgetProvider {
 
     /**
-     * Redraw every placed widget. Called from WalletWidgetObserver when something that can move a
-     * balance is written, and from PreferenceManager when a setting the figure depends on changes.
+     * Redraw every placed widget. Reached from WalletWidgetObserver for every write
+     * DataContentProvider announces, which is more than can move a balance, from PreferenceManager
+     * when a setting the figure depends on changes, and from onUpdate below when the system asks.
+     * A restore is none of those and asks for a redraw in forgetConfiguredWallets.
+     *
+     * The observer folds a run of writes into one redraw only while they keep landing inside its
+     * delay. Writes further apart than that get one redraw each, which is what attaching several
+     * files one at a time does.
      *
      * Not from the main thread. Asking for the ids is a call into another process and drawing one
      * reads an aggregate over the transaction table.

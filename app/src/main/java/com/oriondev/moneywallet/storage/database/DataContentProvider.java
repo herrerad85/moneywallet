@@ -65,6 +65,16 @@ public class DataContentProvider extends ContentProvider {
     public static final Uri CONTENT_PEOPLE = Uri.parse("content://" + AUTHORITY + "/people");
     public static final Uri CONTENT_ATTACHMENTS = Uri.parse("content://" + AUTHORITY + "/attachments");
 
+    /**
+     * Every uri above sits under this one. An observer registered here with descendants included
+     * is told about every change this provider announces, whichever of those uris the write named,
+     * because the framework collects an observer sitting above a uri for a notification on
+     * anything below it.
+     *
+     * It is what a cursor this provider hands out is registered on, and what the widget watches.
+     */
+    public static final Uri CONTENT_ALL = Uri.parse("content://" + AUTHORITY);
+
     private static final int CURRENCY_LIST = 1;
     private static final int WALLET_LIST = 2;
     private static final int TRANSACTION_LIST = 3;
@@ -182,6 +192,27 @@ public class DataContentProvider extends ContentProvider {
         return true;
     }
 
+    /**
+     * Every cursor is registered on the whole provider and not on the entities its own query
+     * reads. A cursor that names its own is a list that has to be kept in step with the joins
+     * under it and with what each write announces, and getting that list wrong shows up as a
+     * screen holding a figure that is no longer true. One of those lists already needed a uri
+     * added by hand when saving a debt's master transaction started writing the debt's people.
+     *
+     * What it costs is reloads. Twenty five of the forty six cases named two entities or fewer,
+     * ten of them exactly one, and every case now wakes for writes it did not name. The ten are
+     * cheap single table queries; the transaction list is not, and it wakes for a currency or a
+     * budget now where it named nine other things and not those. An import announces once per
+     * list when it commits and not once a row, but a run of single row writes reaches further
+     * than it used to. Attaching several files to one transaction, or the recurrence job posting
+     * a backlog, are the two to picture. A reload is the query run again and then the whole list
+     * rebound on the main thread, since nothing here sets an update throttle on a loader and the
+     * adapters swap a cursor with notifyDataSetChanged.
+     *
+     * The cursor stays wrapped for one uri because the wrapper replays a change that arrives
+     * between this method returning and a loader registering on the cursor. AbstractCursor drops
+     * that one.
+     */
     @Nullable
     @Override
     public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
@@ -189,312 +220,145 @@ public class DataContentProvider extends ContentProvider {
         switch (mUriMatcher.match(uri)) {
             case CURRENCY_LIST:
                 cursor = new MultiUriCursorWrapper(db().getCurrencies(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CURRENCIES);
                 break;
             case CURRENCY_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getCurrency(uri.getLastPathSegment(), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
                 break;
             case WALLET_LIST:
                 cursor = new MultiUriCursorWrapper(db().getWallets(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSFERS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
                 break;
             case WALLET_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getWallet(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSFERS);
                 break;
             case TRANSACTION_LIST:
                 cursor = new MultiUriCursorWrapper(db().getTransactions(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSFERS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PEOPLE);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_ATTACHMENTS);
                 break;
             case TRANSACTION_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getTransaction(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSFERS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PEOPLE);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_ATTACHMENTS);
                 break;
             case TRANSACTION_ATTACHMENTS:
                 cursor = new MultiUriCursorWrapper(db().getTransactionAttachments(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_ATTACHMENTS);
                 break;
             case TRANSACTION_PEOPLE:
                 cursor = new MultiUriCursorWrapper(db().getTransactionPeople(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PEOPLE);
                 break;
             case TRANSFER_LIST:
                 cursor = new MultiUriCursorWrapper(db().getTransfers(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSFERS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PEOPLE);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_ATTACHMENTS);
                 break;
             case TRANSFER_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getTransfer(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PEOPLE);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_ATTACHMENTS);
                 break;
             case TRANSFER_ATTACHMENTS:
                 cursor = new MultiUriCursorWrapper(db().getTransferAttachments(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSFERS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_ATTACHMENTS);
                 break;
             case TRANSFER_PEOPLE:
                 cursor = new MultiUriCursorWrapper(db().getTransferPeople(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSFERS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PEOPLE);
                 break;
             case CATEGORY_LIST:
                 cursor = new MultiUriCursorWrapper(db().getCategories(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
                 break;
             case CATEGORY_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getCategory(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
                 break;
             case CATEGORY_TRANSACTION_LIST:
                 cursor = new MultiUriCursorWrapper(db().getCategoryTransactions(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
                 break;
             case DEBT_LIST:
                 cursor = new MultiUriCursorWrapper(db().getDebts(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PEOPLE);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
                 break;
             case DEBT_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getDebt(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PEOPLE);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
                 break;
             case DEBT_PEOPLE:
                 cursor = new MultiUriCursorWrapper(db().getDebtPeople(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PEOPLE);
-                // Saving a debt's master transaction now writes the debt's people, so a write
-                // to a transaction can change what this cursor holds.
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
                 break;
             case DEBT_TRANSACTION_LIST:
                 cursor = new MultiUriCursorWrapper(db().getDebtTransactions(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
                 break;
             case BUDGET_LIST:
                 cursor = new MultiUriCursorWrapper(db().getBudgets(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_BUDGETS);
                 break;
             case BUDGET_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getBudget(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
                 break;
             case BUDGET_WALLETS:
                 cursor = new MultiUriCursorWrapper(db().getBudgetWallets(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_BUDGETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
                 break;
             case BUDGET_CATEGORIES:
                 cursor = new MultiUriCursorWrapper(db().getBudgetCategories(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_BUDGETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
                 break;
             case BUDGET_TRANSACTION_LIST:
                 cursor = new MultiUriCursorWrapper(db().getBudgetTransactions(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_BUDGETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
                 break;
             case SAVING_LIST:
                 cursor = new MultiUriCursorWrapper(db().getSavings(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_SAVINGS);
                 break;
             case SAVING_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getSaving(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
                 break;
             case SAVING_TRANSACTION_LIST:
                 cursor = new MultiUriCursorWrapper(db().getSavingTransactions(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_SAVINGS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
                 break;
             case EVENT_LIST:
                 cursor = new MultiUriCursorWrapper(db().getEvents(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
                 break;
             case EVENT_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getEvent(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
                 break;
             case EVENT_TRANSACTION_LIST:
                 cursor = new MultiUriCursorWrapper(db().getEventTransactions(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
                 break;
             case RECURRENT_TRANSACTION_LIST:
                 cursor = new MultiUriCursorWrapper(db().getRecurrentTransactions(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTION_MODELS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_RECURRENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
                 break;
             case RECURRENT_TRANSACTION_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getRecurrentTransaction(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTION_MODELS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_RECURRENT_TRANSACTIONS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
                 break;
             case RECURRENT_TRANSFER_LIST:
                 cursor = new MultiUriCursorWrapper(db().getRecurrentTransfers(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSFER_MODELS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_RECURRENT_TRANSFERS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
                 break;
             case RECURRENT_TRANSFER_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getRecurrentTransfer(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSFER_MODELS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_RECURRENT_TRANSFERS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
                 break;
             case TRANSACTION_MODEL_LIST:
                 cursor = new MultiUriCursorWrapper(db().getTransactionModels(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTION_MODELS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
                 break;
             case TRANSACTION_MODEL_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getTransactionModel(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
                 break;
             case TRANSFER_MODEL_LIST:
                 cursor = new MultiUriCursorWrapper(db().getTransferModels(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSFER_MODELS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
                 break;
             case TRANSFER_MODEL_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getTransferModel(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_WALLETS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_CATEGORIES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_DEBTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_EVENTS);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
                 break;
             case PLACE_LIST:
                 cursor = new MultiUriCursorWrapper(db().getPlaces(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
                 break;
             case PLACE_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getPlace(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
                 break;
             case PLACE_TRANSACTION_LIST:
                 cursor = new MultiUriCursorWrapper(db().getPlaceTransactions(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PLACES);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
                 break;
             case PERSON_LIST:
                 cursor = new MultiUriCursorWrapper(db().getPeople(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PEOPLE);
                 break;
             case PERSON_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getPerson(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
                 break;
             case PERSON_TRANSACTION_LIST:
                 cursor = new MultiUriCursorWrapper(db().getPeopleTransactions(parseIdAtIndex(uri, 1), projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_PEOPLE);
-                cursor.setNotificationUri(getContentResolver(), CONTENT_TRANSACTIONS);
                 break;
             case ATTACHMENT_LIST:
                 cursor = new MultiUriCursorWrapper(db().getAttachments(projection, selection, selectionArgs, sortOrder));
-                cursor.setNotificationUri(getContentResolver(), CONTENT_ATTACHMENTS);
                 break;
             case ATTACHMENT_ITEM:
                 cursor = new MultiUriCursorWrapper(db().getAttachment(ContentUris.parseId(uri), projection));
-                cursor.setNotificationUri(getContentResolver(), uri);
                 break;
+        }
+        if (cursor != null) {
+            cursor.setNotificationUri(getContentResolver(), CONTENT_ALL);
         }
         return cursor;
     }
