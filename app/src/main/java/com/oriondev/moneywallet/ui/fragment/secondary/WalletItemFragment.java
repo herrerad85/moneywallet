@@ -259,8 +259,12 @@ public class WalletItemFragment extends SecondaryPanelFragment implements Loader
             Icon icon = IconLoader.parse(cursor.getString(cursor.getColumnIndex(Contract.Wallet.ICON)));
             IconLoader.loadInto(icon, mAvatarImageView);
             mNameTextView.setText(cursor.getString(cursor.getColumnIndex(Contract.Wallet.NAME)));
-            CurrencyUnit currency = CurrencyManager.getCurrency(cursor.getString(cursor.getColumnIndex(Contract.Wallet.CURRENCY)));
-            mCurrencyTextView.setText(currency.getName());
+            String currencyIso = cursor.getString(cursor.getColumnIndex(Contract.Wallet.CURRENCY));
+            CurrencyUnit currency = CurrencyManager.getCurrency(currencyIso);
+            // the wallet can name a currency this installation does not have, which a restore from
+            // another one leaves behind, and then the iso is the only name there is. The money
+            // below already reads a null currency, this line did not
+            mCurrencyTextView.setText(currency != null ? currency.getName() : currencyIso);
             long startMoney = cursor.getLong(cursor.getColumnIndex(Contract.Wallet.START_MONEY));
             mMoneyFormatter.applyNotTinted(mStartMoneyTextView, currency, startMoney);
             String note = cursor.getString(cursor.getColumnIndex(Contract.Wallet.NOTE));

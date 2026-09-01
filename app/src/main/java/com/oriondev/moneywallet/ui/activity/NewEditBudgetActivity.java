@@ -214,6 +214,34 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
             }
 
         });
+        // before the one below, because a wallet naming a currency this installation does not
+        // have has no currency to compare and the comparison there would pass it through to
+        // onSaveChanges, which reads the iso straight off it. Validators run in order and stop at
+        // the first refusal, so this is also what decides the message the user is shown
+        mWalletsEditText.addValidator(new Validator() {
+
+            @NonNull
+            @Override
+            public String getErrorMessage() {
+                return getString(R.string.error_input_currency_not_valid);
+            }
+
+            @Override
+            public boolean isValid(@NonNull CharSequence charSequence) {
+                for (Wallet wallet : mWalletsPicker.getCurrentWallets()) {
+                    if (wallet.getCurrency() == null) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public boolean autoValidate() {
+                return false;
+            }
+
+        });
         mWalletsEditText.addValidator(new Validator() {
 
             @NonNull

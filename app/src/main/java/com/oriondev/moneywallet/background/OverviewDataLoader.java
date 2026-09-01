@@ -163,7 +163,10 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
             for (int i = 0; i < periodMoneyList.size(); i++) {
                 PeriodMoney periodMoney = periodMoneyList.get(i);
                 long money = periodMoney.getNetIncomes().getMoney(currency);
-                float value = MoneyScale.toHumanAmount(money, currencyUnit.getDecimals()).floatValue();
+                // getDecimals and not getDecimals() on the unit. A row can name a currency this
+                // installation does not have, which a restore from another one leaves behind, and
+                // getCurrency answers null for it
+                float value = MoneyScale.toHumanAmount(money, CurrencyManager.getDecimals(currencyUnit)).floatValue();
                 barEntryList.add(new BarEntry(i, value));
                 lineEntryList.add(new Entry(i, value));
                 radarEntryList.add(new RadarEntry(value));

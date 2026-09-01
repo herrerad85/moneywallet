@@ -857,6 +857,23 @@ public class DataContentProvider extends ContentProvider {
     private static final ThreadLocal<Set<Uri>> sDeferredNotifications = new ThreadLocal<>();
 
     /**
+     * True when this thread is inside runInOneTransaction, and so holds a database connection for
+     * as long as that runs. Which connection depends on the thread: a staged import holds the
+     * staging one, everything else holds the one the app shares.
+     *
+     * This is narrower than holding a connection. A single provider write holds one too, through
+     * inSharedTransaction, and does not set this. It covers the case worth covering, which is a
+     * caller that has wrapped other work in a transaction and reaches something that takes a lock
+     * across the database. SQLDatabase.resetShared refuses on a wider condition, the swap read
+     * hold count, which it can read because that lock is private to it. Reaching the same
+     * condition from here would take an accessor on SQLDatabase, which is worth doing the day
+     * something inside a plain provider write can reach code that locks across the database.
+     */
+    public static boolean isInsideOneTransaction() {
+        return sDeferredNotifications.get() != null;
+    }
+
+    /**
      * Tells the observers about a write, or remembers it for {@link #runInOneTransaction} to tell
      * them once the import it is running has committed. Announcing each row as it goes in would
      * name rows that are not committed yet, and a failed import rolls every one of them back with
@@ -906,7 +923,12 @@ public class DataContentProvider extends ContentProvider {
      * Every other thread that touches the ledger waits for the import to finish, reads as well as
      * writes, and some of those writes are made on the main thread, where waiting is a frozen
      * screen. Keep what runs in here down to the writes themselves and keep the caller somewhere
-     * that can wait, which the import service and the legacy upgrade service both are.
+     * that can wait, or somewhere nothing else is running yet. The import service and the legacy
+     * upgrade service are the first. CurrencyManager writing the default currency set is the
+     * other, and it reaches here three ways: from a first launch, where nothing else has started
+     * yet; from a restore of a legacy backup, which carries no currencies and so leaves the table
+     * empty, on the backup service thread while the user interface is live; and from deleting the
+     * last currency, on the main thread. The last two can both make a user wait.
      *
      * Public, and here, because SQLDatabase is package local and the importers sit in a sub
      * package, so they cannot name it.
