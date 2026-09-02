@@ -28,6 +28,21 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6
 
+      # Robolectric fetches the android-all jar for the SDK it runs against, about
+      # 190 MB, into the Maven local repository and not the Gradle cache, so the
+      # step above does not keep it. Which jar that is follows the Robolectric
+      # version and targetSdk, both set in app/build.gradle, so the key follows
+      # that file. A cache entry is never rewritten on an exact hit, which is why
+      # the key cannot be a constant. A bump would keep restoring the old jar and
+      # fetching the new one on every run. No restore-keys on purpose, since a
+      # restored entry is saved back as a union and nothing prunes a superseded
+      # jar, so an entry would grow by a jar per bump. An unrelated edit to that
+      # file costs one fetch instead.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-${{ hashFiles('app/build.gradle') }}
+
       - run: ./gradlew clean testFlossOsmDebugUnitTest assembleFlossOsmDebug assembleFlossOsmDebugAndroidTest lintFlossOsmDebug
 
       - uses: actions/upload-artifact@v7
