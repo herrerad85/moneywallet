@@ -184,9 +184,9 @@ public class TransactionItemFragment extends SecondaryPanelFragment implements L
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(TRANSACTION_LOADER_ID, null, this);
-        getLoaderManager().restartLoader(PEOPLE_LOADER_ID, null, this);
-        getLoaderManager().restartLoader(ATTACHMENTS_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(TRANSACTION_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(PEOPLE_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(ATTACHMENTS_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

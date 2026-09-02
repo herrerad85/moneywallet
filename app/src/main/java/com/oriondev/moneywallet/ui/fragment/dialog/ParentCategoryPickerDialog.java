@@ -109,7 +109,7 @@ public class ParentCategoryPickerDialog extends DialogFragment implements Parent
         }
         mRecyclerView.setVisibility(View.GONE);
         mMessageTextView.setVisibility(View.GONE);
-        getLoaderManager().restartLoader(DEFAULT_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(DEFAULT_LOADER_ID, null, this);
         return dialog;
     }
 

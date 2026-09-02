@@ -125,9 +125,9 @@ public class TransferListFragment extends CursorListFragment implements Transfer
         }
         super.onLoadFinished(loader, cursor);
         if (empty) {
-            getLoaderManager().restartLoader(HIDDEN_TRANSFERS_LOADER_ID, null, mHiddenTransfersCallbacks);
+            LoaderManager.getInstance(this).restartLoader(HIDDEN_TRANSFERS_LOADER_ID, null, mHiddenTransfersCallbacks);
         } else {
-            getLoaderManager().destroyLoader(HIDDEN_TRANSFERS_LOADER_ID);
+            LoaderManager.getInstance(this).destroyLoader(HIDDEN_TRANSFERS_LOADER_ID);
         }
     }
 

@@ -156,8 +156,8 @@ public class BudgetItemFragment extends SecondaryPanelFragment implements Loader
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(BUDGET_LOADER_ID, null, this);
-        getLoaderManager().restartLoader(WALLETS_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(BUDGET_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(WALLETS_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

@@ -214,7 +214,7 @@ public class WalletItemFragment extends SecondaryPanelFragment implements Loader
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(WALLET_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(WALLET_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

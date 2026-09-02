@@ -284,30 +284,30 @@ public abstract class MultiPanelFragment extends Fragment implements MultiPanelC
         if (walletId == PreferenceManager.TOTAL_WALLET_ID) {
             // synthetic, there is no row to load
             mPrimaryToolbar.setSubtitle(R.string.total_wallet_name);
-            getLoaderManager().destroyLoader(CURRENT_WALLET_LOADER_ID);
+            LoaderManager.getInstance(this).destroyLoader(CURRENT_WALLET_LOADER_ID);
         } else if (walletId == PreferenceManager.NO_CURRENT_WALLET) {
             mPrimaryToolbar.setSubtitle(null);
-            getLoaderManager().destroyLoader(CURRENT_WALLET_LOADER_ID);
+            LoaderManager.getInstance(this).destroyLoader(CURRENT_WALLET_LOADER_ID);
         } else if (reload) {
             // clear first: the load is asynchronous, and until it lands the old name would be
             // naming the wrong wallet rather than merely being out of date
             mPrimaryToolbar.setSubtitle(null);
             // a loader rather than a direct query: resolving a wallet row runs a balance
             // aggregate over the transactions table, and it redelivers when the row is renamed
-            getLoaderManager().restartLoader(CURRENT_WALLET_LOADER_ID, null, mCurrentWalletCallbacks);
+            LoaderManager.getInstance(this).restartLoader(CURRENT_WALLET_LOADER_ID, null, mCurrentWalletCallbacks);
         } else if (isLoaderBuiltForAnotherWallet(walletId)) {
             // a retained loader outlives this fragment instance, so init would redeliver the row
             // it already holds, which belongs to a wallet that is no longer the selected one.
             // No clear needed before the reload, unlike the branch above: this path only runs
             // while the toolbar is freshly inflated, so there is no old name on it yet
-            getLoaderManager().restartLoader(CURRENT_WALLET_LOADER_ID, null, mCurrentWalletCallbacks);
+            LoaderManager.getInstance(this).restartLoader(CURRENT_WALLET_LOADER_ID, null, mCurrentWalletCallbacks);
         } else {
-            getLoaderManager().initLoader(CURRENT_WALLET_LOADER_ID, null, mCurrentWalletCallbacks);
+            LoaderManager.getInstance(this).initLoader(CURRENT_WALLET_LOADER_ID, null, mCurrentWalletCallbacks);
         }
     }
 
     private boolean isLoaderBuiltForAnotherWallet(long walletId) {
-        Loader<Cursor> loader = getLoaderManager().getLoader(CURRENT_WALLET_LOADER_ID);
+        Loader<Cursor> loader = LoaderManager.getInstance(this).getLoader(CURRENT_WALLET_LOADER_ID);
         if (loader instanceof CursorLoader) {
             return ContentUris.parseId(((CursorLoader) loader).getUri()) != walletId;
         }

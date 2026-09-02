@@ -143,7 +143,7 @@ public class EventItemFragment extends SecondaryPanelFragment implements LoaderM
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(EVENT_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(EVENT_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

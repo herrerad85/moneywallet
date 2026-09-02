@@ -147,7 +147,7 @@ public class PeriodDetailFlowFragment extends Fragment implements PeriodDetailFl
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mHeaderLeftTextView.setText(mIncomes ? R.string.hint_incomes : R.string.hint_expenses);
-        getLoaderManager().restartLoader(LOADER_FRAGMENT_DATA, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_FRAGMENT_DATA, null, this);
     }
 
     @Override
@@ -192,6 +192,6 @@ public class PeriodDetailFlowFragment extends Fragment implements PeriodDetailFl
 
     @Override
     public void onCurrentWalletChanged(long walletId) {
-        getLoaderManager().restartLoader(LOADER_FRAGMENT_DATA, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_FRAGMENT_DATA, null, this);
     }
 }

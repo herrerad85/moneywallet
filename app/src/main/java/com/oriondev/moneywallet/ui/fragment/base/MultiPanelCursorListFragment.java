@@ -54,7 +54,7 @@ public abstract class MultiPanelCursorListFragment extends MultiPanelFragment im
         mAbstractCursorAdapter = onCreateAdapter();
         mAdvancedRecyclerView.setAdapter(mAbstractCursorAdapter);
         mAdvancedRecyclerView.setOnRefreshListener(this);
-        getLoaderManager().initLoader(DEFAULT_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).initLoader(DEFAULT_LOADER_ID, null, this);
         mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.LOADING);
     }
 
@@ -89,12 +89,12 @@ public abstract class MultiPanelCursorListFragment extends MultiPanelFragment im
 
     @Override
     public void onRefresh() {
-        getLoaderManager().restartLoader(DEFAULT_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(DEFAULT_LOADER_ID, null, this);
         mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.REFRESHING);
     }
 
     protected void recreateLoader() {
-        getLoaderManager().restartLoader(DEFAULT_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(DEFAULT_LOADER_ID, null, this);
         mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.LOADING);
     }
 }

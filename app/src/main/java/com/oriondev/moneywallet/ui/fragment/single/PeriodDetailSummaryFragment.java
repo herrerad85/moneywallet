@@ -128,7 +128,7 @@ public class PeriodDetailSummaryFragment extends Fragment implements PeriodDetai
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mHeaderLeftTextView.setText(R.string.hint_net_incomes);
-        getLoaderManager().restartLoader(LOADER_FRAGMENT_DATA, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_FRAGMENT_DATA, null, this);
     }
 
     @Override
@@ -184,6 +184,6 @@ public class PeriodDetailSummaryFragment extends Fragment implements PeriodDetai
 
     @Override
     public void onCurrentWalletChanged(long walletId) {
-        getLoaderManager().restartLoader(LOADER_FRAGMENT_DATA, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_FRAGMENT_DATA, null, this);
     }
 }

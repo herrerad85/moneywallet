@@ -80,7 +80,7 @@ public abstract class CursorListFragment extends Fragment implements SwipeRefres
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        getLoaderManager().restartLoader(DEFAULT_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(DEFAULT_LOADER_ID, null, this);
     }
 
     @Override
@@ -100,7 +100,7 @@ public abstract class CursorListFragment extends Fragment implements SwipeRefres
 
     @Override
     public void onRefresh() {
-        getLoaderManager().restartLoader(DEFAULT_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(DEFAULT_LOADER_ID, null, this);
         mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.REFRESHING);
     }
 
@@ -121,7 +121,7 @@ public abstract class CursorListFragment extends Fragment implements SwipeRefres
      */
     public void reloadList() {
         if (mAdvancedRecyclerView != null) {
-            getLoaderManager().restartLoader(DEFAULT_LOADER_ID, null, this);
+            LoaderManager.getInstance(this).restartLoader(DEFAULT_LOADER_ID, null, this);
             mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.LOADING);
         }
     }
@@ -133,7 +133,7 @@ public abstract class CursorListFragment extends Fragment implements SwipeRefres
     @Override
     public void onCurrentWalletChanged(long walletId) {
         if (shouldRefreshOnCurrentWalletChange()) {
-            getLoaderManager().restartLoader(DEFAULT_LOADER_ID, null, this);
+            LoaderManager.getInstance(this).restartLoader(DEFAULT_LOADER_ID, null, this);
             mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.LOADING);
         }
     }

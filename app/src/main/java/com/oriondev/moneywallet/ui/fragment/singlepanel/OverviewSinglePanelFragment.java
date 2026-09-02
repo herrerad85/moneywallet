@@ -124,7 +124,7 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
 
     @Override
     public void onOverviewSettingChanged(String tag, OverviewSetting overviewSetting) {
-        getLoaderManager().restartLoader(LOADER_OVERVIEW_DATA, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_OVERVIEW_DATA, null, this);
     }
 
     @NonNull
@@ -155,6 +155,6 @@ public class OverviewSinglePanelFragment extends SinglePanelFragment implements 
 
     @Override
     public void onCurrentWalletChanged(long walletId) {
-        getLoaderManager().restartLoader(LOADER_OVERVIEW_DATA, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_OVERVIEW_DATA, null, this);
     }
 }

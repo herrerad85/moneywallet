@@ -119,7 +119,7 @@ public class MultiCategoryPickerDialog extends DialogFragment implements ParentC
         }
         mRecyclerView.setVisibility(View.GONE);
         mMessageTextView.setVisibility(View.GONE);
-        getLoaderManager().restartLoader(DEFAULT_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(DEFAULT_LOADER_ID, null, this);
         return dialog;
     }
 
@@ -225,7 +225,7 @@ public class MultiCategoryPickerDialog extends DialogFragment implements ParentC
         if (before != selectedType()) {
             // the first choice narrows the list to that direction, and dropping the last opens it
             // back up, so the rows on offer have to be asked for again
-            getLoaderManager().restartLoader(DEFAULT_LOADER_ID, null, this);
+            LoaderManager.getInstance(this).restartLoader(DEFAULT_LOADER_ID, null, this);
         } else {
             mCursorAdapter.notifyDataSetChanged();
         }

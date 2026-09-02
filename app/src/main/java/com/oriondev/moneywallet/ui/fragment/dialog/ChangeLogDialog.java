@@ -69,7 +69,7 @@ public class ChangeLogDialog extends DialogFragment implements LoaderManager.Loa
                 .title(R.string.dialog_change_log_title)
                 .positiveText(android.R.string.ok)
                 .adapter(mAdapter, new LinearLayoutManager(activity));
-        getLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
         return builder.build();
     }
 

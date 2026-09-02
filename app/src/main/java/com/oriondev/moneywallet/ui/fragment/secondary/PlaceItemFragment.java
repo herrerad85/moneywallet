@@ -216,7 +216,7 @@ public class PlaceItemFragment extends SecondaryPanelFragment implements LoaderM
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(PLACE_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(PLACE_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

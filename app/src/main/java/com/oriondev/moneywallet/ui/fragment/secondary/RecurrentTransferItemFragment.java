@@ -162,7 +162,7 @@ public class RecurrentTransferItemFragment extends SecondaryPanelFragment implem
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(RECURRENT_TRANSFER_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(RECURRENT_TRANSFER_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

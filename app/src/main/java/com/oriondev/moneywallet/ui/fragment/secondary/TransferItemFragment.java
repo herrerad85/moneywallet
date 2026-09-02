@@ -170,9 +170,9 @@ public class TransferItemFragment extends SecondaryPanelFragment implements Atta
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(TRANSFER_LOADER_ID, null, this);
-        getLoaderManager().restartLoader(PEOPLE_LOADER_ID, null, this);
-        getLoaderManager().restartLoader(ATTACHMENTS_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(TRANSFER_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(PEOPLE_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(ATTACHMENTS_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

@@ -214,7 +214,7 @@ public class SavingItemFragment extends SecondaryPanelFragment implements Loader
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(SAVING_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(SAVING_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

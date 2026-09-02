@@ -221,8 +221,8 @@ public class DebtItemFragment extends SecondaryPanelFragment implements LoaderMa
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(DEBT_LOADER_ID, null, this);
-        getLoaderManager().restartLoader(PEOPLE_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(DEBT_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(PEOPLE_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

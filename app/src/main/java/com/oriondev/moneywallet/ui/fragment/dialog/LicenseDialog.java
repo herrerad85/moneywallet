@@ -72,7 +72,7 @@ public class LicenseDialog extends DialogFragment implements LoaderManager.Loade
                 .title(R.string.title_licenses)
                 .adapter(mAdapter, new LinearLayoutManager(activity))
                 .positiveText(android.R.string.ok);
-        getLoaderManager().restartLoader(LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
         return builder.build();
     }
 

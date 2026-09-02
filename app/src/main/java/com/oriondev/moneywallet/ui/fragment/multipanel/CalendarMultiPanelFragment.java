@@ -136,7 +136,7 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
         mTimelineView.setSelectedDate(year, month, day);
         mTimelineView.setOnDateSelectedListener(this);
         onDateSelected(year, month, day, mTimelineView.getSelectedPosition());
-        getLoaderManager().initLoader(MARKED_DAYS_LOADER_ID, null, mMarkedDaysCallbacks);
+        LoaderManager.getInstance(this).initLoader(MARKED_DAYS_LOADER_ID, null, mMarkedDaysCallbacks);
     }
 
     /**
@@ -366,7 +366,7 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
         arguments.putInt(ARG_SELECTED_YEAR, year);
         arguments.putInt(ARG_SELECTED_MONTH, month);
         arguments.putInt(ARG_SELECTED_DAY, day);
-        getLoaderManager().restartLoader(DEFAULT_LOADER_ID, arguments, this);
+        LoaderManager.getInstance(this).restartLoader(DEFAULT_LOADER_ID, arguments, this);
     }
 
     /**
@@ -375,6 +375,6 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
      * because the cursor is watching the transactions it came from.
      */
     private void loadMarkedDays() {
-        getLoaderManager().restartLoader(MARKED_DAYS_LOADER_ID, null, mMarkedDaysCallbacks);
+        LoaderManager.getInstance(this).restartLoader(MARKED_DAYS_LOADER_ID, null, mMarkedDaysCallbacks);
     }
 }

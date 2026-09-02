@@ -160,7 +160,7 @@ public class RecurrentTransactionItemFragment extends SecondaryPanelFragment imp
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(RECURRENT_TRANSACTION_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(RECURRENT_TRANSACTION_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

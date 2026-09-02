@@ -143,7 +143,7 @@ public class PersonItemFragment extends SecondaryPanelFragment implements Loader
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(PERSON_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(PERSON_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

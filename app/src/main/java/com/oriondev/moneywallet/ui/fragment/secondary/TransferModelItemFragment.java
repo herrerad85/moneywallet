@@ -152,7 +152,7 @@ public class TransferModelItemFragment extends SecondaryPanelFragment implements
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(TRANSFER_MODEL_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(TRANSFER_MODEL_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

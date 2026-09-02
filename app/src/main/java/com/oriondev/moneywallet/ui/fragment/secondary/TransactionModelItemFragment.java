@@ -150,7 +150,7 @@ public class TransactionModelItemFragment extends SecondaryPanelFragment impleme
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(TRANSACTION_MODEL_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(TRANSACTION_MODEL_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {

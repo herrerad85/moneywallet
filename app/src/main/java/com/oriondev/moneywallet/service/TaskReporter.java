@@ -83,6 +83,8 @@ class TaskReporter {
      */
     void showNotification(int id, NotificationCompat.Builder builder) {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(mContext);
-        notificationManager.notify(id, builder.build());
+        if (notificationManager.areNotificationsEnabled()) {
+            notificationManager.notify(id, builder.build());
+        }
     }
 }

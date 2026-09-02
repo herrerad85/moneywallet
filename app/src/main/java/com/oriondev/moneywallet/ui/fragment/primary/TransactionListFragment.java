@@ -119,9 +119,9 @@ public class TransactionListFragment extends CursorListFragment implements Trans
         }
         super.onLoadFinished(loader, cursor);
         if (empty) {
-            getLoaderManager().restartLoader(HIDDEN_TRANSACTIONS_LOADER_ID, null, mHiddenTransactionsCallbacks);
+            LoaderManager.getInstance(this).restartLoader(HIDDEN_TRANSACTIONS_LOADER_ID, null, mHiddenTransactionsCallbacks);
         } else {
-            getLoaderManager().destroyLoader(HIDDEN_TRANSACTIONS_LOADER_ID);
+            LoaderManager.getInstance(this).destroyLoader(HIDDEN_TRANSACTIONS_LOADER_ID);
         }
     }
 

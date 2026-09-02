@@ -19,16 +19,18 @@
 
 package com.oriondev.moneywallet.ui.activity;
 
-import android.app.LoaderManager;
-import android.content.CursorLoader;
 import android.content.Intent;
-import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.Place;
@@ -48,6 +50,7 @@ public class MapActivity extends SinglePanelActivity implements LoaderManager.Lo
     private static final int LOADER_PLACES = 23748;
 
     private MapViewWrapper mMapView;
+    private boolean mPlacesDelivered;
 
     @Override
     protected void onCreatePanelView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
@@ -109,8 +112,9 @@ public class MapActivity extends SinglePanelActivity implements LoaderManager.Lo
         return false;
     }
 
+    @NonNull
     @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+    public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
         Uri uri = DataContentProvider.CONTENT_PLACES;
         String[] projection = new String[] {
                 Contract.Place.ID,
@@ -125,7 +129,14 @@ public class MapActivity extends SinglePanelActivity implements LoaderManager.Lo
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
+        // The framework manager delivered to this screen once. The AndroidX one delivers again
+        // every time the screen is started and after writes elsewhere in the app, and addPlaces
+        // stacks a second overlay on the first and recenters the map.
+        if (mPlacesDelivered) {
+            return;
+        }
+        mPlacesDelivered = true;
         if (cursor != null) {
             if (mMapView.isMapReady() && cursor.moveToFirst()) {
                 List<Place> placeList = new ArrayList<>();
@@ -140,19 +151,18 @@ public class MapActivity extends SinglePanelActivity implements LoaderManager.Lo
                 // display the list of places on map
                 mMapView.addPlaces(placeList);
             }
-            cursor.close();
         }
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         // nothing to release
     }
 
     @Override
     public void onMapReady() {
         mMapView.setOnInfoClickListener(this);
-        getLoaderManager().restartLoader(LOADER_PLACES, null, this);
+        LoaderManager.getInstance(this).restartLoader(LOADER_PLACES, null, this);
     }
 
     @Override

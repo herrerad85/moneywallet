@@ -103,7 +103,7 @@ public class PlacePickerDialog extends DialogFragment implements PlaceSelectorCu
         }
         mRecyclerView.setVisibility(View.GONE);
         mMessageTextView.setVisibility(View.GONE);
-        getLoaderManager().restartLoader(DEFAULT_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(DEFAULT_LOADER_ID, null, this);
         return dialog;
     }
 

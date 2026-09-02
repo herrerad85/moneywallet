@@ -170,7 +170,7 @@ public class CategoryItemFragment extends SecondaryPanelFragment implements Load
     @Override
     protected void onShowItemId(long itemId) {
         setLoadingScreen(true);
-        getLoaderManager().restartLoader(CATEGORY_LOADER_ID, null, this);
+        LoaderManager.getInstance(this).restartLoader(CATEGORY_LOADER_ID, null, this);
     }
 
     private void setLoadingScreen(boolean loading) {
