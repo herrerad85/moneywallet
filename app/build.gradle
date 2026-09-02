@@ -38,11 +38,6 @@ android {
         versionCode 85
         versionName "1.7.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        manifestPlaceholders = [
-                DropBoxApiKey: ApiKey_Dropbox.replaceAll('"', ''),
-                GoogleApiKey : ApiKey_Google
-        ]
-        buildConfigField('String', 'API_KEY_DROPBOX', ApiKey_Dropbox)
         buildConfigField('String', 'API_KEY_OPEN_EXCHANGE_RATES', ApiKey_OpenExchangeRates)
     }
     compileOptions {
@@ -66,18 +61,12 @@ android {
         includeInApk = false
         includeInBundle = false
     }
+    // One flavor per dimension. The F-Droid recipe builds with gradle: [floss, osm] and copies
+    // that list into every new version's build block, so both names stay.
     flavorDimensions "version", "map"
     productFlavors {
-        // version
-        proprietary {
-            dimension "version"
-        }
         floss {
             dimension "version"
-        }
-        // map
-        gmap {
-            dimension "map"
         }
         osm {
             dimension "map"
@@ -190,14 +179,7 @@ dependencies {
     implementation 'com.itextpdf:itextpdf:5.5.13'
     implementation 'com.github.bumptech.glide:glide:4.8.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0'
-    // google play dependencies
-    proprietaryImplementation('com.dropbox.core:dropbox-core-sdk:3.0.8')
-    proprietaryImplementation googlePlayServices.auth
-    proprietaryImplementation googlePlayServices.signin
-    proprietaryImplementation googlePlayServices.drive
-    // google-map dependencies
-    gmapImplementation googlePlayServices.places
-    // floss dependencies
+    // osm flavor
     osmImplementation 'org.osmdroid:osmdroid-android:6.1.1'
     // test dependencies (local tests)
     testImplementation 'junit:junit:4.13.2'

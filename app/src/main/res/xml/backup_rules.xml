@@ -2,12 +2,11 @@
 <!--
   Names the database and nothing else.
 
-  Do not add <include domain="sharedpref">. The app can write six files there and four of them
-  hold a secret in the clear: webdav.xml has the server url, username and password, dropbox.xml
-  has an OAuth access token in the proprietary flavor, backend_preferences.xml has the automatic
-  backup passwords, and preferences.xml has current_lock_code and the user's exchange rate api
-  key. Naming paths one at a time also keeps a preference file added later out of the backup
-  until someone decides it is safe.
+  Do not add <include domain="sharedpref">. Three of the files there hold a secret in the
+  clear: webdav.xml has the server url, username and password, backend_preferences.xml has the
+  automatic backup passwords, and preferences.xml has current_lock_code and the user's exchange
+  rate api key. Naming paths one at a time also keeps a preference file added later out of the
+  backup until someone decides it is safe.
 
   Attachments are out on purpose. Nothing caps their size, a cloud backup has a size quota, and
   going over it fails the whole package instead of dropping the file that broke it, so a user

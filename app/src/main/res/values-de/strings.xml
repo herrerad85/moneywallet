@@ -238,12 +238,8 @@
     <string name="bottom_sheet_icon_picker_action_remove_icon">Symbol entfernen</string>
     <string name="bottom_sheet_icon_picker_action_select_icon">Symbol auswählen</string>
     <string name="bottom_sheet_icon_picker_title">Symbol personalisieren</string>
-    <string name="cover_message_backup_dropbox_button">Anmelden</string>
-    <string name="cover_message_backup_dropbox_title">Die Anwendung kann die Sicherungen auf deinem Dropbox-Konto erstellen und abrufen</string>
     <string name="cover_message_backup_external_memory_button">Weiter</string>
     <string name="cover_message_backup_external_memory_title">Die Anwendung kann die Sicherungen direkt auf dem externen Speicher des Gerätes erstellen und abrufen</string>
-    <string name="cover_message_backup_google_drive_button">Anmelden</string>
-    <string name="cover_message_backup_google_drive_title">Die Anwendung kann die Sicherungen auf deinem Google-Drive-Konto erstellen und abrufen</string>
     <string name="description_attachment_icon">Anhang</string>
     <string name="description_backspace_icon">Zurück</string>
     <string name="description_backup_service_icon">Sicherungsservice</string>
@@ -392,8 +388,6 @@
     <string name="message_backup_restore_standard">Bist du sicher, dass du diese Sicherung wiederherstellen möchtest? Alle bestehenden Daten werden verloren gehen und die Operation kann nicht unterbrochen werden. Fortfahren?</string>
     <string name="message_backup_restoring_failed">Fehler bei Wiederhestellung der Sicherung. Nachricht: %s</string>
     <string name="message_backup_restoring_success">Sicherung erfolgreich wiederhergestellt.</string>
-    <string name="message_backup_service_dropbox_disconnect">Sicher, dass du dein Dropbox-Konto trennen möchtest?</string>
-    <string name="message_backup_service_google_drive_disconnect">Sicher, dass du dein Google-Drive-Konto trennen möchtest?</string>
     <string name="message_backup_status_creation">Erstelle Sicherungsdatei…</string>
     <string name="message_backup_status_downloading">Lade Sicherungsdatei herunter…</string>
     <string name="message_backup_status_restoring">Stelle Sicherungsdatei wieder her…</string>
@@ -540,9 +534,7 @@
     <string name="setting_category_ui_appearance">Aussehen</string>
     <string name="setting_category_database_import_export">Import/Export</string>
     <string name="setting_category_database_backup">Sicherungen</string>
-    <string name="service_backup_google_drive">Google Drive</string>
     <string name="service_backup_external_memory">Externer Speicher</string>
-    <string name="service_backup_drop_box">Dropbox</string>
     <string name="relative_string_will_expire_on">Wird am %s ablaufen</string>
     <string name="relative_string_will_end_on">Wird am %s enden</string>
     <string name="relative_string_version_name">Version %s</string>

@@ -338,12 +338,8 @@
     <string name="message_error_backend_recoverable">"Problema de conexão. Tente novamente."</string>
 
     <string name="cover_message_backup_external_memory_title">"O aplicativo consegue criar e restaurar backups diretamente de fontes de armazenamento externo do dispositivo"</string>
-    <string name="cover_message_backup_dropbox_title">"O aplicativo consegue criar e restaurar backups diretamente da sua conta pessoal do Dropbox"</string>
-    <string name="cover_message_backup_google_drive_title">"O aplicativo consegue criar e restaurar backups diretamente da sua conta pessoal do Google Drive"</string>
     <string name="cover_message_backup_external_memory_button">"Continuar"</string>
     <string name="cover_message_backup_storage_access_framework_button">"Continuar"</string>
-    <string name="cover_message_backup_dropbox_button">"Login"</string>
-    <string name="cover_message_backup_google_drive_button">"Login"</string>
 
     <string name="empty_message_secondary_panel">"Selecione um elemento do painel esquerdo para ver detalhes"</string>
     <string name="empty_message_backup_cover">"Selecione o serviço que você deseja usar parar armazenar e recuperar seu backup pessoal"</string>
@@ -383,8 +379,6 @@
     <string name="message_backup_restoring_success">"Backup restaurado corretamente."</string>
     <string name="message_backup_creation_failed">"Falha durante a criação do arquivo de backup. Mensagem: %s"</string>
     <string name="message_backup_restoring_failed">"Falha durante a restauração do arquivo de backup. Mensagem: %s"</string>
-    <string name="message_backup_service_dropbox_disconnect">"Tem certeza que deseja desconectar da sua conta do Dropbox?"</string>
-    <string name="message_backup_service_google_drive_disconnect">"Tem certeza que deseja desconectar da sua conta do Google Drive?"</string>
     <string name="message_action_archive_wallet">"Tem certeza que deseja arquivar essa carteira? Ela não ficara mais visível no menu."</string>
     <string name="message_action_unarchive_wallet">"Tem certeza que deseja desarquivar essa carteira? Ela ficara visível no menu novamente."</string>
     <string name="message_action_archive_debt">"Tem certeza que deseja arquivar esta dívida?"</string>
@@ -447,8 +441,6 @@
     <string name="spinner_item_start_date">"De:   %s"</string>
     <string name="spinner_item_end_date">"Para:   %s"</string>
 
-    <string name="service_backup_drop_box">"DropBox"</string>
-    <string name="service_backup_google_drive">"Google Drive"</string>
     <string name="service_backup_external_memory">"Armazenamento Externo"</string>
 
     <string name="setting_title_user_interface">"Interface de usuário"</string>

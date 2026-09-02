@@ -370,12 +370,8 @@
 
     <string name="cover_message_backup_storage_access_framework_title">"Create and restore backups in a folder you choose on this device. Because it is an ordinary folder, you can keep it in sync with a tool such as Syncthing or your own setup, with no account required. Document providers like Nextcloud also work."</string>
     <string name="cover_message_backup_external_memory_title">"The application can create and restore the backups directly from the external storage of the device"</string>
-    <string name="cover_message_backup_dropbox_title">"The application can create and restore the backups from your personal Dropbox account"</string>
-    <string name="cover_message_backup_google_drive_title">"The application can create and restore the backups from your personal Google Drive account"</string>
     <string name="cover_message_backup_external_memory_button">"Continue"</string>
     <string name="cover_message_backup_storage_access_framework_button">"Continue"</string>
-    <string name="cover_message_backup_dropbox_button">"Login"</string>
-    <string name="cover_message_backup_google_drive_button">"Login"</string>
     <string name="cover_message_backup_webdav_title">"Create and restore backups on your own WebDAV server, such as Nextcloud, ownCloud or a NAS. Nothing is sent to a third party service and no account with anyone is required."</string>
     <string name="cover_message_backup_webdav_button">"Connect"</string>
 
@@ -418,12 +414,10 @@
     <string name="message_backup_restoring_success">"Backup restored correctly."</string>
     <string name="message_backup_creation_failed">"Failure during the creation of the backup. Message: %s"</string>
     <string name="message_backup_restoring_failed">"Failure during the restoring of the backup. Message: %s"</string>
-    <string name="message_backup_service_dropbox_disconnect">"Are you sure you want to disconnect your Dropbox account?"</string>
     <string name="message_backup_service_storage_access_framework_disconnect">"Are you sure you want to disconnect the current folder? No files will be deleted."</string>
     <string name="message_backup_service_webdav_disconnect">"Are you sure you want to disconnect this server? The saved address and password will be removed from this device. No files will be deleted from the server."</string>
     <string name="message_webdav_app_password">"If your server supports app passwords, such as Nextcloud, create one for Tallybook instead of using your account password."</string>
     <string name="message_webdav_url_scheme">"The address must start with https:// and name a server. A plain http address is refused because it would send your password unencrypted, and Android blocks it."</string>
-    <string name="message_backup_service_google_drive_disconnect">"Are you sure you want to disconnect your Google Drive account?"</string>
     <string name="message_action_archive_wallet">"Are you sure you want to archive this wallet? It will not be visible in the menu anymore."</string>
     <string name="message_action_unarchive_wallet">"Are you sure you want to unarchive this wallet? It will be visible in the menu again."</string>
     <string name="message_action_archive_debt">"Are you sure you want to archive this debt?"</string>
@@ -488,8 +482,6 @@
     <string name="spinner_item_start_date">"From:   %s"</string>
     <string name="spinner_item_end_date">"To:   %s"</string>
 
-    <string name="service_backup_drop_box">"DropBox"</string>
-    <string name="service_backup_google_drive">"Google Drive"</string>
     <string name="service_backup_external_memory">"External Memory"</string>
     <string name="service_backup_storage_access_framework" translatable="false">"Local folder"</string>
     <string name="service_backup_webdav" translatable="false">"WebDAV"</string>

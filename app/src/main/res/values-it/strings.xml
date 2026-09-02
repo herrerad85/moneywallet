@@ -337,11 +337,7 @@
     <string name="message_error_backend_recoverable">"Errore di connessione. Riprova."</string>
 
     <string name="cover_message_backup_external_memory_title">"L'applicazione può creare e rigenerare il backup direttamente dalla memoria esterna del dispositivo"</string>
-    <string name="cover_message_backup_dropbox_title">"L'applicazione può creare e rigenerare il backup direttamente dal tuo account Dropbox personale"</string>
-    <string name="cover_message_backup_google_drive_title">"L'applicazione può creare e rigenerare il backup direttamente dal tuo account Google Drive personale"</string>
     <string name="cover_message_backup_external_memory_button">"Continua"</string>
-    <string name="cover_message_backup_dropbox_button">"Login"</string>
-    <string name="cover_message_backup_google_drive_button">"Login"</string>
 
     <string name="empty_message_secondary_panel">"Seleziona un elemento dal pannello di sinistra per vedere i dettagli"</string>
     <string name="empty_message_backup_cover">"Selezione il servizio che vuoi utilizzare per archiviare e recuperare il tuo backup"</string>
@@ -381,8 +377,6 @@
     <string name="message_backup_restoring_success">"Backup ripristinato correttamente."</string>
     <string name="message_backup_creation_failed">"Errore durante la creazione del backup. Messaggio: %s"</string>
     <string name="message_backup_restoring_failed">"Errore durante il ripristino del backup. Messaggio: %s"</string>
-    <string name="message_backup_service_dropbox_disconnect">"Sei sicuro di voler disconnettere il tuo account Dropbox?"</string>
-    <string name="message_backup_service_google_drive_disconnect">"Sei sicuro di voler disconnettere il tuo account Google Drive?"</string>
     <string name="message_action_archive_wallet">"Sei sicuro di voler archiviare quest portafoglio? Non sarà più visibile nel menu."</string>
     <string name="message_action_unarchive_wallet">"sei sicuro di voler disarchiviare questo portafoglio? Sarà ancora visibile nel menu ."</string>
     <string name="message_action_archive_debt">"Sei sicuro di voler archiviare questo debito?"</string>
@@ -445,8 +439,6 @@
     <string name="spinner_item_start_date">"Da:   %s"</string>
     <string name="spinner_item_end_date">"A:   %s"</string>
 
-    <string name="service_backup_drop_box">"DropBox"</string>
-    <string name="service_backup_google_drive">"Google Drive"</string>
     <string name="service_backup_external_memory">"Memoria esterna"</string>
 
     <string name="setting_title_user_interface">"Interfaccia utente"</string>

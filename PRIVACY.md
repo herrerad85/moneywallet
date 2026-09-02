@@ -36,10 +36,6 @@ A backup is a zip file holding your database and your attachments, and you choos
 
 Exports to CSV, XLS and PDF are never encrypted.
 
-## What these builds leave out
-
-This repository can also build flavors that include Dropbox, Google Drive and Google Maps. The releases this policy covers contain none of those SDKs.
-
 ## Children
 
 Tallybook collects nothing from anyone, which includes children.

@@ -55,13 +55,6 @@ ext {
             preference: 'androidx.preference:preference:1.2.1',
             constraintlayout : 'androidx.constraintlayout:constraintlayout:2.2.2'
     ]
-    googlePlayServices = [
-            auth: "com.google.android.gms:play-services-auth:15.0.1",
-            signin: "com.google.android.gms:play-services-identity:15.0.1",
-            location: "com.google.android.gms:play-services-location:15.0.1",
-            places: "com.google.android.gms:play-services-places:15.0.1",
-            drive: "com.google.android.gms:play-services-drive:15.0.1"
-    ]
 }
 
 task clean(type: Delete) {

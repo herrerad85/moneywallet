@@ -310,11 +310,7 @@
     <string name="message_error_backend_recoverable">"مشکل اتصال ،دوباره سعی کنید."</string>
 
     <string name="cover_message_backup_external_memory_title">"این برنامه می تواند پشتیبان گیری را مستقیما از ذخیره خارجی دستگاه ایجاد و بازگرداند"</string>
-    <string name="cover_message_backup_dropbox_title">"این برنامه می تواند پشتیبان گیری از حساب شخصی Dropbox خود ایجاد و بازگرداند"</string>
-    <string name="cover_message_backup_google_drive_title">"این برنامه می تواند پشتیبان گیری را از حساب شخصی Google Drive شما ایجاد و بازگرداند"</string>
     <string name="cover_message_backup_external_memory_button">"ادامه هید"</string>
-    <string name="cover_message_backup_dropbox_button">"ورود"</string>
-    <string name="cover_message_backup_google_drive_button">"ورود"</string>
 
     <string name="empty_message_secondary_panel">"یکی از عناصر را از پانل سمت چپ انتخاب کنید تا جزئیات را مشاهده کنید"</string>
     <string name="empty_message_backup_cover">"سرویس مورد نظر برای ذخیره و بازیابی پشتیبان شخصی خود را انتخاب کنید"</string>
@@ -350,8 +346,6 @@
     <string name="message_backup_restoring_success">"پشتیبان به درستی برگردانده شد."</string>
     <string name="message_backup_creation_failed">"شکست در هنگام ایجاد پشتیبان. پیام: %s"</string>
     <string name="message_backup_restoring_failed">"شکست در هنگام بازگرداندن پشتیبان. پیام: %s"</string>
-    <string name="message_backup_service_dropbox_disconnect">"آیا مطمئن هستید که می خواهید حساب Dropbox خود را قطع کنید؟"</string>
-    <string name="message_backup_service_google_drive_disconnect">"آیا مطمئن هستید که میخواهید حساب Google Drive خود را قطع کنید؟"</string>
     <string name="message_action_archive_wallet">"آیا مطمئن هستید که میخواهید این کیف پول را بایگانی کنید؟ این دیگر در منو قابل مشاهده نخواهد بود."</string>
     <string name="message_action_unarchive_wallet">"آیا مطمئن هستید که میخواهید این کیف پول را از بایگانی خارج کنید؟ این دوباره در منو قابل مشاهده خواهد بود."</string>
     <string name="message_action_archive_debt">"آیا مطمئن هستید که می خواهید این بدهی را بایگانی کنید؟"</string>
@@ -405,8 +399,6 @@
     <string name="spinner_item_start_date">"از:   %s"</string>
     <string name="spinner_item_end_date">"تا:   %s"</string>
 
-    <string name="service_backup_drop_box">"DropBox"</string>
-    <string name="service_backup_google_drive">"Google Drive"</string>
     <string name="service_backup_external_memory">"حافظه خارجی"</string>
 
     <string name="setting_title_user_interface">"رابط کاربری"</string>

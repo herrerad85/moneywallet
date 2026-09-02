@@ -390,9 +390,8 @@ public class CurrencyManagerSourceTest {
     }
 
     /**
-     * Every production source set, not just main. floss, gmap, osm and proprietary are flavor
-     * source sets and are compiled into the app exactly like main is, so a caller added in one of
-     * them ships.
+     * Every production source set, not just main. floss and osm are flavor source sets and are
+     * compiled into the app exactly like main is, so a caller added in one of them ships.
      */
     private static List<File> productionSourceRoots() {
         File app = new File("src");

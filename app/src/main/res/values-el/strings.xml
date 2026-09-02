@@ -338,11 +338,7 @@
 
 
     <string name="cover_message_backup_external_memory_title">"Η εφαρμογή μπορεί να δημιουργήσει και να επανακτήσει τα αντίγραφα κατευθείαν από την εξωτερική μνήμη της συσκευής."</string>
-    <string name="cover_message_backup_dropbox_title">"Η εφαρμογή μπορεί να δημιουργήσει και να επανακτήσει τα αντίγραφα από το προσωπικό σας λογαριασμό Dropbox."</string>
-    <string name="cover_message_backup_google_drive_title">"Η εφαρμογή μπορεί να δημιουργήσει και να επανακτήσει τα αντίγραφα από το προσωπικό σας λογαριασμό Google Drive."</string>
     <string name="cover_message_backup_external_memory_button">"Συνέχεια"</string>
-    <string name="cover_message_backup_dropbox_button">"Σύνδεση"</string>
-    <string name="cover_message_backup_google_drive_button">"Σύνδεση"</string>
 
     <string name="empty_message_secondary_panel">"Επέλεξε ένα στοιχείο από τα αριστερά για να δεις λεπτομέρειες"</string>
     <string name="empty_message_backup_cover">"Επέλεξε την υπηρεσία που θες να χρησιμοποιήσεις για αποθήκευση και επαναφορά των προσωπικών σου αντιγράφων"</string>
@@ -382,8 +378,6 @@
     <string name="message_backup_restoring_success">"Το αντίγραφο ασφαλείας επανακτήθηκε με επιτυχία."</string>
     <string name="message_backup_creation_failed">"Αποτυχία κατα τη δημιουργία του αντίγραφου ασφαλείας. Μήνυμα: %s"</string>
     <string name="message_backup_restoring_failed">"Αποτυχία κατα τη επαναφορά του αντίγραφου ασφαλείας. Μήνυμα: %s"</string>
-    <string name="message_backup_service_dropbox_disconnect">"Είστε σίγουροι ότι θέλετε να αποσυνδέσετε τον Dropbox λογαριασμό σας;"</string>
-    <string name="message_backup_service_google_drive_disconnect">"Είστε σίγουροι ότι θέλετε να αποσυνδέσετε τον Google Drive λογαριασμό σας;"</string>
     <string name="message_action_archive_wallet">"Είστε σιγουροι ότι θέλετε να αρχειοθετήσετε αυτό το πορτοφόλι; Δεν θα φαίνεται πια στο μενού."</string>
     <string name="message_action_unarchive_wallet">"Είστε σιγουροι ότι θέλετε να αναιρέσετε την αρχειοθέτηση αυτού του πορτοφολιού; Θα φαίνεται ξανά πλέον στο μενού."</string>
     <string name="message_action_archive_debt">"Είστε σιγουροι ότι θέλετε να αρχειοθετήσετε αυτή την οφειλή;"</string>
@@ -446,8 +440,6 @@
     <string name="spinner_item_start_date">"Από:   %s"</string>
     <string name="spinner_item_end_date">"Μέχρι:   %s"</string>
 
-    <string name="service_backup_drop_box">"DropBox"</string>
-    <string name="service_backup_google_drive">"Google Drive"</string>
     <string name="service_backup_external_memory">"Εξωτερική μνήμη"</string>
 
     <string name="setting_title_user_interface">"Διεπαφή Χρήστη"</string>

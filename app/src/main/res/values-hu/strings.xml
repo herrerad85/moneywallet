@@ -53,12 +53,8 @@
     <string name="bottom_sheet_icon_picker_action_remove_icon">Ikon eltávolítása</string>
     <string name="bottom_sheet_icon_picker_action_select_icon">Ikon kiválasztása</string>
     <string name="bottom_sheet_icon_picker_title">Ikon személyre szabása</string>
-    <string name="cover_message_backup_dropbox_button">Belépés</string>
-    <string name="cover_message_backup_dropbox_title">Az alkalmazás képes csinálni és visszaállítani biztonsági mentést a dropbox fiókodból.</string>
     <string name="cover_message_backup_external_memory_button">Tovább</string>
     <string name="cover_message_backup_external_memory_title">Az alkalmazás képes csinálni és visszaállítani biztonsági mentést az eszközről.</string>
-    <string name="cover_message_backup_google_drive_button">Belépés</string>
-    <string name="cover_message_backup_google_drive_title">Az alkalmazás képes csinálni és visszaállítani biztonsági mentést a Google Drive-ról.</string>
     <string name="default_category_car_expenses">Autós kiadások</string>
     <string name="default_category_food_drinks">Étel és ital</string>
     <string name="default_category_friends">Barátok</string>
@@ -312,8 +308,6 @@
     <string name="message_backup_restore_standard">MINDEN JELENLEGI ADAT EL FOG VESZNI. Biztosan vissza szeretnéd állítani ezt a biztonsági mentést?</string>
     <string name="message_backup_restoring_failed">Hiba a biztonsági mentés visszaállítása közben. Üzenet: %s</string>
     <string name="message_backup_restoring_success">A biztonsági mentés visszaállítva.</string>
-    <string name="message_backup_service_dropbox_disconnect">Biztos, hogy szeretnéd szétkapcsolni a Dropbox fiókodat?</string>
-    <string name="message_backup_service_google_drive_disconnect">Biztos, hogy szeretnéd szétkapcsolni a Google Drive fiókodat?</string>
     <string name="message_backup_status_creation">Biztonsági mentés folyamatban...</string>
     <string name="message_backup_status_downloading">Biztonsági mentés letöltése folyamatban...</string>
     <string name="message_backup_status_restoring">Biztonsági mentés visszaállítása folyamatban</string>
@@ -450,9 +444,7 @@
     <string name="relative_string_version_name">Verzió %s</string>
     <string name="relative_string_will_end_on">%s időpontban fog befejeződni</string>
     <string name="relative_string_will_expire_on">%s időpontban fog lejárni</string>
-    <string name="service_backup_drop_box">Dropbox</string>
     <string name="service_backup_external_memory">Telefon memória</string>
-    <string name="service_backup_google_drive">Google Drive</string>
     <string name="setting_category_database_backup">Biztonsági mentés</string>
     <string name="setting_category_database_import_export">Betöltés/Mentés</string>
     <string name="setting_category_ui_appearance">Megjelenés</string>

@@ -337,11 +337,7 @@
     <string name="message_error_backend_recoverable">"Problème de connection. Veuillez réessayer."</string>
 
     <string name="cover_message_backup_external_memory_title">L\'application peut créer et restaurer les sauvegardes directement depuis le stockage de votre appareil</string>
-    <string name="cover_message_backup_dropbox_title">L\'application peut créer et restaurer les sauvegardes depuis votre compte Dropbox</string>
-    <string name="cover_message_backup_google_drive_title">L\'application peut créer et restaurer les sauvegardes depuis votre compte Google Drive</string>
     <string name="cover_message_backup_external_memory_button">Continuer</string>
-    <string name="cover_message_backup_dropbox_button">Se connecter</string>
-    <string name="cover_message_backup_google_drive_button">Se connecter</string>
 
     <string name="empty_message_secondary_panel">Sélectionnez un élément sur le panneau de gauche pour voir les détails</string>
     <string name="empty_message_backup_cover">Sélectionnez le service que vous souhaitez utiliser pour stocker et retrouver vos sauvegardes</string>
@@ -381,8 +377,6 @@
     <string name="message_backup_restoring_success">"La restauration s\'est terminée avec succès."</string>
     <string name="message_backup_creation_failed">"Échec lors de la création de la sauvegarde. Erreur : %s"</string>
     <string name="message_backup_restoring_failed">"Échec lors de la restauration de la sauvegarde. Erreur : %s"</string>
-    <string name="message_backup_service_dropbox_disconnect">"Êtes-vous sûr de vouloir vous déconnecter votre compte Dropbox?"</string>
-    <string name="message_backup_service_google_drive_disconnect">"Êtes-vous sûr de vouloir vous déconnecter votre compte Google drive?"</string>
     <string name="message_action_archive_wallet">"Êtes-vous sûr de vouloir archiver ce portefeuille? Il ne sera plus visible dans le menu."</string>
     <string name="message_action_unarchive_wallet">"Êtes-vous sûr de vouloir désarchiver ce portefeuille? Il sera à nouveau visible dans le menu."</string>
     <string name="message_action_archive_debt">"Êtes-vous sûr de vouloir archiver cette dette?"</string>
@@ -445,8 +439,6 @@
     <string name="spinner_item_start_date">"Du :   %s"</string>
     <string name="spinner_item_end_date">"Au :   %s"</string>
 
-    <string name="service_backup_drop_box">"DropBox"</string>
-    <string name="service_backup_google_drive">"Google Drive"</string>
     <string name="service_backup_external_memory">"Mémoire externe"</string>
 
     <string name="setting_title_user_interface">"Interface"</string>

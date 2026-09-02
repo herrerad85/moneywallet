@@ -324,11 +324,7 @@
     <string name="message_error_backend_recoverable">"കണക്ഷൻ പ്രശ്നം. ദയവായി വീണ്ടും ശ്രമിക്കുക."</string>
 
     <string name="cover_message_backup_external_memory_title">"ഉപകരണത്തിന്റെ ബാഹ്യ സംഭരണത്തിൽ നിന്ന് നേരിട്ട് അപ്ലിക്കേഷന് ബാക്കപ്പുകൾ സൃഷ്ടിക്കാനും പുന restore സ്ഥാപിക്കാനും കഴിയും"</string>
-    <string name="cover_message_backup_dropbox_title">"നിങ്ങളുടെ സ്വകാര്യ ഡ്രോപ്പ്ബോക്സ് അക്ക from ണ്ടിൽ നിന്ന് ബാക്കപ്പുകൾ സൃഷ്ടിക്കാനും പുന restore സ്ഥാപിക്കാനും അപ്ലിക്കേഷന് കഴിയും"</string>
-    <string name="cover_message_backup_google_drive_title">"അപ്ലിക്കേഷന് നിങ്ങളുടെ സ്വകാര്യ Google ഡ്രൈവ് അക്കൗണ്ടിൽ നിന്ന് ബാക്കപ്പുകൾ സൃഷ്ടിക്കാനും പുന restore സ്ഥാപിക്കാനും കഴിയും"</string>
     <string name="cover_message_backup_external_memory_button">"തുടരുക"</string>
-    <string name="cover_message_backup_dropbox_button">"ലോഗിൻ"</string>
-    <string name="cover_message_backup_google_drive_button">"ലോഗിൻ"</string>
 
     <string name="empty_message_secondary_panel">"വിശദാംശങ്ങൾ കാണുന്നതിന് ഇടത് പാനലിൽ നിന്ന് ഒരു ഘടകം തിരഞ്ഞെടുക്കുക"</string>
     <string name="empty_message_backup_cover">"നിങ്ങളുടെ സ്വകാര്യ ബാക്കപ്പുകൾ സംഭരിക്കുന്നതിനും വീണ്ടെടുക്കുന്നതിനും നിങ്ങൾ ഉപയോഗിക്കാൻ ആഗ്രഹിക്കുന്ന സേവനം തിരഞ്ഞെടുക്കുക"</string>
@@ -368,8 +364,6 @@
     <string name="message_backup_restoring_success">"ബാക്കപ്പ് ശരിയായി പുന ored സ്ഥാപിച്ചു."</string>
     <string name="message_backup_creation_failed">"ബാക്കപ്പ് സൃഷ്ടിക്കുമ്പോൾ പരാജയപ്പെട്ടു. സന്ദേശം: %s"</string>
     <string name="message_backup_restoring_failed">"ബാക്കപ്പ് പുന oring സ്ഥാപിക്കുന്ന സമയത്ത് പരാജയം. സന്ദേശം: %s"</string>
-    <string name="message_backup_service_dropbox_disconnect">"നിങ്ങളുടെ ഡ്രോപ്പ്ബോക്സ് അക്കൗണ്ട് വിച്ഛേദിക്കണമെന്ന് നിങ്ങൾക്ക് ഉറപ്പാണോ?"</string>
-    <string name="message_backup_service_google_drive_disconnect">"നിങ്ങളുടെ Google ഡ്രൈവ് അക്കൗണ്ട് വിച്ഛേദിക്കണമെന്ന് നിങ്ങൾക്ക് ഉറപ്പാണോ?"</string>
     <string name="message_action_archive_wallet">"ഈ വാലറ്റ് ആർക്കൈവുചെയ്യണമെന്ന് നിങ്ങൾക്ക് ഉറപ്പാണോ? ഇത് ഇനി മെനുവിൽ ദൃശ്യമാകില്ല."</string>
     <string name="message_action_unarchive_wallet">"ഈ വാലറ്റ് ആർക്കൈവ് ചെയ്യണമെന്ന് നിങ്ങൾക്ക് ഉറപ്പാണോ? ഇത് മെനുവിൽ വീണ്ടും ദൃശ്യമാകും."</string>
     <string name="message_action_archive_debt">"ഈ കടം ശേഖരിക്കണമെന്ന് നിങ്ങൾക്ക് ഉറപ്പാണോ?"</string>
@@ -432,8 +426,6 @@
     <string name="spinner_item_start_date">"അയച്ചയാൾ: %s"</string>
     <string name="spinner_item_end_date">"സ്വീകർത്താവ്: %s"</string>
 
-    <string name="service_backup_drop_box">"ഡ്രോപ്പ്ബോക്സ്"</string>
-    <string name="service_backup_google_drive">"ഗൂഗിൾ ഡ്രൈവ്"</string>
     <string name="service_backup_external_memory">"ബാഹ്യ മെമ്മറി"</string>
 
     <string name="setting_title_user_interface">"ഉപയോക്തൃ ഇന്റർഫേസ്"</string>

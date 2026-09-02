@@ -338,11 +338,7 @@
     <string name="message_error_backend_recoverable">"Problem z połączeniem. Spróbuj ponownie."</string>
 
     <string name="cover_message_backup_external_memory_title">"Aplikacja może tworzyć i przywracać kopie zapasowe bezpośrednio z zewnętrznej pamięci urządzenia"</string>
-    <string name="cover_message_backup_dropbox_title">"Aplikacja może tworzyć i przywracać kopie zapasowe z osobistego konta Dropbox"</string>
-    <string name="cover_message_backup_google_drive_title">"Aplikacja może tworzyć i przywracać kopie zapasowe z osobistego konta Dysku Google"</string>
     <string name="cover_message_backup_external_memory_button">"Kontunuuj"</string>
-    <string name="cover_message_backup_dropbox_button">"Login"</string>
-    <string name="cover_message_backup_google_drive_button">"Login"</string>
 
     <string name="empty_message_secondary_panel">"Wybierz jeden element z lewego panelu, aby zobaczyć szczegóły"</string>
     <string name="empty_message_backup_cover">"Wybierz usługę, której chcesz używać do przechowywania i odzyskiwania osobistych kopii zapasowych"</string>
@@ -384,8 +380,6 @@
     <string name="message_backup_restoring_failed">"Błąd podczas przywracania kopii zapasowej. Wiadomość
  
 : %s"</string>
-    <string name="message_backup_service_dropbox_disconnect">"Czy na pewno chcesz odłączyć swoje konto Dropbox?"</string>
-    <string name="message_backup_service_google_drive_disconnect">"Czy na pewno chcesz odłączyć swoje konto na Dysku Google?"</string>
     <string name="message_action_archive_wallet">"Czy na pewno chcesz zarchiwizować ten portfel? Nie będzie już widoczny w menu."</string>
     <string name="message_action_unarchive_wallet">"Czy na pewno chcesz rozpakować ten portfel? Będzie ponownie widoczny w menu."</string>
     <string name="message_action_archive_debt">"Czy na pewno chcesz zarchiwizować ten dług?"</string>
@@ -448,8 +442,6 @@
     <string name="spinner_item_start_date">"Od:   %s"</string>
     <string name="spinner_item_end_date">"Do:   %s"</string>
 
-    <string name="service_backup_drop_box">"DropBox"</string>
-    <string name="service_backup_google_drive">"Dysk Google"</string>
     <string name="service_backup_external_memory">"Pamięć zewnętrzna"</string>
 
     <string name="setting_title_user_interface">"Interfejs użytkownika"</string>
