@@ -69,7 +69,6 @@ import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -107,18 +106,19 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
      */
     public static final String WALLET_ID = "NewEditTransactionActivity::WalletId";
 
-    public static final int TYPE_STANDARD = 0;
-    public static final int TYPE_TRANSFER = 1;
-    public static final int TYPE_DEBT = 2;
-    public static final int TYPE_SAVING = 3;
-    public static final int TYPE_MODEL = 4;
+    public static final int TYPE_STANDARD = TransactionEditorRules.TYPE_STANDARD;
+    public static final int TYPE_TRANSFER = TransactionEditorRules.TYPE_TRANSFER;
+    public static final int TYPE_DEBT = TransactionEditorRules.TYPE_DEBT;
+    public static final int TYPE_SAVING = TransactionEditorRules.TYPE_SAVING;
+    public static final int TYPE_MODEL = TransactionEditorRules.TYPE_MODEL;
 
-    public static final int DEBT_PAY = 1;
-    public static final int DEBT_RECEIVE = 2;
+    public static final int DEBT_PAY = TransactionEditorRules.DEBT_PAY;
+    public static final int DEBT_RECEIVE = TransactionEditorRules.DEBT_RECEIVE;
 
-    public static final int SAVING_DEPOSIT = 1;
-    public static final int SAVING_WITHDRAW = 2;
-    public static final int SAVING_WITHDRAW_EVERYTHING = 3;
+    public static final int SAVING_DEPOSIT = TransactionEditorRules.SAVING_DEPOSIT;
+    public static final int SAVING_WITHDRAW = TransactionEditorRules.SAVING_WITHDRAW;
+    public static final int SAVING_WITHDRAW_EVERYTHING =
+            TransactionEditorRules.SAVING_WITHDRAW_EVERYTHING;
 
     private static final String TAG_MONEY_PICKER = "NewEditTransactionActivity::Tag::MoneyPicker";
     private static final String TAG_CATEGORY_PICKER = "NewEditTransactionActivity::Tag::CategoryPicker";
@@ -129,11 +129,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     private static final String TAG_PERSON_PICKER = "NewEditTransactionActivity::Tag::PersonPicker";
     private static final String TAG_ATTACHMENT_PICKER = "NewEditTransactionActivity::Tag::AttachmentPicker";
 
-    private static final String SS_TYPE = "NewEditTransactionActivity::SavedState::Type";
-    private static final String SS_DEBT_ID = "NewEditTransactionActivity::SavedState::DebtId";
-    private static final String SS_SAVING_ID = "NewEditTransactionActivity::SavedState::SavingId";
-    private static final String SS_SAVING_COMPLETED = "NewEditTransactionActivity::SavedState::SavingCompleted";
-    private static final String SS_DEBT_PAYMENT = "NewEditTransactionActivity::SavedState::DebtPayment";
+    private static final String SS_RULES = "NewEditTransactionActivity::SavedState::Rules";
 
     private TextView mCurrencyTextView;
     private TextView mMoneyTextView;
@@ -159,11 +155,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     private PersonPicker mPersonPicker;
     private AttachmentPicker mAttachmentPicker;
 
-    private int mType;
-    private Long mDebtId = null;
-    private Long mSavingId = null;
-    private boolean mSavingCompleted = false;
-    private boolean mDebtPayment = false;
+    private TransactionEditorRules mRules = new TransactionEditorRules();
 
     private MoneyFormatter mMoneyFormatter = MoneyFormatter.getInstance();
 
@@ -432,7 +424,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                                 Contract.CategoryType.fromValue(cursor.getInt(cursor.getColumnIndex(Contract.Transaction.CATEGORY_TYPE))),
                                 cursor.getString(cursor.getColumnIndex(Contract.Transaction.CATEGORY_TAG))
                         );
-                        mType = cursor.getInt(cursor.getColumnIndex(Contract.Transaction.TYPE));
+                        mRules.setType(cursor.getInt(cursor.getColumnIndex(Contract.Transaction.TYPE)));
                         wallet = new Wallet(
                                 cursor.getLong(cursor.getColumnIndex(Contract.Transaction.WALLET_ID)),
                                 cursor.getString(cursor.getColumnIndex(Contract.Transaction.WALLET_NAME)),
@@ -461,10 +453,10 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                             );
                         }
                         if (!cursor.isNull(cursor.getColumnIndex(Contract.Transaction.DEBT_ID))) {
-                            mDebtId = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.DEBT_ID));
+                            mRules.setDebtId(cursor.getLong(cursor.getColumnIndex(Contract.Transaction.DEBT_ID)));
                         }
                         if (!cursor.isNull(cursor.getColumnIndex(Contract.Transaction.SAVING_ID))) {
-                            mSavingId = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.SAVING_ID));
+                            mRules.setSavingId(cursor.getLong(cursor.getColumnIndex(Contract.Transaction.SAVING_ID)));
                         }
                         mConfirmedCheckBox.setChecked(cursor.getInt(cursor.getColumnIndex(Contract.Transaction.CONFIRMED)) == 1);
                         mCountInTotalCheckBox.setChecked(cursor.getInt(cursor.getColumnIndex(Contract.Transaction.COUNT_IN_TOTAL)) == 1);
@@ -472,7 +464,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                     cursor.close();
                 }
                 // before continuing, check if the transaction is part of a transfer
-                if (mType == TYPE_TRANSFER) {
+                if (mRules.getType() == TYPE_TRANSFER) {
                     uri = DataContentProvider.CONTENT_TRANSFERS;
                     projection = new String[] {Contract.Transfer.ID};
                     String selection = Contract.Transfer.TRANSACTION_FROM_ID + " = ? OR " +
@@ -550,8 +542,8 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                 }
             } else {
                 Intent intent = getIntent();
-                mType = intent.getIntExtra(TYPE, TYPE_STANDARD);
-                if (mType == TYPE_STANDARD) {
+                mRules.setType(intent.getIntExtra(TYPE, TYPE_STANDARD));
+                if (mRules.getType() == TYPE_STANDARD) {
                     String[] projection = new String[] {
                             Contract.Wallet.ID,
                             Contract.Wallet.NAME,
@@ -610,15 +602,15 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                             personCursor.close();
                         }
                     }
-                } else if (mType == TYPE_TRANSFER) {
+                } else if (mRules.getType() == TYPE_TRANSFER) {
                     // In this case the activity has been launched to insert a new transfer so we
                     // have to simply start the correct activity and finish the current one.
                     startActivity(new Intent(this, NewEditTransferActivity.class));
                     finish();
-                } else if (mType == TYPE_DEBT) {
-                    mDebtId = intent.getLongExtra(DEBT_ID, 0L);
+                } else if (mRules.getType() == TYPE_DEBT) {
+                    mRules.setDebtId(intent.getLongExtra(DEBT_ID, 0L));
                     Contract.DebtType debtType = null;
-                    Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_DEBTS, mDebtId);
+                    Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_DEBTS, mRules.getDebtId());
                     String[] projection = new String[] {
                             Contract.Debt.TYPE,
                             Contract.Debt.WALLET_ID,
@@ -689,26 +681,12 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                             Contract.Category.TAG
                     };
                     String where = Contract.Category.TAG + " = ?";
-                    String[] whereArgs = new String[1];
                     if (debtType == null) {
-                        switch (intent.getIntExtra(DEBT_ACTION, 0)) {
-                            case DEBT_PAY:
-                                debtType = Contract.DebtType.DEBT;
-                                break;
-                            case DEBT_RECEIVE:
-                                debtType = Contract.DebtType.CREDIT;
-                                break;
-                        }
+                        debtType = TransactionEditorRules.debtTypeFor(intent.getIntExtra(DEBT_ACTION, 0));
                     }
-                    if (debtType != null) {
-                        switch (debtType) {
-                            case DEBT:
-                                whereArgs[0] = Contract.CategoryTag.PAID_DEBT;
-                                break;
-                            case CREDIT:
-                                whereArgs[0] = Contract.CategoryTag.PAID_CREDIT;
-                                break;
-                        }
+                    String debtTag = TransactionEditorRules.debtCategoryTag(debtType);
+                    if (debtTag != null) {
+                        String[] whereArgs = new String[] {debtTag};
                         cursor = contentResolver.query(uri, projection, where, whereArgs, null);
                         if (cursor != null) {
                             if (cursor.moveToFirst()) {
@@ -723,8 +701,8 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                             cursor.close();
                         }
                     }
-                } else if (mType == TYPE_SAVING) {
-                    mSavingId = intent.getLongExtra(SAVING_ID, 0L);
+                } else if (mRules.getType() == TYPE_SAVING) {
+                    mRules.setSavingId(intent.getLongExtra(SAVING_ID, 0L));
                     long startMoney = 0L;
                     // getItemId is the id of the transaction being edited, and this branch only
                     // runs when there is no transaction yet, so it was always the -1 assigned for
@@ -734,7 +712,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                     // against: it read the typed digits as minor units and 2000 became 20.00.
                     // Load the saving the intent names, the way the debt branch above loads its
                     // debt.
-                    Uri savingUri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, mSavingId);
+                    Uri savingUri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, mRules.getSavingId());
                     String[] projection = new String[] {
                             Contract.Saving.START_MONEY,
                             Contract.Saving.WALLET_ID,
@@ -765,38 +743,30 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                             Contract.Category.TAG
                     };
                     String selection = Contract.Category.TAG + " = ?";
-                    String[] selectionArgs = new String[1];
                     int action = intent.getIntExtra(SAVING_ACTION, 0);
-                    switch (action) {
-                        case SAVING_DEPOSIT:
-                            selectionArgs[0] = Contract.CategoryTag.SAVING_DEPOSIT;
-                            break;
-                        case SAVING_WITHDRAW_EVERYTHING:
-                            // The row this writes opens dated now, so what it can actually take
-                            // is the lowest the saving reaches from now onwards, which is the
-                            // same figure the check applies when the save is pressed. Prefilling
-                            // anything above it offers an amount this same screen then refuses.
-                            // END_MONEY is the target, and a saving can be deposited past its
-                            // target, so the target would strand the overshoot here.
-                            //
-                            // Never below zero either. A saving already carrying more
-                            // withdrawals than it holds gives a negative figure here, and the
-                            // check on the way out only refuses an amount above the ceiling, so
-                            // the field would open on a negative amount and saving it untouched
-                            // would write a withdrawal of a negative amount. A saving whose rows
-                            // do not come back offers nothing for the same reason.
-                            Long lowest = readLowestSavingBalanceFrom(contentResolver, savingUri,
-                                    startMoney, DateUtils.getSQLDateTimeString(new Date()), -1L);
-                            money = lowest != null ? Math.max(lowest, 0L) : 0L;
-                            mSavingCompleted = true;
-                            // Deliberate fall through: withdraw everything needs the withdraw
-                            // category set below. A break here, which is what an IDE inspection
-                            // offers, leaves selectionArgs[0] null, and the query below then
-                            // crashes the editor as it opens: the bind value at index 1 is null.
-                        case SAVING_WITHDRAW:
-                            selectionArgs[0] = Contract.CategoryTag.SAVING_WITHDRAW;
-                            break;
+                    // A saving row is filed under a category this screen picks, and an action it
+                    // does not know names none. There is no editor to draw: the category field is
+                    // hidden on a saving, so an empty picker cannot be filled in and its own
+                    // validator would refuse every save against a view the user cannot see. Close
+                    // instead. No launch inside the app reaches this, since every one of
+                    // SavingListFragment's three sets an action, and this activity is exported.
+                    if (TransactionEditorRules.savingCategoryTag(action) == null) {
+                        finish();
+                        return;
                     }
+                    if (TransactionEditorRules.completesTheSaving(action)) {
+                        // The row this writes opens dated now, so what it can actually take is
+                        // the lowest the saving reaches from now onwards, which is the same
+                        // figure the check applies when the save is pressed. Prefilling anything
+                        // above it offers an amount this same screen then refuses.
+                        Long lowest = readLowestSavingBalanceFrom(contentResolver, savingUri,
+                                startMoney, DateUtils.getSQLDateTimeString(new Date()), -1L);
+                        money = TransactionEditorRules.withdrawEverythingPrefill(lowest);
+                        mRules.setSavingCompleted(true);
+                    }
+                    String[] selectionArgs = new String[] {
+                            TransactionEditorRules.savingCategoryTag(action)
+                    };
                     cursor = contentResolver.query(uri, projection, selection, selectionArgs, null);
                     if (cursor != null) {
                         if (cursor.moveToFirst()) {
@@ -810,7 +780,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                         }
                         cursor.close();
                     }
-                } else if (mType == TYPE_MODEL) {
+                } else if (mRules.getType() == TYPE_MODEL) {
                     long modelId = intent.getLongExtra(MODEL_ID, 0L);
                     Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSACTION_MODELS, modelId);
                     String[] projection = new String[] {
@@ -888,29 +858,21 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                 datetime = new Date();
             }
         } else {
-            mType = savedInstanceState.getInt(SS_TYPE, TYPE_STANDARD);
-            mDebtId = savedInstanceState.containsKey(SS_DEBT_ID) ? savedInstanceState.getLong(SS_DEBT_ID) : null;
-            mSavingId = savedInstanceState.containsKey(SS_SAVING_ID) ? savedInstanceState.getLong(SS_SAVING_ID) : null;
-            mSavingCompleted = savedInstanceState.getBoolean(SS_SAVING_COMPLETED, false);
-            mDebtPayment = savedInstanceState.getBoolean(SS_DEBT_PAYMENT, false);
+            TransactionEditorRules restored =
+                    (TransactionEditorRules) savedInstanceState.getSerializable(SS_RULES);
+            if (restored != null) {
+                mRules = restored;
+            }
         }
         if (savedInstanceState == null && category != null) {
-            String categoryTag = category.getTag();
-            mDebtPayment = Contract.CategoryTag.PAID_DEBT.equals(categoryTag)
-                    || Contract.CategoryTag.PAID_CREDIT.equals(categoryTag);
+            mRules.setDebtPayment(TransactionEditorRules.isDebtPaymentTag(category.getTag()));
         }
         // depending on the type we must hide pickers that are now allowed to be changed
-        switch (mType) {
-            case TYPE_DEBT:
-                mCategoryEditText.setVisibility(View.GONE);
-                if (mDebtPayment) {
-                    mWalletEditText.setVisibility(View.GONE);
-                }
-                break;
-            case TYPE_SAVING:
-                mCategoryEditText.setVisibility(View.GONE);
-                mWalletEditText.setVisibility(View.GONE);
-                break;
+        if (mRules.hidesCategoryField()) {
+            mCategoryEditText.setVisibility(View.GONE);
+        }
+        if (mRules.hidesWalletField()) {
+            mWalletEditText.setVisibility(View.GONE);
         }
         // now we can create pickers with default values or existing item parameters
         // and update all the views according to the data
@@ -973,15 +935,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(SS_TYPE, mType);
-        if (mDebtId != null) {
-            outState.putLong(SS_DEBT_ID, mDebtId);
-        }
-        if (mSavingId != null) {
-            outState.putLong(SS_SAVING_ID, mSavingId);
-        }
-        outState.putBoolean(SS_SAVING_COMPLETED, mSavingCompleted);
-        outState.putBoolean(SS_DEBT_PAYMENT, mDebtPayment);
+        outState.putSerializable(SS_RULES, mRules);
     }
 
     @Override
@@ -1034,17 +988,10 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
      * The lowest a saving's balance reaches from a moment onwards, over the rows it already
      * carries, or null when those rows do not come back at all.
      *
-     * They come back ordered on the raw date column, which is the order
-     * {@link Contract#lowestSavingBalanceFrom(long, String[], long[], String)} needs, and are
-     * held to the two saving categories so this walks the same rows the saving's own sums count.
-     * A deposit that is not confirmed is left out, because landing takes being confirmed and
-     * money that never arrives must not pay for a withdrawal that does. A withdrawal is counted
-     * whether it is confirmed or not, for the mirror reason, that leaving it out hands out a
-     * ceiling it can then take the saving under.
-     *
-     * excludedId names the row being edited, whose own drain has to come out before the walk or
-     * the row would be held against itself. A new row names nothing, since the id of a new item
-     * is minus one and no row carries it.
+     * The rows are held to the two saving categories, so this reads the same rows the saving's
+     * own sums count. Which of them are counted, how each is signed and what order they are
+     * walked in is
+     * {@link TransactionEditorRules#lowestSavingBalanceFrom(long, List, long, String)}.
      */
     private Long readLowestSavingBalanceFrom(ContentResolver contentResolver, Uri savingUri,
                                              long startMoney, String from, long excludedId) {
@@ -1065,38 +1012,24 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
         if (cursor == null) {
             return null;
         }
-        String[] dates = new String[cursor.getCount()];
-        long[] signedMoney = new long[cursor.getCount()];
-        int rows = 0;
+        List<TransactionEditorRules.SavingRow> rows = new ArrayList<>();
         while (cursor.moveToNext()) {
-            if (cursor.getLong(cursor.getColumnIndex(Contract.Transaction.ID)) == excludedId) {
-                continue;
-            }
-            // A withdrawal is the income half of the pair, since it pays money into the wallet,
-            // and it is what takes the saving down.
-            boolean withdrawal = cursor.getInt(cursor.getColumnIndex(Contract.Transaction.DIRECTION))
-                    == Contract.Direction.INCOME;
-            if (!withdrawal && cursor.getInt(cursor.getColumnIndex(Contract.Transaction.CONFIRMED)) != 1) {
-                continue;
-            }
-            long money = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY));
-            dates[rows] = cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE));
-            signedMoney[rows] = withdrawal ? -money : money;
-            rows++;
+            rows.add(new TransactionEditorRules.SavingRow(
+                    cursor.getLong(cursor.getColumnIndex(Contract.Transaction.ID)),
+                    cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE)),
+                    cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY)),
+                    cursor.getInt(cursor.getColumnIndex(Contract.Transaction.DIRECTION)),
+                    cursor.getInt(cursor.getColumnIndex(Contract.Transaction.CONFIRMED)) == 1
+            ));
         }
         cursor.close();
-        return Contract.lowestSavingBalanceFrom(startMoney, Arrays.copyOf(dates, rows),
-                Arrays.copyOf(signedMoney, rows), from);
+        return TransactionEditorRules.lowestSavingBalanceFrom(startMoney, rows, excludedId, from);
     }
 
     /**
-     * Whether the row being edited is being kept or lowered on a date it does not move back
-     * from. Such a save takes nothing the saving is not already giving, so it is never refused.
-     *
-     * Without this, two withdrawals that already have a saving under zero would freeze each
-     * other, since neither can be lowered while the other one alone is more than the saving
-     * holds, and deleting one would be the only way out. Moving a stored row earlier is a new
-     * drain on the dates it moves across and is held to the ceiling like any other.
+     * Reads the stored row this edit is replacing and asks
+     * {@link TransactionEditorRules#isStoredWithdrawalKeptOrLowered(long, String, long, String)}
+     * whether it is being kept or lowered.
      *
      * A new row answers false, since there is no stored row to compare with.
      */
@@ -1114,8 +1047,10 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
         boolean unchangedOrSmaller = false;
         if (cursor != null) {
             if (cursor.moveToFirst()) {
-                unchangedOrSmaller = money <= cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY))
-                        && date.compareTo(cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE))) >= 0;
+                unchangedOrSmaller = TransactionEditorRules.isStoredWithdrawalKeptOrLowered(
+                        money, date,
+                        cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY)),
+                        cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE)));
             }
             cursor.close();
         }
@@ -1149,7 +1084,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
      * ceiling it can then take the saving under.
      */
     private boolean validateSavingWithdraw() {
-        if (mSavingId == null) {
+        if (mRules.getSavingId() == null) {
             return true;
         }
         Category category = mCategoryPicker.getCurrentCategory();
@@ -1157,7 +1092,7 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
             return true;
         }
         ContentResolver contentResolver = getContentResolver();
-        Uri savingUri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, mSavingId);
+        Uri savingUri = ContentUris.withAppendedId(DataContentProvider.CONTENT_SAVINGS, mRules.getSavingId());
         String[] projection = new String[] {
                 Contract.Saving.START_MONEY,
                 Contract.Saving.WALLET_CURRENCY
@@ -1173,12 +1108,9 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
             cursor.close();
         }
         CurrencyUnit currency = currencyIso != null ? CurrencyManager.getCurrency(currencyIso) : null;
-        // The ceiling is in the saving's own currency. If the row sits in a wallet held in another
-        // one the two are not comparable as they stand, and this screen converts nowhere else, so
-        // the check steps aside instead of comparing amounts that do not mean the same thing. A
-        // saving that gives back no row at all leaves the currency null and stops here too.
         CurrencyUnit walletCurrency = mWalletPicker.getCurrentWallet().getCurrency();
-        if (currency == null || walletCurrency == null || !currency.getIso().equals(walletCurrency.getIso())) {
+        if (!TransactionEditorRules.ceilingApplies(currency != null ? currency.getIso() : null,
+                walletCurrency != null ? walletCurrency.getIso() : null)) {
             return true;
         }
         long money = mMoneyPicker.getCurrentMoney();
@@ -1191,14 +1123,12 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
         if (lowest == null) {
             return true;
         }
-        // Held at nothing, since a saving already under zero on some date from here on gives a
-        // negative figure and no amount at all would clear it. An amount of nothing is therefore
-        // never refused, and that matters. Refusing it would refuse every save of a stored
-        // withdrawal of nothing, whatever the saving holds, so its own note and date could never
-        // be corrected and only deletion would be open. The old withdraw everything path could
-        // write such a row.
-        long limit = Math.max(lowest, 0L);
-        if (money <= limit) {
+        // An amount of nothing is never refused, and that matters. Refusing it would refuse every
+        // save of a stored withdrawal of nothing, whatever the saving holds, so its own note and
+        // date could never be corrected and only deletion would be open. The old withdraw
+        // everything path could write such a row.
+        long limit = TransactionEditorRules.withdrawLimit(lowest);
+        if (TransactionEditorRules.isWithinLimit(money, limit)) {
             return true;
         }
         // The figure every time, with no separate wording for a ceiling of nothing. What a
@@ -1226,13 +1156,13 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                     .description(mDescriptionEditText.getTextAsString())
                     .categoryId(mCategoryPicker.getCurrentCategory().getId())
                     .direction(mCategoryPicker.getCurrentCategory().getDirection())
-                    .type(mType)
+                    .type(mRules.getType())
                     .walletId(mWalletPicker.getCurrentWallet().getId())
                     .placeId(mPlacePicker.isSelected() ? mPlacePicker.getCurrentPlace().getId() : null)
                     .note(mNoteEditText.getTextAsString())
                     .eventId(mEventPicker.isSelected() ? mEventPicker.getCurrentEvent().getId() : null)
-                    .savingId(mSavingId)
-                    .debtId(mDebtId)
+                    .savingId(mRules.getSavingId())
+                    .debtId(mRules.getDebtId())
                     .confirmed(mConfirmedCheckBox.isChecked())
                     .countInTotal(mCountInTotalCheckBox.isChecked())
                     .peopleIds(Contract.getObjectIds(mPersonPicker.getCurrentPeople()))
@@ -1243,8 +1173,8 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                 switch (mode) {
                     case NEW_ITEM:
                         contentResolver.insert(DataContentProvider.CONTENT_TRANSACTIONS, contentValues);
-                        if (mSavingId != null && mSavingCompleted) {
-                            setSavingCompleted(contentResolver, mSavingId);
+                        if (mRules.getSavingId() != null && mRules.isSavingCompleted()) {
+                            setSavingCompleted(contentResolver, mRules.getSavingId());
                         }
                         break;
                     case EDIT_ITEM:
