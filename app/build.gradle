@@ -38,7 +38,6 @@ android {
         versionCode 85
         versionName "1.7.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        multiDexEnabled true
         manifestPlaceholders = [
                 DropBoxApiKey: ApiKey_Dropbox.replaceAll('"', ''),
                 GoogleApiKey : ApiKey_Google
@@ -157,7 +156,6 @@ dependencies {
     // WebDAV needs PROPFIND and MKCOL. Android's HttpURLConnection validates the method against a
     // fixed list and throws ProtocolException for both, so a real HTTP client is not optional here.
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-    implementation 'androidx.multidex:multidex:2.0.1'
     // Without this line documentfile resolves to 1.0.0, by way of legacy-support-core-utils.
     // In 1.0.0 fromTreeUri drops the document id, so every folder under a granted tree
     // resolves to the top of the tree. 1.0.1 keeps the id when the uri is a document uri.
@@ -190,11 +188,6 @@ dependencies {
     implementation 'com.opencsv:opencsv:4.4'
     implementation 'net.sourceforge.jexcelapi:jxl:2.6.12'
     implementation 'com.itextpdf:itextpdf:5.5.13'
-    // jcenter-orphaned. me.weishu:free_reflection:2.2.0 does not exist on any live repo (jcenter-only,
-    // never on mavenCentral, no 2.x git tag). JitPack tiann/FreeReflection lowest live tag is 3.1.0;
-    // the only API used here, Reflection.unseal(Context), is unchanged in 3.x (same me.weishu.reflection
-    // package), so this is a minor pin, not a breaking migration.
-    implementation 'com.github.tiann:FreeReflection:3.1.0'
     implementation 'com.github.bumptech.glide:glide:4.8.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0'
     // google play dependencies

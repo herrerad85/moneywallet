@@ -32,7 +32,6 @@ import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.NewEditTransactionActivity;
 import com.oriondev.moneywallet.ui.notification.NotificationContract;
-import com.oriondev.moneywallet.utils.Utils;
 
 import java.util.Calendar;
 
@@ -82,7 +81,7 @@ public class DailyBroadcastReceiver extends BroadcastReceiver {
         Intent i = new Intent(context, NewEditTransactionActivity.class);
         PendingIntent pending = PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NotificationContract.NOTIFICATION_CHANNEL_REMINDER)
-                .setSmallIcon(Utils.isAtLeastLollipop() ? R.drawable.ic_notification : R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(context.getString(R.string.notification_title_daily_reminder_title))
                 .setContentText(context.getString(R.string.notification_title_daily_reminder_text))
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(context.getString(R.string.notification_title_daily_reminder_text)))

@@ -154,13 +154,6 @@
     "copyright":"Copyright (c) iText",
     "license":"AGPL"
   },{
-    "name":"FreeReflection",
-    "author":"weishu",
-    "website":"https://github.com/tiann/FreeReflection",
-    "version":"2.2.0",
-    "copyright":"Copyright (c) 2018 weishu",
-    "license":"MIT"
-  },{
     "name":"Phosphor Icons",
     "author":"phosphor-icons",
     "website":"https://github.com/phosphor-icons/core",

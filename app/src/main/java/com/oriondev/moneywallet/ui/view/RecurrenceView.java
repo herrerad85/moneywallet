@@ -19,9 +19,7 @@
 
 package com.oriondev.moneywallet.ui.view;
 
-import android.annotation.TargetApi;
 import android.content.Context;
-import android.os.Build;
 import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -56,7 +54,6 @@ public class RecurrenceView extends LinearLayout {
         initialize(context);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public RecurrenceView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initialize(context);

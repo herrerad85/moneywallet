@@ -25,7 +25,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import androidx.annotation.IdRes;
 import androidx.core.content.ContextCompat;
@@ -90,10 +89,6 @@ public class Utils {
         return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 
-    public static boolean isAtLeastLollipop() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
-    }
-
     /**
      * From Android 13 POST_NOTIFICATIONS is a runtime permission, and an app targeting 33 or
      * later gets no prompt from the system, so anything that speaks through a notification has
@@ -108,16 +103,6 @@ public class Utils {
                 && !PreferenceManager.hasAskedNotificationPermission()
                 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                         != PackageManager.PERMISSION_GRANTED;
-    }
-
-    public static void setBackgroundCompat(View view, Drawable drawable) {
-        if (view != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                view.setBackground(drawable);
-            } else {
-                view.setBackgroundDrawable(drawable);
-            }
-        }
     }
 
     public static int getFileIcon(String extension) {

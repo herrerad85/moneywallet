@@ -19,12 +19,10 @@
 
 package com.oriondev.moneywallet.ui.view;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -55,7 +53,6 @@ public class MaterialProgressBar extends View {
         initialize();
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public MaterialProgressBar(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initialize();

@@ -20,7 +20,6 @@
 package com.oriondev.moneywallet.api;
 
 import android.content.Context;
-import android.os.Build;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.api.disk.DiskBackendService;
@@ -73,11 +72,6 @@ public class BackendServiceFactory {
             }
         });
         descriptors.add(new BackendDescriptor(SERVICE_ID_SAF, R.drawable.ic_storage_black_24dp) {
-            @Override
-            public boolean isAvailable() {
-                return Build.VERSION.SDK_INT >= 21;
-            }
-
             @Override
             public AbstractBackendServiceDelegate createDelegate(AbstractBackendServiceDelegate.BackendServiceStatusListener listener) {
                 return new SAFBackendService(listener);

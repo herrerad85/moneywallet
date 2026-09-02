@@ -41,7 +41,7 @@
         errorLine2="                                                                                                            ~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/picker/AttachmentPicker.java"
-            line="265"
+            line="260"
             column="109"/>
     </issue>
 
@@ -98,17 +98,6 @@
             file="src/main/java/com/oriondev/moneywallet/api/webdav/WebDAVException.java"
             line="45"
             column="17"/>
-    </issue>
-
-    <issue
-        id="DiscouragedPrivateApi"
-        message="Reflective access to mEditor, which is not part of the public SDK and therefore likely to change in future Android releases"
-        errorLine1="            Field fEditor = TextView.class.getDeclaredField(&quot;mEditor&quot;);"
-        errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/TintHelper.java"
-            line="242"
-            column="29"/>
     </issue>
 
     <issue
@@ -689,7 +678,7 @@
         errorLine2="                                                              ~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/base/ThemedActivity.java"
-            line="214"
+            line="213"
             column="63"/>
     </issue>
 
@@ -700,7 +689,7 @@
         errorLine2="                             ~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/base/ThemedActivity.java"
-            line="214"
+            line="213"
             column="30"/>
     </issue>
 
@@ -711,7 +700,7 @@
         errorLine2="                                         ~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/base/ThemedActivity.java"
-            line="215"
+            line="214"
             column="42"/>
     </issue>
 
@@ -722,7 +711,7 @@
         errorLine2="                            ~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/base/ThemedActivity.java"
-            line="216"
+            line="215"
             column="29"/>
     </issue>
 
@@ -733,7 +722,7 @@
         errorLine2="                                ~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/base/ThemedActivity.java"
-            line="217"
+            line="216"
             column="33"/>
     </issue>
 
@@ -744,7 +733,7 @@
         errorLine2="                                 ~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/base/ThemedActivity.java"
-            line="218"
+            line="217"
             column="34"/>
     </issue>
 
@@ -920,7 +909,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/data/AbstractDataImporter.java"
-            line="103"
+            line="109"
             column="43"/>
     </issue>
 
@@ -931,7 +920,7 @@
         errorLine2="                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/data/AbstractDataImporter.java"
-            line="187"
+            line="193"
             column="39"/>
     </issue>
 
@@ -942,7 +931,7 @@
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/data/AbstractDataImporter.java"
-            line="206"
+            line="212"
             column="31"/>
     </issue>
 
@@ -953,7 +942,7 @@
         errorLine2="                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/data/AbstractDataImporter.java"
-            line="207"
+            line="213"
             column="39"/>
     </issue>
 
@@ -964,7 +953,7 @@
         errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/data/AbstractDataImporter.java"
-            line="225"
+            line="231"
             column="47"/>
     </issue>
 
@@ -975,7 +964,7 @@
         errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/data/AbstractDataImporter.java"
-            line="246"
+            line="252"
             column="47"/>
     </issue>
 
@@ -986,7 +975,7 @@
         errorLine2="                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/data/AbstractDataImporter.java"
-            line="285"
+            line="291"
             column="62"/>
     </issue>
 
@@ -997,7 +986,7 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/picker/AttachmentPicker.java"
-            line="243"
+            line="238"
             column="50"/>
     </issue>
 
@@ -1008,7 +997,7 @@
         errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/picker/AttachmentPicker.java"
-            line="245"
+            line="240"
             column="48"/>
     </issue>
 
@@ -1400,12 +1389,12 @@
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                cacheObj.mCurrency = cursor.getString(cursor.getColumnIndex(SQLCache.ExchangeRateT.CURRENCY_ISO));"
-        errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                String iso = cursor.getString(cursor.getColumnIndex(SQLCache.ExchangeRateT.CURRENCY_ISO));"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/cache/ExchangeRateCache.java"
-            line="56"
-            column="55"/>
+            line="68"
+            column="47"/>
     </issue>
 
     <issue
@@ -1415,7 +1404,7 @@
         errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/cache/ExchangeRateCache.java"
-            line="57"
+            line="77"
             column="51"/>
     </issue>
 
@@ -1426,7 +1415,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/cache/ExchangeRateCache.java"
-            line="58"
+            line="78"
             column="54"/>
     </issue>
 
@@ -1481,7 +1470,7 @@
         errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/MapActivity.java"
-            line="133"
+            line="144"
             column="46"/>
     </issue>
 
@@ -1492,7 +1481,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/MapActivity.java"
-            line="134"
+            line="145"
             column="52"/>
     </issue>
 
@@ -1503,7 +1492,7 @@
         errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/MapActivity.java"
-            line="135"
+            line="146"
             column="55"/>
     </issue>
 
@@ -1514,7 +1503,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/MapActivity.java"
-            line="136"
+            line="147"
             column="56"/>
     </issue>
 
@@ -1525,7 +1514,7 @@
         errorLine2="                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/MapActivity.java"
-            line="137"
+            line="148"
             column="57"/>
     </issue>
 
@@ -1536,7 +1525,7 @@
         errorLine2="                                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="423"
+            line="451"
             column="76"/>
     </issue>
 
@@ -1547,7 +1536,7 @@
         errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="424"
+            line="452"
             column="48"/>
     </issue>
 
@@ -1558,7 +1547,7 @@
         errorLine2="                                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="425"
+            line="453"
             column="89"/>
     </issue>
 
@@ -1569,7 +1558,7 @@
         errorLine2="                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="426"
+            line="454"
             column="87"/>
     </issue>
 
@@ -1580,7 +1569,7 @@
         errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="427"
+            line="455"
             column="49"/>
     </issue>
 
@@ -1591,7 +1580,7 @@
         errorLine2="                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="428"
+            line="456"
             column="67"/>
     </issue>
 
@@ -1602,7 +1591,7 @@
         errorLine2="                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="455"
+            line="483"
             column="60"/>
     </issue>
 
@@ -1613,7 +1602,7 @@
         errorLine2="                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="456"
+            line="484"
             column="62"/>
     </issue>
 
@@ -1624,7 +1613,7 @@
         errorLine2="                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="457"
+            line="485"
             column="79"/>
     </issue>
 
@@ -1635,7 +1624,7 @@
         errorLine2="                                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="458"
+            line="486"
             column="91"/>
     </issue>
 
@@ -1646,7 +1635,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="481"
+            line="509"
             column="52"/>
     </issue>
 
@@ -1657,7 +1646,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="482"
+            line="510"
             column="54"/>
     </issue>
 
@@ -1668,7 +1657,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="483"
+            line="511"
             column="71"/>
     </issue>
 
@@ -1679,7 +1668,7 @@
         errorLine2="                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="484"
+            line="512"
             column="82"/>
     </issue>
 
@@ -1690,7 +1679,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="485"
+            line="513"
             column="52"/>
     </issue>
 
@@ -1701,7 +1690,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="516"
+            line="544"
             column="56"/>
     </issue>
 
@@ -1712,7 +1701,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="517"
+            line="545"
             column="58"/>
     </issue>
 
@@ -1723,7 +1712,7 @@
         errorLine2="                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="518"
+            line="546"
             column="75"/>
     </issue>
 
@@ -1734,7 +1723,7 @@
         errorLine2="                                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="519"
+            line="547"
             column="86"/>
     </issue>
 
@@ -1745,7 +1734,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="520"
+            line="548"
             column="56"/>
     </issue>
 
@@ -1756,7 +1745,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="521"
+            line="549"
             column="56"/>
     </issue>
 
@@ -1767,7 +1756,7 @@
         errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="660"
+            line="688"
             column="45"/>
     </issue>
 
@@ -1778,7 +1767,7 @@
         errorLine2="                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="751"
+            line="779"
             column="63"/>
     </issue>
 
@@ -1789,7 +1778,7 @@
         errorLine2="                                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="752"
+            line="780"
             column="61"/>
     </issue>
 
@@ -1800,7 +1789,7 @@
         errorLine2="                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="753"
+            line="781"
             column="62"/>
     </issue>
 
@@ -1811,7 +1800,7 @@
         errorLine2="                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditBudgetActivity.java"
-            line="754"
+            line="782"
             column="67"/>
     </issue>
 
@@ -3472,7 +3461,7 @@
         errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="423"
+            line="415"
             column="48"/>
     </issue>
 
@@ -3483,7 +3472,7 @@
         errorLine2="                                                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="425"
+            line="417"
             column="96"/>
     </issue>
 
@@ -3494,7 +3483,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="427"
+            line="419"
             column="71"/>
     </issue>
 
@@ -3505,7 +3494,7 @@
         errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="429"
+            line="421"
             column="48"/>
     </issue>
 
@@ -3516,7 +3505,7 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="430"
+            line="422"
             column="50"/>
     </issue>
 
@@ -3527,7 +3516,7 @@
         errorLine2="                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="431"
+            line="423"
             column="67"/>
     </issue>
 
@@ -3538,7 +3527,7 @@
         errorLine2="                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="432"
+            line="424"
             column="79"/>
     </issue>
 
@@ -3549,19 +3538,19 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="433"
+            line="425"
             column="50"/>
     </issue>
 
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                        mType = cursor.getInt(cursor.getColumnIndex(Contract.Transaction.TYPE));"
-        errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                        mRules.setType(cursor.getInt(cursor.getColumnIndex(Contract.Transaction.TYPE)));"
+        errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="435"
-            column="47"/>
+            line="427"
+            column="54"/>
     </issue>
 
     <issue
@@ -3571,7 +3560,7 @@
         errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="437"
+            line="429"
             column="48"/>
     </issue>
 
@@ -3582,7 +3571,7 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="438"
+            line="430"
             column="50"/>
     </issue>
 
@@ -3593,7 +3582,7 @@
         errorLine2="                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="439"
+            line="431"
             column="67"/>
     </issue>
 
@@ -3604,7 +3593,7 @@
         errorLine2="                                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="440"
+            line="432"
             column="78"/>
     </issue>
 
@@ -3615,7 +3604,7 @@
         errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="443"
+            line="435"
             column="44"/>
     </issue>
 
@@ -3626,7 +3615,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="445"
+            line="437"
             column="52"/>
     </issue>
 
@@ -3637,7 +3626,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="446"
+            line="438"
             column="54"/>
     </issue>
 
@@ -3648,7 +3637,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="447"
+            line="439"
             column="71"/>
     </issue>
 
@@ -3659,7 +3648,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="448"
+            line="440"
             column="54"/>
     </issue>
 
@@ -3670,7 +3659,7 @@
         errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="449"
+            line="441"
             column="51"/>
     </issue>
 
@@ -3681,7 +3670,7 @@
         errorLine2="                                                                                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="449"
+            line="441"
             column="137"/>
     </issue>
 
@@ -3692,7 +3681,7 @@
         errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="450"
+            line="442"
             column="51"/>
     </issue>
 
@@ -3703,7 +3692,7 @@
         errorLine2="                                                                                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="450"
+            line="442"
             column="138"/>
     </issue>
 
@@ -3714,7 +3703,7 @@
         errorLine2="                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="453"
+            line="445"
             column="64"/>
     </issue>
 
@@ -3725,7 +3714,7 @@
         errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="454"
+            line="446"
             column="44"/>
     </issue>
 
@@ -3736,7 +3725,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="456"
+            line="448"
             column="52"/>
     </issue>
 
@@ -3747,7 +3736,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="457"
+            line="449"
             column="54"/>
     </issue>
 
@@ -3758,7 +3747,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="458"
+            line="450"
             column="71"/>
     </issue>
 
@@ -3769,7 +3758,7 @@
         errorLine2="                                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="459"
+            line="451"
             column="89"/>
     </issue>
 
@@ -3780,7 +3769,7 @@
         errorLine2="                                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="460"
+            line="452"
             column="89"/>
     </issue>
 
@@ -3791,19 +3780,19 @@
         errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="463"
+            line="455"
             column="44"/>
     </issue>
 
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                            mDebtId = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.DEBT_ID));"
-        errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                            mRules.setDebtId(cursor.getLong(cursor.getColumnIndex(Contract.Transaction.DEBT_ID)));"
+        errorLine2="                                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="464"
-            column="54"/>
+            line="456"
+            column="61"/>
     </issue>
 
     <issue
@@ -3813,19 +3802,19 @@
         errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="466"
+            line="458"
             column="44"/>
     </issue>
 
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                            mSavingId = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.SAVING_ID));"
-        errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                            mRules.setSavingId(cursor.getLong(cursor.getColumnIndex(Contract.Transaction.SAVING_ID)));"
+        errorLine2="                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="467"
-            column="56"/>
+            line="459"
+            column="63"/>
     </issue>
 
     <issue
@@ -3835,7 +3824,7 @@
         errorLine2="                                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="469"
+            line="461"
             column="69"/>
     </issue>
 
@@ -3846,7 +3835,7 @@
         errorLine2="                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="470"
+            line="462"
             column="72"/>
     </issue>
 
@@ -3857,7 +3846,7 @@
         errorLine2="                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="487"
+            line="479"
             column="66"/>
     </issue>
 
@@ -3868,7 +3857,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="515"
+            line="507"
             column="52"/>
     </issue>
 
@@ -3879,7 +3868,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="516"
+            line="508"
             column="54"/>
     </issue>
 
@@ -3890,7 +3879,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="517"
+            line="509"
             column="71"/>
     </issue>
 
@@ -3901,7 +3890,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="539"
+            line="531"
             column="56"/>
     </issue>
 
@@ -3912,7 +3901,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="540"
+            line="532"
             column="58"/>
     </issue>
 
@@ -3923,7 +3912,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="541"
+            line="533"
             column="58"/>
     </issue>
 
@@ -3934,7 +3923,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="542"
+            line="534"
             column="58"/>
     </issue>
 
@@ -3945,7 +3934,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="543"
+            line="535"
             column="56"/>
     </issue>
 
@@ -3956,7 +3945,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="575"
+            line="567"
             column="52"/>
     </issue>
 
@@ -3967,7 +3956,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="576"
+            line="568"
             column="54"/>
     </issue>
 
@@ -3978,7 +3967,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="577"
+            line="569"
             column="71"/>
     </issue>
 
@@ -3989,7 +3978,7 @@
         errorLine2="                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="578"
+            line="570"
             column="82"/>
     </issue>
 
@@ -4000,7 +3989,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="579"
+            line="571"
             column="52"/>
     </issue>
 
@@ -4011,7 +4000,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="580"
+            line="572"
             column="52"/>
     </issue>
 
@@ -4022,7 +4011,7 @@
         errorLine2="                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="604"
+            line="596"
             column="70"/>
     </issue>
 
@@ -4033,7 +4022,7 @@
         errorLine2="                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="605"
+            line="597"
             column="72"/>
     </issue>
 
@@ -4044,7 +4033,7 @@
         errorLine2="                                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="606"
+            line="598"
             column="89"/>
     </issue>
 
@@ -4055,7 +4044,7 @@
         errorLine2="                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="638"
+            line="630"
             column="82"/>
     </issue>
 
@@ -4066,7 +4055,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="640"
+            line="632"
             column="52"/>
     </issue>
 
@@ -4077,7 +4066,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="641"
+            line="633"
             column="54"/>
     </issue>
 
@@ -4088,7 +4077,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="642"
+            line="634"
             column="71"/>
     </issue>
 
@@ -4099,7 +4088,7 @@
         errorLine2="                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="643"
+            line="635"
             column="82"/>
     </issue>
 
@@ -4110,7 +4099,7 @@
         errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="646"
+            line="638"
             column="48"/>
     </issue>
 
@@ -4121,7 +4110,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="648"
+            line="640"
             column="56"/>
     </issue>
 
@@ -4132,7 +4121,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="649"
+            line="641"
             column="58"/>
     </issue>
 
@@ -4143,7 +4132,7 @@
         errorLine2="                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="650"
+            line="642"
             column="75"/>
     </issue>
 
@@ -4154,7 +4143,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="651"
+            line="643"
             column="58"/>
     </issue>
 
@@ -4165,7 +4154,7 @@
         errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="652"
+            line="644"
             column="55"/>
     </issue>
 
@@ -4176,7 +4165,7 @@
         errorLine2="                                                                                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="652"
+            line="644"
             column="134"/>
     </issue>
 
@@ -4187,7 +4176,7 @@
         errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="653"
+            line="645"
             column="55"/>
     </issue>
 
@@ -4198,7 +4187,7 @@
         errorLine2="                                                                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="653"
+            line="645"
             column="135"/>
     </issue>
 
@@ -4209,7 +4198,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="674"
+            line="666"
             column="56"/>
     </issue>
 
@@ -4220,7 +4209,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="675"
+            line="667"
             column="58"/>
     </issue>
 
@@ -4231,7 +4220,7 @@
         errorLine2="                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="676"
+            line="668"
             column="75"/>
     </issue>
 
@@ -4242,7 +4231,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="716"
+            line="694"
             column="56"/>
     </issue>
 
@@ -4253,7 +4242,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="717"
+            line="695"
             column="58"/>
     </issue>
 
@@ -4264,7 +4253,7 @@
         errorLine2="                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="718"
+            line="696"
             column="75"/>
     </issue>
 
@@ -4275,7 +4264,7 @@
         errorLine2="                                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="719"
+            line="697"
             column="87"/>
     </issue>
 
@@ -4286,7 +4275,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="720"
+            line="698"
             column="58"/>
     </issue>
 
@@ -4297,7 +4286,7 @@
         errorLine2="                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="748"
+            line="726"
             column="57"/>
     </issue>
 
@@ -4308,7 +4297,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="750"
+            line="728"
             column="52"/>
     </issue>
 
@@ -4319,7 +4308,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="751"
+            line="729"
             column="54"/>
     </issue>
 
@@ -4330,7 +4319,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="752"
+            line="730"
             column="71"/>
     </issue>
 
@@ -4341,7 +4330,7 @@
         errorLine2="                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="753"
+            line="731"
             column="82"/>
     </issue>
 
@@ -4352,7 +4341,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="804"
+            line="774"
             column="52"/>
     </issue>
 
@@ -4363,7 +4352,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="805"
+            line="775"
             column="54"/>
     </issue>
 
@@ -4374,7 +4363,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="806"
+            line="776"
             column="71"/>
     </issue>
 
@@ -4385,7 +4374,7 @@
         errorLine2="                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="807"
+            line="777"
             column="83"/>
     </issue>
 
@@ -4396,7 +4385,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="808"
+            line="778"
             column="54"/>
     </issue>
 
@@ -4407,7 +4396,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="847"
+            line="817"
             column="52"/>
     </issue>
 
@@ -4418,7 +4407,7 @@
         errorLine2="                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="848"
+            line="818"
             column="75"/>
     </issue>
 
@@ -4429,7 +4418,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="850"
+            line="820"
             column="52"/>
     </issue>
 
@@ -4440,7 +4429,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="851"
+            line="821"
             column="54"/>
     </issue>
 
@@ -4451,7 +4440,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="852"
+            line="822"
             column="71"/>
     </issue>
 
@@ -4462,7 +4451,7 @@
         errorLine2="                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="853"
+            line="823"
             column="83"/>
     </issue>
 
@@ -4473,7 +4462,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="856"
+            line="826"
             column="52"/>
     </issue>
 
@@ -4484,7 +4473,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="857"
+            line="827"
             column="54"/>
     </issue>
 
@@ -4495,7 +4484,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="858"
+            line="828"
             column="71"/>
     </issue>
 
@@ -4506,7 +4495,7 @@
         errorLine2="                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="859"
+            line="829"
             column="82"/>
     </issue>
 
@@ -4517,7 +4506,7 @@
         errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="862"
+            line="832"
             column="48"/>
     </issue>
 
@@ -4528,7 +4517,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="864"
+            line="834"
             column="56"/>
     </issue>
 
@@ -4539,7 +4528,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="865"
+            line="835"
             column="58"/>
     </issue>
 
@@ -4550,7 +4539,7 @@
         errorLine2="                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="866"
+            line="836"
             column="75"/>
     </issue>
 
@@ -4561,7 +4550,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="867"
+            line="837"
             column="58"/>
     </issue>
 
@@ -4572,7 +4561,7 @@
         errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="868"
+            line="838"
             column="55"/>
     </issue>
 
@@ -4583,7 +4572,7 @@
         errorLine2="                                                                                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="868"
+            line="838"
             column="146"/>
     </issue>
 
@@ -4594,7 +4583,7 @@
         errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="869"
+            line="839"
             column="55"/>
     </issue>
 
@@ -4605,7 +4594,7 @@
         errorLine2="                                                                                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="869"
+            line="839"
             column="147"/>
     </issue>
 
@@ -4616,7 +4605,7 @@
         errorLine2="                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="872"
+            line="842"
             column="68"/>
     </issue>
 
@@ -4627,7 +4616,7 @@
         errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="873"
+            line="843"
             column="48"/>
     </issue>
 
@@ -4638,7 +4627,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="875"
+            line="845"
             column="56"/>
     </issue>
 
@@ -4649,7 +4638,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="876"
+            line="846"
             column="58"/>
     </issue>
 
@@ -4660,7 +4649,7 @@
         errorLine2="                                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="877"
+            line="847"
             column="75"/>
     </issue>
 
@@ -4671,7 +4660,7 @@
         errorLine2="                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="878"
+            line="848"
             column="93"/>
     </issue>
 
@@ -4682,7 +4671,7 @@
         errorLine2="                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="879"
+            line="849"
             column="93"/>
     </issue>
 
@@ -4693,7 +4682,7 @@
         errorLine2="                                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="882"
+            line="852"
             column="73"/>
     </issue>
 
@@ -4704,7 +4693,7 @@
         errorLine2="                                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="883"
+            line="853"
             column="76"/>
     </issue>
 
@@ -4715,85 +4704,85 @@
         errorLine2="                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="945"
+            line="907"
             column="39"/>
     </issue>
 
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="            if (cursor.getLong(cursor.getColumnIndex(Contract.Transaction.ID)) == excludedId) {"
-        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                    cursor.getLong(cursor.getColumnIndex(Contract.Transaction.ID)),"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1072"
-            column="32"/>
+            line="1018"
+            column="36"/>
     </issue>
 
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="            boolean withdrawal = cursor.getInt(cursor.getColumnIndex(Contract.Transaction.DIRECTION))"
-        errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                    cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE)),"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1077"
-            column="48"/>
+            line="1019"
+            column="38"/>
     </issue>
 
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="            if (!withdrawal &amp;&amp; cursor.getInt(cursor.getColumnIndex(Contract.Transaction.CONFIRMED)) != 1) {"
-        errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                    cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY)),"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1079"
-            column="46"/>
+            line="1020"
+            column="36"/>
     </issue>
 
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="            long money = cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY));"
-        errorLine2="                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                    cursor.getInt(cursor.getColumnIndex(Contract.Transaction.DIRECTION)),"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1082"
-            column="41"/>
+            line="1021"
+            column="35"/>
     </issue>
 
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="            dates[rows] = cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE));"
-        errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                    cursor.getInt(cursor.getColumnIndex(Contract.Transaction.CONFIRMED)) == 1"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1083"
-            column="44"/>
+            line="1022"
+            column="35"/>
     </issue>
 
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                unchangedOrSmaller = money &lt;= cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY))"
-        errorLine2="                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                        cursor.getLong(cursor.getColumnIndex(Contract.Transaction.MONEY)),"
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1117"
-            column="62"/>
+            line="1052"
+            column="40"/>
     </issue>
 
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                        &amp;&amp; date.compareTo(cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE))) >= 0;"
-        errorLine2="                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                        cursor.getString(cursor.getColumnIndex(Contract.Transaction.DATE)));"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1118"
-            column="60"/>
+            line="1053"
+            column="42"/>
     </issue>
 
     <issue
@@ -4803,7 +4792,7 @@
         errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1170"
+            line="1105"
             column="45"/>
     </issue>
 
@@ -4814,7 +4803,7 @@
         errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1171"
+            line="1106"
             column="48"/>
     </issue>
 
@@ -4825,7 +4814,7 @@
         errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1299"
+            line="1229"
             column="47"/>
     </issue>
 
@@ -4836,7 +4825,7 @@
         errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1301"
+            line="1231"
             column="55"/>
     </issue>
 
@@ -4847,7 +4836,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1302"
+            line="1232"
             column="52"/>
     </issue>
 
@@ -4858,7 +4847,7 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1303"
+            line="1233"
             column="50"/>
     </issue>
 
@@ -4869,7 +4858,7 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1305"
+            line="1235"
             column="50"/>
     </issue>
 
@@ -4880,7 +4869,7 @@
         errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1306"
+            line="1236"
             column="48"/>
     </issue>
 
@@ -4891,7 +4880,7 @@
         errorLine2="                                                                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1306"
+            line="1236"
             column="131"/>
     </issue>
 
@@ -4902,7 +4891,7 @@
         errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1307"
+            line="1237"
             column="48"/>
     </issue>
 
@@ -4913,7 +4902,7 @@
         errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1308"
+            line="1238"
             column="48"/>
     </issue>
 
@@ -4924,7 +4913,7 @@
         errorLine2="                                                                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1308"
+            line="1238"
             column="131"/>
     </issue>
 
@@ -4935,7 +4924,7 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1309"
+            line="1239"
             column="50"/>
     </issue>
 
@@ -4946,7 +4935,7 @@
         errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/NewEditTransactionActivity.java"
-            line="1310"
+            line="1240"
             column="53"/>
     </issue>
 
@@ -7916,7 +7905,7 @@
         errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="264"
+            line="507"
             column="45"/>
     </issue>
 
@@ -7927,7 +7916,7 @@
         errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="358"
+            line="643"
             column="45"/>
     </issue>
 
@@ -7938,7 +7927,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="411"
+            line="696"
             column="52"/>
     </issue>
 
@@ -7949,7 +7938,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="574"
+            line="852"
             column="54"/>
     </issue>
 
@@ -7960,7 +7949,7 @@
         errorLine2="                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="801"
+            line="1016"
             column="62"/>
     </issue>
 
@@ -7971,7 +7960,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="956"
+            line="1171"
             column="54"/>
     </issue>
 
@@ -7982,7 +7971,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1112"
+            line="1324"
             column="54"/>
     </issue>
 
@@ -7993,7 +7982,7 @@
         errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1178"
+            line="1369"
             column="42"/>
     </issue>
 
@@ -8004,7 +7993,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1307"
+            line="1498"
             column="52"/>
     </issue>
 
@@ -8015,7 +8004,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1308"
+            line="1499"
             column="52"/>
     </issue>
 
@@ -8026,7 +8015,7 @@
         errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1309"
+            line="1500"
             column="36"/>
     </issue>
 
@@ -8037,7 +8026,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1310"
+            line="1501"
             column="56"/>
     </issue>
 
@@ -8048,7 +8037,7 @@
         errorLine2="                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1394"
+            line="1585"
             column="62"/>
     </issue>
 
@@ -8059,7 +8048,7 @@
         errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1872"
+            line="2033"
             column="44"/>
     </issue>
 
@@ -8070,7 +8059,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1877"
+            line="2038"
             column="43"/>
     </issue>
 
@@ -8081,7 +8070,7 @@
         errorLine2="                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1924"
+            line="2085"
             column="39"/>
     </issue>
 
@@ -8092,7 +8081,7 @@
         errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1927"
+            line="2088"
             column="40"/>
     </issue>
 
@@ -8103,7 +8092,7 @@
         errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1961"
+            line="2122"
             column="44"/>
     </issue>
 
@@ -8114,7 +8103,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="1966"
+            line="2127"
             column="43"/>
     </issue>
 
@@ -8125,7 +8114,7 @@
         errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="2086"
+            line="2247"
             column="59"/>
     </issue>
 
@@ -8136,7 +8125,7 @@
         errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="2382"
+            line="2536"
             column="42"/>
     </issue>
 
@@ -8147,7 +8136,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="2383"
+            line="2537"
             column="43"/>
     </issue>
 
@@ -8158,7 +8147,7 @@
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="2384"
+            line="2538"
             column="54"/>
     </issue>
 
@@ -8169,7 +8158,7 @@
         errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="2389"
+            line="2543"
             column="49"/>
     </issue>
 
@@ -8180,7 +8169,7 @@
         errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="2533"
+            line="2687"
             column="47"/>
     </issue>
 
@@ -8191,7 +8180,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="2534"
+            line="2688"
             column="58"/>
     </issue>
 
@@ -8202,7 +8191,7 @@
         errorLine2="                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="2742"
+            line="2894"
             column="57"/>
     </issue>
 
@@ -8213,7 +8202,7 @@
         errorLine2="                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="2743"
+            line="2895"
             column="63"/>
     </issue>
 
@@ -8224,7 +8213,7 @@
         errorLine2="                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="3257"
+            line="3394"
             column="62"/>
     </issue>
 
@@ -8235,7 +8224,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="3437"
+            line="3575"
             column="56"/>
     </issue>
 
@@ -8246,7 +8235,7 @@
         errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="3549"
+            line="3687"
             column="49"/>
     </issue>
 
@@ -8257,7 +8246,7 @@
         errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="3571"
+            line="3709"
             column="47"/>
     </issue>
 
@@ -8268,7 +8257,7 @@
         errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5311"
+            line="5320"
             column="52"/>
     </issue>
 
@@ -8279,7 +8268,7 @@
         errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5312"
+            line="5321"
             column="46"/>
     </issue>
 
@@ -8290,7 +8279,7 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5544"
+            line="5574"
             column="50"/>
     </issue>
 
@@ -8301,7 +8290,7 @@
         errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5545"
+            line="5575"
             column="53"/>
     </issue>
 
@@ -8312,7 +8301,7 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5567"
+            line="5597"
             column="50"/>
     </issue>
 
@@ -8323,7 +8312,7 @@
         errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5568"
+            line="5598"
             column="58"/>
     </issue>
 
@@ -8334,7 +8323,7 @@
         errorLine2="                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5569"
+            line="5599"
             column="56"/>
     </issue>
 
@@ -8345,7 +8334,7 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5592"
+            line="5622"
             column="50"/>
     </issue>
 
@@ -8356,7 +8345,7 @@
         errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5593"
+            line="5623"
             column="53"/>
     </issue>
 
@@ -8367,7 +8356,7 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5614"
+            line="5644"
             column="50"/>
     </issue>
 
@@ -8378,52 +8367,8 @@
         errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5615"
-            column="53"/>
-    </issue>
-
-    <issue
-        id="Range"
-        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                        long id = cursor.getLong(cursor.getColumnIndex(Schema.TransferModel.ID));"
-        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5637"
-            column="50"/>
-    </issue>
-
-    <issue
-        id="Range"
-        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                        long money = cursor.getLong(cursor.getColumnIndex(Schema.TransferModel.MONEY_FROM));"
-        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5638"
-            column="53"/>
-    </issue>
-
-    <issue
-        id="Range"
-        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                        if (!cursor.isNull(cursor.getColumnIndex(Schema.TransferModel.MONEY_TAX))) {"
-        errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5644"
-            column="44"/>
-    </issue>
-
-    <issue
-        id="Range"
-        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                            long moneyTax = cursor.getLong(cursor.getColumnIndex(Schema.TransferModel.MONEY_TAX));"
-        errorLine2="                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
             line="5645"
-            column="60"/>
+            column="53"/>
     </issue>
 
     <issue
@@ -8440,11 +8385,55 @@
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
+        errorLine1="                        long money = cursor.getLong(cursor.getColumnIndex(Schema.TransferModel.MONEY_FROM));"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
+            line="5668"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="Range"
+        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
+        errorLine1="                        if (!cursor.isNull(cursor.getColumnIndex(Schema.TransferModel.MONEY_TAX))) {"
+        errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
+            line="5674"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="Range"
+        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
+        errorLine1="                            long moneyTax = cursor.getLong(cursor.getColumnIndex(Schema.TransferModel.MONEY_TAX));"
+        errorLine2="                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
+            line="5675"
+            column="60"/>
+    </issue>
+
+    <issue
+        id="Range"
+        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
+        errorLine1="                        long id = cursor.getLong(cursor.getColumnIndex(Schema.TransferModel.ID));"
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
+            line="5697"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="Range"
+        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
         errorLine1="                        long money = cursor.getLong(cursor.getColumnIndex(Schema.TransferModel.MONEY_TO));"
         errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5668"
+            line="5698"
             column="53"/>
     </issue>
 
@@ -8455,7 +8444,7 @@
         errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5689"
+            line="5719"
             column="50"/>
     </issue>
 
@@ -8466,52 +8455,8 @@
         errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5690"
-            column="53"/>
-    </issue>
-
-    <issue
-        id="Range"
-        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                        long id = cursor.getLong(cursor.getColumnIndex(Schema.RecurrentTransfer.ID));"
-        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5712"
-            column="50"/>
-    </issue>
-
-    <issue
-        id="Range"
-        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                        long money = cursor.getLong(cursor.getColumnIndex(Schema.RecurrentTransfer.MONEY_FROM));"
-        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5713"
-            column="53"/>
-    </issue>
-
-    <issue
-        id="Range"
-        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                        if (!cursor.isNull(cursor.getColumnIndex(Schema.RecurrentTransfer.MONEY_TAX))) {"
-        errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5719"
-            column="44"/>
-    </issue>
-
-    <issue
-        id="Range"
-        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="                            long moneyTax = cursor.getLong(cursor.getColumnIndex(Schema.RecurrentTransfer.MONEY_TAX));"
-        errorLine2="                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
             line="5720"
-            column="60"/>
+            column="53"/>
     </issue>
 
     <issue
@@ -8528,11 +8473,55 @@
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
+        errorLine1="                        long money = cursor.getLong(cursor.getColumnIndex(Schema.RecurrentTransfer.MONEY_FROM));"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
+            line="5743"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="Range"
+        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
+        errorLine1="                        if (!cursor.isNull(cursor.getColumnIndex(Schema.RecurrentTransfer.MONEY_TAX))) {"
+        errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
+            line="5749"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="Range"
+        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
+        errorLine1="                            long moneyTax = cursor.getLong(cursor.getColumnIndex(Schema.RecurrentTransfer.MONEY_TAX));"
+        errorLine2="                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
+            line="5750"
+            column="60"/>
+    </issue>
+
+    <issue
+        id="Range"
+        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
+        errorLine1="                        long id = cursor.getLong(cursor.getColumnIndex(Schema.RecurrentTransfer.ID));"
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
+            line="5772"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="Range"
+        message="Value must be ≥ 0 but `getColumnIndex` can be -1"
         errorLine1="                        long money = cursor.getLong(cursor.getColumnIndex(Schema.RecurrentTransfer.MONEY_TO));"
         errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5743"
+            line="5773"
             column="53"/>
     </issue>
 
@@ -8543,7 +8532,7 @@
         errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5766"
+            line="5796"
             column="46"/>
     </issue>
 
@@ -8554,7 +8543,7 @@
         errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="5767"
+            line="5797"
             column="49"/>
     </issue>
 
@@ -12052,7 +12041,7 @@
         errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SystemCategoryLocalizer.java"
-            line="209"
+            line="208"
             column="44"/>
     </issue>
 
@@ -12063,7 +12052,7 @@
         errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SystemCategoryLocalizer.java"
-            line="210"
+            line="209"
             column="46"/>
     </issue>
 
@@ -12074,7 +12063,7 @@
         errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SystemCategoryLocalizer.java"
-            line="211"
+            line="210"
             column="46"/>
     </issue>
 
@@ -12085,7 +12074,7 @@
         errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SystemCategoryLocalizer.java"
-            line="212"
+            line="211"
             column="46"/>
     </issue>
 
@@ -12785,12 +12774,12 @@
     <issue
         id="Range"
         message="Value must be ≥ 0 but `getColumnIndex` can be -1"
-        errorLine1="            CurrencyUnit currency = CurrencyManager.getCurrency(cursor.getString(cursor.getColumnIndex(Contract.Wallet.CURRENCY)));"
-        errorLine2="                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="            String currencyIso = cursor.getString(cursor.getColumnIndex(Contract.Wallet.CURRENCY));"
+        errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/fragment/secondary/WalletItemFragment.java"
             line="262"
-            column="82"/>
+            column="51"/>
     </issue>
 
     <issue
@@ -12800,7 +12789,7 @@
         errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/fragment/secondary/WalletItemFragment.java"
-            line="264"
+            line="268"
             column="46"/>
     </issue>
 
@@ -12811,7 +12800,7 @@
         errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/fragment/secondary/WalletItemFragment.java"
-            line="266"
+            line="270"
             column="44"/>
     </issue>
 
@@ -12822,7 +12811,7 @@
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/fragment/secondary/WalletItemFragment.java"
-            line="273"
+            line="277"
             column="31"/>
     </issue>
 
@@ -12833,7 +12822,7 @@
         errorLine2="                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/fragment/secondary/WalletItemFragment.java"
-            line="280"
+            line="284"
             column="63"/>
     </issue>
 
@@ -12910,7 +12899,7 @@
         errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/widget/WalletWidgetProvider.java"
-            line="149"
+            line="155"
             column="45"/>
     </issue>
 
@@ -12921,7 +12910,7 @@
         errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/widget/WalletWidgetProvider.java"
-            line="153"
+            line="159"
             column="49"/>
     </issue>
 
@@ -12932,7 +12921,7 @@
         errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/widget/WalletWidgetProvider.java"
-            line="154"
+            line="160"
             column="46"/>
     </issue>
 
@@ -12943,19 +12932,8 @@
         errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/widget/WalletWidgetProvider.java"
-            line="161"
+            line="167"
             column="46"/>
-    </issue>
-
-    <issue
-        id="SoonBlockedPrivateApi"
-        message="Reflective access to mCursorDrawableRes will throw an exception when targeting API 35 and above"
-        errorLine1="            Field fCursorDrawableRes = TextView.class.getDeclaredField(&quot;mCursorDrawableRes&quot;);"
-        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/TintHelper.java"
-            line="239"
-            column="40"/>
     </issue>
 
     <issue
@@ -13042,7 +13020,7 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/storage/database/SystemCategoryLocalizer.java"
-            line="192"
+            line="191"
             column="9"/>
     </issue>
 
@@ -13103,7 +13081,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-ci`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix8`)"
         errorLine1="            floatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                 ~~~~~~~~~~~~~">
         <location
@@ -13114,7 +13092,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-ci`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix8`)"
         errorLine1="            floatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                               ~~~~~~~~~">
         <location
@@ -13125,7 +13103,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-ci`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix8`)"
         errorLine1="                mFloatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                      ~~~~~~~~~~~~~">
         <location
@@ -13136,7 +13114,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-ci`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix8`)"
         errorLine1="                mFloatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                                    ~~~~~~~~~">
         <location
@@ -13147,7 +13125,7 @@
 
     <issue
         id="RestrictedApi"
-        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-ci`)"
+        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix8`)"
         errorLine1="        return dependency instanceof AppBarLayout || dependency instanceof Snackbar.SnackbarLayout;"
         errorLine2="                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -13158,7 +13136,7 @@
 
     <issue
         id="RestrictedApi"
-        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-ci`)"
+        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix8`)"
         errorLine1="        } else if (dependency instanceof Snackbar.SnackbarLayout) {"
         errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -13169,7 +13147,7 @@
 
     <issue
         id="RestrictedApi"
-        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-ci`)"
+        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix8`)"
         errorLine1="            if (view instanceof Snackbar.SnackbarLayout &amp;&amp; parent.doViewsOverlap(fab, view)) {"
         errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -13180,7 +13158,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-ci`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix8`)"
         errorLine1="                floatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                     ~~~~~~~~~~~~~">
         <location
@@ -13191,7 +13169,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-ci`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix8`)"
         errorLine1="                floatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                                   ~~~~~~~~~">
         <location
@@ -13202,7 +13180,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-ci`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix8`)"
         errorLine1="                floatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                     ~~~~~~~~~~~~~">
         <location
@@ -13213,7 +13191,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-ci`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix8`)"
         errorLine1="                floatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                                   ~~~~~~~~~">
         <location
@@ -13275,83 +13253,6 @@
             file="src/main/java/com/oriondev/moneywallet/background/IconGroupLoader.java"
             line="98"
             column="44"/>
-    </issue>
-
-    <issue
-        id="UseRequiresApi"
-        message="Use `@RequiresApi(Build.VERSION_CODES.LOLLIPOP) instead of `@TargetApi` to propagate the requirement to callers of `CategoryChildIndicator`"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/CategoryChildIndicator.java"
-            line="53"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UseRequiresApi"
-        message="Use `@RequiresApi(Build.VERSION_CODES.LOLLIPOP) instead of `@TargetApi` to propagate the requirement to callers of `DotView`"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/calendar/DotView.java"
-            line="54"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UseRequiresApi"
-        message="Use `@RequiresApi(Build.VERSION_CODES.LOLLIPOP) instead of `@TargetApi` to propagate the requirement to callers of `setEffectColor`"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/EdgeGlowUtil.java"
-            line="344"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UseRequiresApi"
-        message="Use `@RequiresApi(Build.VERSION_CODES.LOLLIPOP) instead of `@TargetApi` to propagate the requirement to callers of `MaterialProgressBar`"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/MaterialProgressBar.java"
-            line="58"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UseRequiresApi"
-        message="Use `@RequiresApi(Build.VERSION_CODES.LOLLIPOP) instead of `@TargetApi` to propagate the requirement to callers of `RecurrenceView`"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/RecurrenceView.java"
-            line="59"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UseRequiresApi"
-        message="Use `@RequiresApi(Build.VERSION_CODES.LOLLIPOP) instead of `@TargetApi` to propagate the requirement to callers of `ThemedHorizontalScrollView`"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/ThemedHorizontalScrollView.java"
-            line="45"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UseRequiresApi"
-        message="Use `@RequiresApi(Build.VERSION_CODES.LOLLIPOP) instead of `@TargetApi` to propagate the requirement to callers of `ThemedScrollView`"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/ThemedScrollView.java"
-            line="45"
-            column="5"/>
     </issue>
 
     <issue
@@ -19884,7 +19785,7 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/activity/MainActivity.java"
-            line="656"
+            line="654"
             column="9"/>
     </issue>
 
@@ -19895,7 +19796,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/view/calendar/MonthView.java"
-            line="335"
+            line="326"
             column="13"/>
     </issue>
 
@@ -19906,7 +19807,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/view/calendar/MonthView.java"
-            line="346"
+            line="337"
             column="13"/>
     </issue>
 
@@ -19983,7 +19884,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/view/calendar/TimelineView.java"
-            line="250"
+            line="245"
             column="13"/>
     </issue>
 
@@ -19994,7 +19895,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/view/calendar/TimelineView.java"
-            line="324"
+            line="319"
             column="13"/>
     </issue>
 
@@ -20005,7 +19906,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/view/calendar/TimelineView.java"
-            line="340"
+            line="335"
             column="13"/>
     </issue>
 
@@ -20018,369 +19919,6 @@
             file="src/main/java/com/oriondev/moneywallet/ui/fragment/dialog/WalletPickerDialog.java"
             line="233"
             column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/picker/AttachmentPicker.java"
-            line="175"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/picker/AttachmentPicker.java"
-            line="204"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="                return Build.VERSION.SDK_INT >= 21;"
-        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/floss/java/com/oriondev/moneywallet/api/BackendServiceFactory.java"
-            line="78"
-            column="24"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 21"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/CategoryChildIndicator.java"
-            line="53"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 21"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/calendar/DotView.java"
-            line="54"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is never &lt; 24"
-        errorLine1="        if (Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.LOLLIPOP) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/EdgeGlowUtil.java"
-            line="76"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 21"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/EdgeGlowUtil.java"
-            line="344"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.LOLLIPOP` is never true here"
-        errorLine1="        if (Build.VERSION.SDK_INT &lt; Build.VERSION_CODES.LOLLIPOP) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/EdgeGlowUtil.java"
-            line="360"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 21"
-        errorLine1="    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/activity/MainActivity.java"
-            line="659"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 21"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/MaterialProgressBar.java"
-            line="58"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {"
-        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/calendar/MonthView.java"
-            line="217"
-            column="20"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {"
-        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/calendar/MonthView.java"
-            line="238"
-            column="20"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/storage/database/MultiUriCursorWrapper.java"
-            line="105"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/storage/database/MultiUriCursorWrapper.java"
-            line="127"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 21"
-        errorLine1="    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/chart/PieChart.java"
-            line="105"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 21"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/RecurrenceView.java"
-            line="59"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/storage/database/SQLDatabase.java"
-            line="136"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/activity/base/ThemedActivity.java"
-            line="249"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/activity/base/ThemedActivity.java"
-            line="256"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `Build.VERSION.SDK_INT >= Build.VERSION_CODES.M` is always true here (`SDK_INT` ≥ 24 and &lt; 35)"
-        errorLine1="        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {"
-        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/activity/base/ThemedActivity.java"
-            line="289"
-            column="20"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 21"
-        errorLine1="    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/activity/base/ThemedActivity.java"
-            line="302"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 21"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/ThemedHorizontalScrollView.java"
-            line="45"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 21"
-        errorLine1="    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/ThemedPieChart.java"
-            line="47"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 21"
-        errorLine1="    @TargetApi(Build.VERSION_CODES.LOLLIPOP)"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/ThemedScrollView.java"
-            line="45"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {"
-        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/calendar/TimelineView.java"
-            line="190"
-            column="20"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &amp;&amp; button.getBackground() instanceof RippleDrawable) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/TintHelper.java"
-            line="129"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/TintHelper.java"
-            line="153"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/TintHelper.java"
-            line="177"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/TintHelper.java"
-            line="224"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN` is never true here"
-        errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/theme/TintHelper.java"
-            line="230"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/view/text/Utils.java"
-            line="46"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;"
-        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/utils/Utils.java"
-            line="94"
-            column="16"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 24"
-        errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/utils/Utils.java"
-            line="115"
-            column="17"/>
     </issue>
 
     <issue
@@ -24286,7 +23824,7 @@
         errorLine2="                ~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/view/RecurrenceView.java"
-            line="90"
+            line="87"
             column="17"/>
     </issue>
 

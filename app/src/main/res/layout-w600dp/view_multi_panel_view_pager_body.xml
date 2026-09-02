@@ -21,7 +21,7 @@
 <merge
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <com.oriondev.moneywallet.ui.view.theme.ThemedViewPager
+    <androidx.viewpager.widget.ViewPager
         android:id="@+id/view_pager"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"/>

@@ -20,7 +20,6 @@
 package com.oriondev.moneywallet.ui.view.calendar;
 
 import android.content.Context;
-import android.os.Build;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -212,12 +211,8 @@ public class MonthView extends RecyclerView {
     }
 
     public void centerOnPosition(int position) {
-        if (getChildCount() == 0) {
+        if (getChildCount() == 0 || !isLaidOut()) {
             return;
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            if (!isLaidOut()) {
-                return;
-            }
         }
         // Animate scroll
         int offset = getMeasuredWidth() / 2 - getItemWidth() / 2;
@@ -233,12 +228,8 @@ public class MonthView extends RecyclerView {
     }
 
     void scrollToYearPosition(int year, int offsetYear) {
-        if (getChildCount() == 0) {
+        if (getChildCount() == 0 || !isLaidOut()) {
             return;
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            if (!isLaidOut()) {
-                return;
-            }
         }
         // Animate scroll
         layoutManager.scrollToPositionWithOffset(getPositionForDate(year + 1, 0),

@@ -27,7 +27,6 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.oriondev.moneywallet.R;
-import com.oriondev.moneywallet.utils.Utils;
 
 /**
  * Small helper shared by the intent services to report task state.
@@ -74,7 +73,7 @@ class TaskReporter {
      */
     NotificationCompat.Builder newNotification(String channelId) {
         return new NotificationCompat.Builder(mContext, channelId)
-                .setSmallIcon(Utils.isAtLeastLollipop() ? R.drawable.ic_notification : R.mipmap.ic_launcher);
+                .setSmallIcon(R.drawable.ic_notification);
     }
 
     /**

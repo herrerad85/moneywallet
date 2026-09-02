@@ -28,7 +28,6 @@ import android.os.Bundle;
 import android.util.AttributeSet;
 import androidx.annotation.CallSuper;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import android.graphics.Insets;
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
@@ -246,16 +245,12 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
         onThemeStatusBar(theme);
         onThemeStatusBarScrim(theme);
         onThemeStatusBarIcons(theme);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            onThemeTaskDescription(theme);
-        }
+        onThemeTaskDescription(theme);
         onThemeWindowBackground(theme);
     }
 
     protected void onThemeStatusBar(ITheme theme) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            getWindow().setStatusBarColor(theme.getColorPrimaryDark());
-        }
+        getWindow().setStatusBarColor(theme.getColorPrimaryDark());
     }
 
     /**
@@ -286,7 +281,7 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
                         Utils.isColorLight(theme.getColorWindowBackground()) ? navigationMask : 0,
                         navigationMask);
             }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        } else {
             View decorView = getWindow().getDecorView();
             int systemUiVisibility = decorView.getSystemUiVisibility();
             int statusBarColor = theme.getColorPrimaryDark();
@@ -299,7 +294,6 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     protected void onThemeTaskDescription(ITheme theme) {
         String name = getString(R.string.app_name);
         Bitmap icon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);

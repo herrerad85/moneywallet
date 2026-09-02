@@ -69,7 +69,7 @@ public class ThemedMonthView extends MonthView implements ThemeEngine.ThemeConsu
             setDefaultColor(color);
             setColorSelected(Util.visibleOr(theme.getColorAccent(), background, color));
             setColorBeforeSelection(color);
-            EdgeGlowUtil.setEdgeGlowColor(this, theme.getColorPrimary(), null);
+            EdgeGlowUtil.setEdgeGlowColor(this, theme.getColorPrimary());
         }
     }
 }

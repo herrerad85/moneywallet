@@ -43,10 +43,10 @@ public class ThemedRecyclerView extends RecyclerView implements ThemeEngine.Them
 
     @Override
     public void onApplyTheme(ITheme theme) {
-        EdgeGlowUtil.setEdgeGlowColor(this, theme.getColorPrimary(), null);
+        EdgeGlowUtil.setEdgeGlowColor(this, theme.getColorPrimary());
     }
 
     public static void applyTheme(RecyclerView recyclerView, ITheme theme) {
-        EdgeGlowUtil.setEdgeGlowColor(recyclerView, theme.getColorPrimary(), null);
+        EdgeGlowUtil.setEdgeGlowColor(recyclerView, theme.getColorPrimary());
     }
 }

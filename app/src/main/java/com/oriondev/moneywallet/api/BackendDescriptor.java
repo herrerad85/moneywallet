@@ -60,8 +60,7 @@ public abstract class BackendDescriptor {
     }
 
     /**
-     * Whether this backend is usable on the current device. Defaults to true; backends gated on
-     * an SDK level (e.g. the storage access framework) override this.
+     * Whether this backend is usable on the current device. Defaults to true.
      */
     public boolean isAvailable() {
         return true;

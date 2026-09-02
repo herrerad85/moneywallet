@@ -28,11 +28,9 @@ import android.database.Cursor;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -656,7 +654,6 @@ public class MainActivity extends BaseActivity implements DrawerController, Acco
         recyclerView.getAdapter().notifyDataSetChanged();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     protected void onThemeStatusBar(ITheme theme) {
         mDrawer.getDrawerLayout().setStatusBarBackgroundColor(theme.getColorPrimaryDark());
     }

@@ -20,12 +20,10 @@
 package com.oriondev.moneywallet;
 
 import android.app.Application;
-import android.content.Context;
 import android.content.res.Configuration;
 import android.os.LocaleList;
 
 import androidx.annotation.NonNull;
-import androidx.multidex.MultiDex;
 
 import com.oriondev.moneywallet.broadcast.AutoBackupBroadcastReceiver;
 import com.oriondev.moneywallet.broadcast.DailyBroadcastReceiver;
@@ -37,8 +35,6 @@ import com.oriondev.moneywallet.ui.notification.NotificationContract;
 import com.oriondev.moneywallet.ui.view.theme.ThemeEngine;
 import com.oriondev.moneywallet.ui.widget.WalletWidgetObserver;
 import com.oriondev.moneywallet.utils.CurrencyManager;
-
-import me.weishu.reflection.Reflection;
 
 /**
  * Created by andrea on 17/01/18.
@@ -88,12 +84,5 @@ public class App extends Application {
         DailyBroadcastReceiver.scheduleDailyNotification(this);
         RecurrenceBroadcastReceiver.scheduleRecurrenceTask(this);
         AutoBackupBroadcastReceiver.ensureAutoBackupTaskScheduled(this);
-    }
-
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(base);
-        MultiDex.install(this);
-        Reflection.unseal(base);
     }
 }

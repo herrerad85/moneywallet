@@ -22,7 +22,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <com.oriondev.moneywallet.ui.view.theme.ThemedViewPager
+    <androidx.viewpager.widget.ViewPager
         android:id="@+id/view_pager"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:layout_width="match_parent"

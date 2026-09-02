@@ -19,7 +19,6 @@
 
 package com.oriondev.moneywallet.ui.view.theme;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -31,7 +30,6 @@ import androidx.annotation.CheckResult;
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.appcompat.widget.SwitchCompat;
 import android.widget.Button;
@@ -39,12 +37,6 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.SeekBar;
-import android.widget.TextView;
-
-import com.oriondev.moneywallet.R;
-import com.oriondev.moneywallet.utils.Utils;
-
-import java.lang.reflect.Field;
 
 /**
  * Created by andrea on 11/04/18.
@@ -68,7 +60,9 @@ import java.lang.reflect.Field;
     private static final int COLOR_SWITCH_TRACK_NORMAL_LIGHT = Color.parseColor("#43000000");
     private static final int COLOR_SWITCH_TRACK_NORMAL_DARK = Color.parseColor("#4DFFFFFF");
 
-    // This returns a NEW Drawable because of the mutate() call. The mutate() call is necessary because Drawables with the same resource have shared states otherwise.
+    // Tints the drawable it was given, after mutate() so the tint does not reach every drawable
+    // sharing its state. From API 23 the wrap is the identity, so the caller's object comes back,
+    // and setCursorTint relies on that: the editor keeps drawing the drawable it loaded first.
     @CheckResult
     @Nullable
     /*package-local*/ static Drawable createTintedDrawable(@Nullable Drawable drawable, @ColorInt int color) {
@@ -126,19 +120,18 @@ import java.lang.reflect.Field;
                 },
                 new int[] {disabled, color}
         );
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && button.getBackground() instanceof RippleDrawable) {
+        if (button.getBackground() instanceof RippleDrawable) {
             RippleDrawable rippleDrawable = (RippleDrawable) button.getBackground();
             rippleDrawable.setColor(ColorStateList.valueOf(rippleColor));
         }
         Drawable drawable = button.getBackground();
         if (drawable != null) {
             drawable = createTintedDrawable(drawable, colorStateList);
-            Utils.setBackgroundCompat(button, drawable);
+            button.setBackground(drawable);
         }
     }
 
     /*package-local*/ static void applyTint(CheckBox checkBox, @ColorInt int color, boolean useDarker) {
-        Context context = checkBox.getContext();
         ColorStateList stateList = new ColorStateList(new int[][] {
                 new int[] {-android.R.attr.state_enabled},
                 new int[] {android.R.attr.state_enabled, -android.R.attr.state_checked},
@@ -150,19 +143,10 @@ import java.lang.reflect.Field;
                         color
                 }
         );
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            checkBox.setButtonTintList(stateList);
-        } else {
-            @SuppressLint("PrivateResource")
-            int resource = androidx.appcompat.R.drawable.abc_btn_radio_material;
-            Drawable drawable = ContextCompat.getDrawable(context, resource);
-            drawable = createTintedDrawable(drawable, stateList);
-            checkBox.setButtonDrawable(drawable);
-        }
+        checkBox.setButtonTintList(stateList);
     }
 
     /*package-local*/ static void applyTint(RadioButton radioButton, @ColorInt int color, boolean useDarker) {
-        Context context = radioButton.getContext();
         ColorStateList stateList = new ColorStateList(new int[][] {
                                         new int[] {-android.R.attr.state_enabled},
                                         new int[] {android.R.attr.state_enabled, -android.R.attr.state_checked},
@@ -174,15 +158,7 @@ import java.lang.reflect.Field;
                                         color
                                     }
         );
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            radioButton.setButtonTintList(stateList);
-        } else {
-            @SuppressLint("PrivateResource")
-            int resource = androidx.appcompat.R.drawable.abc_btn_radio_material;
-            Drawable drawable = ContextCompat.getDrawable(context, resource);
-            drawable = createTintedDrawable(drawable, stateList);
-            radioButton.setButtonDrawable(drawable);
-        }
+        radioButton.setButtonTintList(stateList);
     }
 
     /*package-local*/ static void applyTint(SwitchCompat switchCompat, @ColorInt int color, boolean useDarker) {
@@ -221,38 +197,19 @@ import java.lang.reflect.Field;
                         color
                 }
         );
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            seekBar.setThumbTintList(colorStateList);
-            seekBar.setProgressTintList(colorStateList);
-        } else {
-            Drawable progressDrawable = createTintedDrawable(seekBar.getProgressDrawable(), colorStateList);
-            seekBar.setProgressDrawable(progressDrawable);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                Drawable thumbDrawable = createTintedDrawable(seekBar.getThumb(), colorStateList);
-                seekBar.setThumb(thumbDrawable);
-            }
-        }
+        seekBar.setThumbTintList(colorStateList);
+        seekBar.setProgressTintList(colorStateList);
     }
 
+    /**
+     * Below API 29 the cursor drawable is private to the text view, so it keeps the theme's color.
+     */
     /*package-local*/ static void setCursorTint(@NonNull EditText editText, @ColorInt int color) {
-        try {
-            Field fCursorDrawableRes = TextView.class.getDeclaredField("mCursorDrawableRes");
-            fCursorDrawableRes.setAccessible(true);
-            int mCursorDrawableRes = fCursorDrawableRes.getInt(editText);
-            Field fEditor = TextView.class.getDeclaredField("mEditor");
-            fEditor.setAccessible(true);
-            Object editor = fEditor.get(editText);
-            Class<?> clazz = editor.getClass();
-            Field fCursorDrawable = clazz.getDeclaredField("mCursorDrawable");
-            fCursorDrawable.setAccessible(true);
-            Drawable[] drawables = new Drawable[2];
-            drawables[0] = ContextCompat.getDrawable(editText.getContext(), mCursorDrawableRes);
-            drawables[0] = createTintedDrawable(drawables[0], color);
-            drawables[1] = ContextCompat.getDrawable(editText.getContext(), mCursorDrawableRes);
-            drawables[1] = createTintedDrawable(drawables[1], color);
-            fCursorDrawable.set(editor, drawables);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Drawable cursor = editText.getTextCursorDrawable();
+            if (cursor != null) {
+                editText.setTextCursorDrawable(createTintedDrawable(cursor, color));
+            }
         }
     }
 }

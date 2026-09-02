@@ -20,9 +20,7 @@
 package com.oriondev.moneywallet.ui.view.theme;
 
 import android.content.Context;
-import android.os.Build;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import android.util.AttributeSet;
 
 import com.oriondev.moneywallet.ui.view.chart.PieChart;
@@ -44,7 +42,6 @@ public class ThemedPieChart extends PieChart implements ThemeEngine.ThemeConsume
         super(context, attrs, defStyleAttr);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public ThemedPieChart(Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }

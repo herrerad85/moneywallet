@@ -30,7 +30,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import androidx.annotation.NonNull;
@@ -172,9 +171,7 @@ public class AttachmentPicker extends Fragment {
     public void showPicker() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType(ALL_FILES);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        }
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         startActivityForResult(intent, REQUEST_CODE_FILE_PICKER);
     }
 
@@ -201,18 +198,16 @@ public class AttachmentPicker extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE_FILE_PICKER) {
             if (resultCode == Activity.RESULT_OK) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-                    ClipData clipData = data.getClipData();
-                    if (clipData != null) {
-                        for (int i = 0; i < clipData.getItemCount(); i++) {
-                            ClipData.Item item = clipData.getItemAt(i);
-                            Uri uri = item.getUri();
-                            if (uri != null) {
-                                onFileSelected(uri);
-                            }
+                ClipData clipData = data.getClipData();
+                if (clipData != null) {
+                    for (int i = 0; i < clipData.getItemCount(); i++) {
+                        ClipData.Item item = clipData.getItemAt(i);
+                        Uri uri = item.getUri();
+                        if (uri != null) {
+                            onFileSelected(uri);
                         }
-                        return;
                     }
+                    return;
                 }
                 Uri uri = data.getData();
                 if (uri != null) {

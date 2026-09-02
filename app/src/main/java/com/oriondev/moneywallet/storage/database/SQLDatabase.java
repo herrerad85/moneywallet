@@ -27,7 +27,6 @@ import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseLongArray;
@@ -96,8 +95,6 @@ import java.util.function.Supplier;
      * database whose ids name different rows, with foreign keys on.
      */
     private static final ThreadLocal<SQLDatabase> sStaging = new ThreadLocal<>();
-
-    private static final String ENABLE_FOREIGN_KEYS = "PRAGMA foreign_keys=ON";
 
     private final Context mContext;
 
@@ -383,11 +380,7 @@ import java.util.function.Supplier;
     @Override
     public void onConfigure(SQLiteDatabase db) {
         super.onConfigure(db);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            db.setForeignKeyConstraintsEnabled(true);
-        } else {
-            db.execSQL(ENABLE_FOREIGN_KEYS);
-        }
+        db.setForeignKeyConstraintsEnabled(true);
     }
 
     @Override
@@ -5448,7 +5441,6 @@ import java.util.function.Supplier;
      */
     private long[] parseIds(String list) {
         if (!TextUtils.isEmpty(list)) {
-            System.out.println(list);
             String[] encodedIds = list.split(",");
             long[] ids = new long[encodedIds.length];
             for (int i = 0; i < encodedIds.length; i++) {

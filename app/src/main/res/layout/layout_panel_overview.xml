@@ -18,7 +18,7 @@
   ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<com.oriondev.moneywallet.ui.view.theme.ThemedNestedScrollView
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -30,7 +30,7 @@
         android:orientation="vertical"
         android:descendantFocusability="blocksDescendants">
 
-        <com.oriondev.moneywallet.ui.view.theme.ThemedViewPager
+        <androidx.viewpager.widget.ViewPager
             android:id="@+id/chart_view_pager"
             android:layout_width="match_parent"
             android:layout_height="@dimen/view_pie_chart_height"
@@ -45,7 +45,7 @@
                 android:gravity="center_vertical"
                 app:dotRadius="@dimen/view_pie_chart_indicator_radius" />
 
-        </com.oriondev.moneywallet.ui.view.theme.ThemedViewPager>
+        </androidx.viewpager.widget.ViewPager>
 
         <com.oriondev.moneywallet.ui.view.theme.ThemedRecyclerView
             android:id="@+id/recycler_view"
@@ -57,4 +57,4 @@
 
     </LinearLayout>
 
-</com.oriondev.moneywallet.ui.view.theme.ThemedNestedScrollView>
+</androidx.core.widget.NestedScrollView>

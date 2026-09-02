@@ -48,6 +48,6 @@ public class ThemedTimelineView extends TimelineView implements ThemeEngine.Them
         setDayLabelColor(textColor);
         setDateLabelColor(textColor);
         setDateLabelSelectedColor(theme.getColorAccent());
-        EdgeGlowUtil.setEdgeGlowColor(this, theme.getColorPrimary(), null);
+        EdgeGlowUtil.setEdgeGlowColor(this, theme.getColorPrimary());
     }
 }

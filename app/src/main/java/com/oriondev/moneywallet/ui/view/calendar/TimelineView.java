@@ -21,7 +21,6 @@ package com.oriondev.moneywallet.ui.view.calendar;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -185,12 +184,8 @@ public class TimelineView extends RecyclerView {
     }
 
     public void centerOnPosition(int position) {
-        if (getChildCount() == 0) {
+        if (getChildCount() == 0 || !isLaidOut()) {
             return;
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            if (!isLaidOut()) {
-                return;
-            }
         }
         // Animate scroll
         int offset = getMeasuredWidth() / 2 - getChildAt(0).getMeasuredWidth() / 2;

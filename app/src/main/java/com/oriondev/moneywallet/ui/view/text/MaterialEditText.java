@@ -117,7 +117,7 @@ public class MaterialEditText extends androidx.appcompat.widget.AppCompatEditTex
         mMeter = new Rect();
         mLabelVisible = false;
         // disable background
-        Utils.setBackgroundCompat(this, null);
+        setBackground(null);
         // parse attributes from xml
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.MaterialEditText, defStyleAttr, 0);
         try {
