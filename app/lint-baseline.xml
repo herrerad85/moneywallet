@@ -13081,51 +13081,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
-        errorLine1="            floatingActionButton.setVisibility(View.GONE);"
-        errorLine2="                                 ~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/fragment/secondary/BackupHandlerFragment.java"
-            line="238"
-            column="34"/>
-    </issue>
-
-    <issue
-        id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
-        errorLine1="            floatingActionButton.setVisibility(View.GONE);"
-        errorLine2="                                               ~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/fragment/secondary/BackupHandlerFragment.java"
-            line="238"
-            column="48"/>
-    </issue>
-
-    <issue
-        id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
-        errorLine1="                mFloatingActionButton.setVisibility(View.GONE);"
-        errorLine2="                                      ~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/fragment/base/MultiPanelFragment.java"
-            line="145"
-            column="39"/>
-    </issue>
-
-    <issue
-        id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
-        errorLine1="                mFloatingActionButton.setVisibility(View.GONE);"
-        errorLine2="                                                    ~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/fragment/base/MultiPanelFragment.java"
-            line="145"
-            column="53"/>
-    </issue>
-
-    <issue
-        id="RestrictedApi"
-        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
+        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10b`)"
         errorLine1="        return dependency instanceof AppBarLayout || dependency instanceof Snackbar.SnackbarLayout;"
         errorLine2="                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -13136,7 +13092,7 @@
 
     <issue
         id="RestrictedApi"
-        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
+        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10b`)"
         errorLine1="        } else if (dependency instanceof Snackbar.SnackbarLayout) {"
         errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -13147,57 +13103,13 @@
 
     <issue
         id="RestrictedApi"
-        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
+        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10b`)"
         errorLine1="            if (view instanceof Snackbar.SnackbarLayout &amp;&amp; parent.doViewsOverlap(fab, view)) {"
         errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/oriondev/moneywallet/ui/behavior/ScrollingFloatingActionButtonBehavior.java"
             line="78"
             column="33"/>
-    </issue>
-
-    <issue
-        id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
-        errorLine1="                floatingActionButton.setVisibility(View.GONE);"
-        errorLine2="                                     ~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/activity/base/SinglePanelActivity.java"
-            line="114"
-            column="38"/>
-    </issue>
-
-    <issue
-        id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
-        errorLine1="                floatingActionButton.setVisibility(View.GONE);"
-        errorLine2="                                                   ~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/activity/base/SinglePanelActivity.java"
-            line="114"
-            column="52"/>
-    </issue>
-
-    <issue
-        id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
-        errorLine1="                floatingActionButton.setVisibility(View.GONE);"
-        errorLine2="                                     ~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/fragment/base/SinglePanelFragment.java"
-            line="125"
-            column="38"/>
-    </issue>
-
-    <issue
-        id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
-        errorLine1="                floatingActionButton.setVisibility(View.GONE);"
-        errorLine2="                                                   ~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/fragment/base/SinglePanelFragment.java"
-            line="125"
-            column="52"/>
     </issue>
 
     <issue

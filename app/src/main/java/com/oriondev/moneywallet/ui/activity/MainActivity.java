@@ -59,6 +59,7 @@ import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.shape.MaterialShapeDrawable;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.ColorIcon;
@@ -715,7 +716,14 @@ public class MainActivity extends BaseActivity implements DrawerController, Navi
     }
 
     private void applyNavigationDrawerBodyTheme(ITheme theme) {
-        mNavigationView.setBackgroundColor(theme.getDrawerBackgroundColor());
+        // the library gives the drawer its outline, and with it its shadow, only while the background
+        // is still the shape drawable it built, so that drawable is recolored and not replaced
+        Drawable background = mNavigationView.getBackground();
+        if (background instanceof MaterialShapeDrawable) {
+            ((MaterialShapeDrawable) background).setFillColor(ColorStateList.valueOf(theme.getDrawerBackgroundColor()));
+        } else {
+            mNavigationView.setBackgroundColor(theme.getDrawerBackgroundColor());
+        }
         mNavigationView.setItemTextColor(checkedStates(theme.getDrawerSelectedTextColor(), theme.getDrawerTextColor()));
         // the row's own foreground is the theme's ripple, so the background only marks the open entry
         StateListDrawable checkedBackground = new StateListDrawable();

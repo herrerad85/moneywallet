@@ -19,7 +19,10 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.google.android.material.elevation.ElevationOverlayProvider;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.shape.MaterialShapeDrawable;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.Money;
@@ -31,6 +34,7 @@ import com.oriondev.moneywallet.storage.database.TestDatabases;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.fragment.multipanel.CategoryMultiPanelViewPagerFragment;
 import com.oriondev.moneywallet.ui.fragment.multipanel.TransactionMultiPanelViewPagerFragment;
+import com.oriondev.moneywallet.ui.view.theme.ThemeEngine;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
 
 import org.junit.Before;
@@ -85,6 +89,21 @@ public class MainActivityTest {
                 assertNotNull(icon.getBackground());
                 assertNotNull(drawer(activity).getItemBackground());
                 assertNull(drawer(activity).getItemIconTintList());
+                assertTrue(drawer(activity).getClipToOutline());
+                assertTrue(drawer(activity).getBackground() instanceof MaterialShapeDrawable);
+                assertEquals(ThemeEngine.getTheme().getDrawerBackgroundColor(), ((MaterialShapeDrawable) drawer(activity).getBackground()).getFillColor().getDefaultColor());
+                assertFalse(new ElevationOverlayProvider(activity).isThemeElevationOverlayEnabled());
+            });
+        }
+    }
+
+    @Test
+    public void theMainScreenInflatesItsFloatingActionButton() {
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            scenario.onActivity(activity -> {
+                awaitWallets(activity);
+                View fab = activity.findViewById(R.id.floating_action_button);
+                assertTrue(fab instanceof FloatingActionButton);
             });
         }
     }

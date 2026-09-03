@@ -42,16 +42,11 @@ allprojects {
 
 ext {
     supportDependencies = [
-            // Held with material. appcompat-resources 1.6.0 replaced the DrawableWrapper that
-            // material 1.0.0's ShadowDrawableWrapper extends. Past 1.5.1 the JVM cannot load
-            // material's floating action button implementation, so Robolectric cannot inflate a
-            // screen that holds one, and a device would load that class the first time a button
-            // asked for useCompatPadding. Both move together.
-            appcompat : 'androidx.appcompat:appcompat:1.5.1',
+            appcompat : 'androidx.appcompat:appcompat:1.8.0',
             recyclerview : 'androidx.recyclerview:recyclerview:1.4.0',
             cardview: 'androidx.cardview:cardview:1.0.0',
             annotations : 'androidx.annotation:annotation:1.10.0',
-            design : 'com.google.android.material:material:1.0.0',
+            design : 'com.google.android.material:material:1.14.0',
             preference: 'androidx.preference:preference:1.2.1',
             constraintlayout : 'androidx.constraintlayout:constraintlayout:2.2.2'
     ]

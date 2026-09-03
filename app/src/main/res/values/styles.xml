@@ -19,13 +19,12 @@
 
 <resources>
 
-    <!-- Base application theme. The screens carry their own toolbar, so the window's action bar
-         and title stay off, which is what the drawer library's theme used to set on top of this
-         same AppCompat parent. -->
-    <style name="MoneyWalletAppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <!-- Base application theme. The Bridge parent keeps AppCompat's own widget styles and adds the
+         theme attributes material's widgets check for when they inflate. It is a Light theme and not
+         DayNight because ThemeEngine paints the dark modes itself. The screens carry their own
+         toolbar, so the parent's window action bar and title stay off. -->
+    <style name="MoneyWalletAppTheme" parent="Theme.MaterialComponents.Light.NoActionBar.Bridge">
         <!-- Customize your theme here. -->
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
