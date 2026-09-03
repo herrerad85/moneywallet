@@ -119,17 +119,6 @@ dependencies {
     implementation supportDependencies.preference
     implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
     implementation 'com.afollestad.material-dialogs:commons:0.9.6.0'
-    implementation('com.mikepenz:materialdrawer:6.0.8@aar') {
-        transitive = true
-    }
-    // materialdrawer 6.0.8 transitively pulls fastadapter-extensions-expandable:3.2.6, whose POM
-    // references the dead jcenter-only artifacts com.mikepenz:library / :library-core:3.2.6 (the old
-    // Android-Iconics artifact ids, never on mavenCentral). The 3.2.7 fastadapter chain (still
-    // support-lib era, on mavenCentral) dropped those deps, so pinning it removes the unresolved
-    // transitives without bumping materialdrawer itself.
-    implementation 'com.mikepenz:fastadapter:3.2.7'
-    implementation 'com.mikepenz:fastadapter-commons:3.2.7'
-    implementation 'com.mikepenz:fastadapter-extensions-expandable:3.2.7'
     implementation 'com.pnikosis:materialish-progress:1.7'
     // jcenter-orphaned. No 1.6.1 git tag ever existed (Bintray-only publish); rubensousa's repo only
     // has buildable tags up to 1.5.1 on JitPack. kizitonwose/BottomSheetBuilder is a direct fork at

@@ -19,13 +19,24 @@
 
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="MoneyWalletAppTheme" parent="MaterialDrawerTheme.Light.DarkToolbar">
+    <!-- Base application theme. The screens carry their own toolbar, so the window's action bar
+         and title stay off, which is what the drawer library's theme used to set on top of this
+         same AppCompat parent. -->
+    <style name="MoneyWalletAppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <item name="drawerArrowStyle">@style/MoneyWalletDrawerArrowStyle</item>
+    </style>
+
+    <!-- The drawer icon morphs into the back arrow without spinning, as the drawer library's own
+         style had it. -->
+    <style name="MoneyWalletDrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="spinBars">false</item>
     </style>
 
 </resources>

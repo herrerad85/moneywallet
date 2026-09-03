@@ -13081,7 +13081,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix9`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
         errorLine1="            floatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                 ~~~~~~~~~~~~~">
         <location
@@ -13092,7 +13092,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix9`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
         errorLine1="            floatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                               ~~~~~~~~~">
         <location
@@ -13103,7 +13103,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix9`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
         errorLine1="                mFloatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                      ~~~~~~~~~~~~~">
         <location
@@ -13114,7 +13114,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix9`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
         errorLine1="                mFloatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                                    ~~~~~~~~~">
         <location
@@ -13125,7 +13125,7 @@
 
     <issue
         id="RestrictedApi"
-        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix9`)"
+        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
         errorLine1="        return dependency instanceof AppBarLayout || dependency instanceof Snackbar.SnackbarLayout;"
         errorLine2="                                                                           ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -13136,7 +13136,7 @@
 
     <issue
         id="RestrictedApi"
-        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix9`)"
+        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
         errorLine1="        } else if (dependency instanceof Snackbar.SnackbarLayout) {"
         errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -13147,7 +13147,7 @@
 
     <issue
         id="RestrictedApi"
-        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix9`)"
+        message="SnackbarLayout can only be accessed from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
         errorLine1="            if (view instanceof Snackbar.SnackbarLayout &amp;&amp; parent.doViewsOverlap(fab, view)) {"
         errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -13158,7 +13158,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix9`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
         errorLine1="                floatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                     ~~~~~~~~~~~~~">
         <location
@@ -13169,7 +13169,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix9`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
         errorLine1="                floatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                                   ~~~~~~~~~">
         <location
@@ -13180,7 +13180,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix9`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
         errorLine1="                floatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                     ~~~~~~~~~~~~~">
         <location
@@ -13191,7 +13191,7 @@
 
     <issue
         id="RestrictedApi"
-        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix9`)"
+        message="VisibilityAwareImageButton.setVisibility can only be called from within the same library group (referenced groupId=`com.google.android.material` from groupId=`moneywallet-fix10a`)"
         errorLine1="                floatingActionButton.setVisibility(View.GONE);"
         errorLine2="                                                   ~~~~~~~~~">
         <location
@@ -19693,17 +19693,6 @@
     <issue
         id="NotifyDataSetChanged"
         message="It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort."
-        errorLine1="        recyclerView.getAdapter().notifyDataSetChanged();"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/oriondev/moneywallet/ui/activity/MainActivity.java"
-            line="654"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="NotifyDataSetChanged"
-        message="It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort."
         errorLine1="            adapter.notifyDataSetChanged();"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -19895,7 +19884,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/descriptions.xml"
-            line="34"
+            line="36"
             column="13"/>
     </issue>
 

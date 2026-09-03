@@ -7,13 +7,6 @@
     "copyright":"Copyright (c) 2014-2016 Aidan Michael Follestad",
     "license":"MIT"
   },{
-    "name":"MaterialDrawer",
-    "author":"mikepenz",
-    "website":"https://github.com/mikepenz/MaterialDrawer",
-    "version":"6.0.8",
-    "copyright":"Copyright 2018 Mike Penz",
-    "license":"APACHE"
-  },{
     "name":"Material-ish Progress",
     "author":"pnikosis",
     "website":"https://github.com/pnikosis/materialish-progress",
