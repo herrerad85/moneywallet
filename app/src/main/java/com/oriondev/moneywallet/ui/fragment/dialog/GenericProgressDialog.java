@@ -22,11 +22,19 @@ package com.oriondev.moneywallet.ui.fragment.dialog;
 import android.app.Activity;
 import android.app.Dialog;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
-import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.progressindicator.BaseProgressIndicator;
+import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
+
+import java.text.NumberFormat;
 
 /**
  * Created by andre on 22/03/2018.
@@ -36,6 +44,10 @@ public class GenericProgressDialog extends DialogFragment {
     private static final String ARG_TITLE_RES = "GenericProgressDialog::Arguments::TitleRes";
     private static final String ARG_CONTENT_RES = "GenericProgressDialog::Arguments::ContentRes";
     private static final String ARG_INDETERMINATE = "GenericProgressDialog::Arguments::Indeterminate";
+
+    private BaseProgressIndicator<?> mProgressIndicator;
+    private TextView mMessageTextView;
+    private TextView mPercentageTextView;
 
     public static GenericProgressDialog newInstance(int title, int content, boolean indeterminate) {
         GenericProgressDialog dialog = new GenericProgressDialog();
@@ -59,28 +71,67 @@ public class GenericProgressDialog extends DialogFragment {
         int titleRes = arguments != null ? arguments.getInt(ARG_TITLE_RES) : 0;
         int contentRes = arguments != null ? arguments.getInt(ARG_CONTENT_RES) : 0;
         boolean indeterminate = arguments != null && arguments.getBoolean(ARG_INDETERMINATE);
-        MaterialDialog.Builder builder = ThemedDialog.buildMaterialDialog(activity);
-                if (titleRes != 0) {
-                    builder.title(titleRes);
-                }
-                if (contentRes != 0) {
-                    builder.content(contentRes);
-                }
-        return builder.progress(indeterminate, 100)
-                .cancelable(false)
-                .build();
+        int layoutRes = indeterminate ? R.layout.dialog_progress_indeterminate
+                : R.layout.dialog_progress_determinate;
+        MaterialAlertDialogBuilder builder = ThemedDialog.buildMaterialDialog(activity);
+        if (titleRes != 0) {
+            builder.setTitle(titleRes);
+        }
+        AlertDialog dialog = builder.setCancelable(false).create();
+        // The dialog's own context carries the light or dark dialog theme the factory picked, so
+        // the layout's theme attributes have to resolve against it and not against the activity.
+        // This is the same clone DialogFragment makes for a dialog it inflates a content view for,
+        // and it has to be made by hand here because getLayoutInflater() hands back the plain
+        // activity inflater while onCreateDialog is still running.
+        View view = getLayoutInflater().cloneInContext(dialog.getContext()).inflate(layoutRes, null);
+        mProgressIndicator = view.findViewById(R.id.dialog_progress_indicator);
+        mProgressIndicator.setMax(100);
+        // The widget defaults to colorPrimary, which neither dialog style sets, so it sinks into
+        // the dark dialog surface.
+        mProgressIndicator.setIndicatorColor(ThemedDialog.getAccentColor());
+        if (!indeterminate) {
+            // setIndicatorColor leaves the track alone, and the linear style declares no track
+            // color, so the widget derived one at inflation by fading colorPrimary to the theme's
+            // disabledAlpha, which all but erases it on the dark dialog. The circular style
+            // declares a transparent track and keeps it.
+            mProgressIndicator.setTrackColor(ThemedDialog.getIdleColor());
+        }
+        mMessageTextView = view.findViewById(R.id.dialog_progress_message);
+        // Only the determinate layout carries a percentage label.
+        mPercentageTextView = view.findViewById(R.id.dialog_progress_percentage);
+        setMessage(contentRes);
+        setProgress(0);
+        dialog.setView(view);
+        return dialog;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mProgressIndicator = null;
+        mMessageTextView = null;
+        mPercentageTextView = null;
     }
 
     public void updateProgress(int contentRes, int progress) {
-        MaterialDialog dialog = (MaterialDialog) getDialog();
-        if (dialog != null) {
-            dialog.setCancelable(false);
-            if (contentRes != 0) {
-                dialog.setContent(contentRes);
-            } else {
-                dialog.setContent(null);
-            }
-            dialog.setProgress(progress);
+        if (mProgressIndicator == null) {
+            return;
+        }
+        setMessage(contentRes);
+        setProgress(progress);
+    }
+
+    private void setMessage(int contentRes) {
+        mMessageTextView.setText(contentRes != 0 ? getText(contentRes) : null);
+    }
+
+    private void setProgress(int progress) {
+        mProgressIndicator.setProgress(progress);
+        if (mPercentageTextView != null) {
+            // material-dialogs wrote this label through its default progressPercentFormat, which
+            // is NumberFormat.getPercentInstance().
+            NumberFormat format = NumberFormat.getPercentInstance();
+            mPercentageTextView.setText(format.format(progress / (float) mProgressIndicator.getMax()));
         }
     }
 }

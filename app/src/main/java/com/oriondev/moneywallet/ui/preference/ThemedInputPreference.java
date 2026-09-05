@@ -20,12 +20,15 @@
 package com.oriondev.moneywallet.ui.preference;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
+import android.content.DialogInterface;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
+import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 
@@ -96,14 +99,20 @@ public class ThemedInputPreference extends Preference {
     }
 
     private void showDialog() {
-        ThemedDialog.buildMaterialDialog(getContext())
-                .title(getTitle())
-                .content(mContent)
-                .inputType(mInputType)
-                .input(mHint, mValue, mAllowEmptyInput, new MaterialDialog.InputCallback() {
+        View inputView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_input, null);
+        final EditText inputEditText = inputView.findViewById(R.id.dialog_input_edit_text);
+        inputEditText.setHint(mHint);
+        inputEditText.setText(mValue);
+        inputEditText.setInputType(mInputType);
+        AlertDialog dialog = ThemedDialog.buildMaterialDialog(getContext())
+                .setTitle(getTitle())
+                .setMessage(mContent)
+                .setView(inputView)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                    public void onClick(DialogInterface dialog, int which) {
+                        CharSequence input = inputEditText.getText();
                         if (!TextUtils.equals(input, mValue)) {
                             mValue = input.toString();
                             callChangeListener(mValue);
@@ -111,8 +120,8 @@ public class ThemedInputPreference extends Preference {
                     }
 
                 })
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
-                .show();
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+        ThemedDialog.showWithInput(dialog, inputEditText, mAllowEmptyInput);
     }
 }

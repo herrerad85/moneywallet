@@ -20,11 +20,11 @@
 package com.oriondev.moneywallet.ui.preference;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import androidx.preference.Preference;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 
@@ -100,23 +100,29 @@ public class ThemedListPreference extends Preference {
     }
 
     private void showDialog() {
+        final int[] selected = new int[] {mCurrentValueIndex};
         ThemedDialog.buildMaterialDialog(getContext())
-                .title(getTitle())
-                .items(mEntries)
-                .itemsCallbackSingleChoice(mCurrentValueIndex, new MaterialDialog.ListCallbackSingleChoice() {
+                .setTitle(getTitle())
+                .setSingleChoiceItems(mEntries, mCurrentValueIndex, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public boolean onSelection(MaterialDialog dialog, View itemView, int which, CharSequence text) {
-                        if (which != mCurrentValueIndex) {
-                            callChangeListener(mEntryValues[which]);
-                            mCurrentValueIndex = which;
-                        }
-                        return false;
+                    public void onClick(DialogInterface dialog, int which) {
+                        selected[0] = which;
                     }
 
                 })
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (selected[0] != mCurrentValueIndex) {
+                            callChangeListener(mEntryValues[selected[0]]);
+                            mCurrentValueIndex = selected[0];
+                        }
+                    }
+
+                })
+                .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
 }

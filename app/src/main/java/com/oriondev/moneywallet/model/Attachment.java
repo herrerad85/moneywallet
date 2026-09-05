@@ -179,9 +179,9 @@ public class Attachment implements Parcelable, Identifiable {
             context.startActivity(attachment.getActionViewIntent(context));
         } catch (ActivityNotFoundException e) {
             ThemedDialog.buildMaterialDialog(context)
-                    .title(R.string.title_error)
-                    .content(R.string.message_error_activity_not_found)
-                    .positiveText(android.R.string.ok)
+                    .setTitle(R.string.title_error)
+                    .setMessage(R.string.message_error_activity_not_found)
+                    .setPositiveButton(android.R.string.ok, null)
                     .show();
         }
     }

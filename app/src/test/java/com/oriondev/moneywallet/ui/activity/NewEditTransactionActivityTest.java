@@ -8,13 +8,14 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.view.View;
+import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.Attachment;
 import com.oriondev.moneywallet.model.Category;
@@ -271,11 +272,12 @@ public class NewEditTransactionActivityTest {
                 assertFalse(activity.isFinishing());
                 // the lowest this saving reaches is minus 5000 and the ceiling is held at
                 // nothing, so the refusal names 0.00 and not a negative figure
-                MaterialDialog dialog = (MaterialDialog) ShadowDialog.getLatestDialog();
+                AlertDialog dialog = (AlertDialog) ShadowDialog.getLatestDialog();
+                TextView message = dialog.findViewById(android.R.id.message);
                 assertEquals(activity.getString(R.string.error_saving_withdraw_over_balance,
                         MoneyFormatter.getInstance().getNotTintedString(
                                 CurrencyManager.getCurrency("EUR"), 0L)),
-                        dialog.getContentView().getText().toString());
+                        message.getText().toString());
                 moneyPicker(activity).setMoney(0L);
                 save(activity);
                 assertTrue(activity.isFinishing());

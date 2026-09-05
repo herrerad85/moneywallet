@@ -21,11 +21,13 @@ package com.oriondev.moneywallet.ui.fragment.dialog;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.loader.app.LoaderManager;
@@ -36,8 +38,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.Category;
 import com.oriondev.moneywallet.storage.database.Contract;
@@ -84,29 +84,26 @@ public class ParentCategoryPickerDialog extends DialogFragment implements Parent
             mCallerId = savedInstanceState.getLong(SS_CALLER_ID);
             mCategoryType = (Contract.CategoryType) savedInstanceState.getSerializable(SS_CATEGORY_TYPE);
         }
-        MaterialDialog dialog = ThemedDialog.buildMaterialDialog(activity)
-                .title(R.string.dialog_category_picker_title)
-                .positiveText(R.string.action_new)
-                .negativeText(android.R.string.cancel)
-                .customView(R.layout.dialog_advanced_list, false)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+        View view = getLayoutInflater().inflate(R.layout.dialog_advanced_list, null);
+        AlertDialog dialog = ThemedDialog.buildMaterialDialog(activity)
+                .setTitle(R.string.dialog_category_picker_title)
+                .setPositiveButton(R.string.action_new, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         startActivity(new Intent(getActivity(), NewEditCategoryActivity.class));
                     }
 
                 })
-                .build();
+                .setNegativeButton(android.R.string.cancel, null)
+                .setView(view)
+                .create();
         mCursorAdapter = new ParentCategorySelectorCursorAdapter(this);
-        View view = dialog.getCustomView();
-        if (view != null) {
-            mRecyclerView = view.findViewById(R.id.recycler_view);
-            mMessageTextView = view.findViewById(R.id.message_text_view);
-            mRecyclerView.setLayoutManager(new LinearLayoutManager(activity));
-            mRecyclerView.setAdapter(mCursorAdapter);
-            mMessageTextView.setText(R.string.message_no_category_found);
-        }
+        mRecyclerView = view.findViewById(R.id.recycler_view);
+        mMessageTextView = view.findViewById(R.id.message_text_view);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(activity));
+        mRecyclerView.setAdapter(mCursorAdapter);
+        mMessageTextView.setText(R.string.message_no_category_found);
         mRecyclerView.setVisibility(View.GONE);
         mMessageTextView.setVisibility(View.GONE);
         LoaderManager.getInstance(this).restartLoader(DEFAULT_LOADER_ID, null, this);

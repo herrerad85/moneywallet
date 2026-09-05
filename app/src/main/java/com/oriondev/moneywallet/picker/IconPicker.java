@@ -33,7 +33,6 @@ import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.widget.EditText;
 
-import com.afollestad.materialdialogs.color.ColorChooserDialog;
 import com.github.rubensousa.bottomsheetbuilder.BottomSheetBuilder;
 import com.github.rubensousa.bottomsheetbuilder.adapter.BottomSheetItemClickListener;
 import com.oriondev.moneywallet.R;
@@ -41,6 +40,7 @@ import com.oriondev.moneywallet.model.ColorIcon;
 import com.oriondev.moneywallet.model.Icon;
 import com.oriondev.moneywallet.model.VectorIcon;
 import com.oriondev.moneywallet.ui.activity.IconListActivity;
+import com.oriondev.moneywallet.ui.fragment.dialog.ColorChooserDialog;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.Utils;
@@ -48,7 +48,7 @@ import com.oriondev.moneywallet.utils.Utils;
 /**
  * Created by andrea on 01/02/18.
  */
-public class IconPicker extends Fragment implements ColorChooserDialog.ColorCallback {
+public class IconPicker extends Fragment implements ColorChooserDialog.Callback {
 
     private static final String SS_CURRENT_ICON = "IconPicker::SavedState::CurrentIcon";
     private static final String SS_LAST_BG_COLOR = "IconPicker::SavedState::LastBackgroundColor";
@@ -57,6 +57,8 @@ public class IconPicker extends Fragment implements ColorChooserDialog.ColorCall
     private static final int REQUEST_ICON_PICKER = 57;
 
     private static final String DEFAULT_BACKGROUND_COLOR = "#000000";
+
+    private static final String TAG_COLOR_CHOOSER = "IconPicker::Tag::ColorChooserDialog";
 
     private Controller mController;
 
@@ -236,13 +238,15 @@ public class IconPicker extends Fragment implements ColorChooserDialog.ColorCall
     }
 
     private void openColorPicker() {
-        Activity activity = getActivity();
-        if (activity != null) {
-            ThemedDialog.buildColorChooserDialog(activity, R.string.dialog_color_picker_title_icon_picker_background_color)
-                    .accentMode(true)
-                    .preselect(Color.parseColor(mLastBackgroundColor))
-                    .dynamicButtonColor(false)
-                    .show(getChildFragmentManager());
+        if (!isAdded()) {
+            return;
+        }
+        FragmentManager fragmentManager = getChildFragmentManager();
+        // showNow adds the dialog before it returns, so a second tap in the same frame finds it.
+        if (fragmentManager.findFragmentByTag(TAG_COLOR_CHOOSER) == null) {
+            ColorChooserDialog.newInstance(R.string.dialog_color_picker_title_icon_picker_background_color,
+                            true, Color.parseColor(mLastBackgroundColor))
+                    .showNow(fragmentManager, TAG_COLOR_CHOOSER);
         }
     }
 
@@ -262,7 +266,7 @@ public class IconPicker extends Fragment implements ColorChooserDialog.ColorCall
     }
 
     @Override
-    public void onColorSelection(@NonNull ColorChooserDialog dialog, int selectedColor) {
+    public void onColorSelection(ColorChooserDialog dialog, int selectedColor) {
         mLastBackgroundColor = Utils.getHexColor(selectedColor);
         if (mCurrentIcon instanceof ColorIcon) {
             String text = IconLoader.getColorIconString(mBindEditText != null ? mBindEditText.getText().toString() : null);
@@ -272,7 +276,7 @@ public class IconPicker extends Fragment implements ColorChooserDialog.ColorCall
     }
 
     @Override
-    public void onColorChooserDismissed(@NonNull ColorChooserDialog dialog) {
+    public void onColorChooserDismissed(ColorChooserDialog dialog) {
         // do nothing here: if the user dismiss the picker, it means that he don't want to change
         // the color at the moment.
     }

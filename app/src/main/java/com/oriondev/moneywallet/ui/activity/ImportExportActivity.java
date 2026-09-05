@@ -3,6 +3,7 @@ package com.oriondev.moneywallet.ui.activity;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
@@ -26,8 +27,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.DataFormat;
@@ -447,18 +446,17 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
         if (itemId == R.id.action_import_data) {
             if (mImportFormatEditText.validate() && mImportFileEditText.validate()) {
                 ThemedDialog.buildMaterialDialog(this)
-                        .title(R.string.title_warning)
-                        .content(R.string.message_data_import_without_backup)
-                        .positiveText(android.R.string.ok)
-                        .negativeText(android.R.string.cancel)
-                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        .setTitle(R.string.title_warning)
+                        .setMessage(R.string.message_data_import_without_backup)
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                             @Override
-                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            public void onClick(DialogInterface dialog, int which) {
                                 importData();
                             }
 
                         })
+                        .setNegativeButton(android.R.string.cancel, null)
                         .show();
             }
         } else if (itemId == R.id.action_export_data) {
@@ -523,9 +521,9 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
             mImportFile = null;
             mImportFileEditText.setText(null);
             ThemedDialog.buildMaterialDialog(this)
-                    .title(R.string.title_failed)
-                    .content(R.string.message_data_import_failed, e.getMessage())
-                    .positiveText(android.R.string.ok)
+                    .setTitle(R.string.title_failed)
+                    .setMessage(getString(R.string.message_data_import_failed, e.getMessage()))
+                    .setPositiveButton(android.R.string.ok, null)
                     .show();
         }
     }
@@ -738,11 +736,11 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
                         // that too rather than leaving the user to find it in the ledger.
                         int roundedAmounts = intent.getIntExtra(ImportExportIntentService.ROUNDED_AMOUNTS, 0);
                         ThemedDialog.buildMaterialDialog(ImportExportActivity.this)
-                                .title(R.string.title_success)
-                                .content(roundedAmounts > 0
+                                .setTitle(R.string.title_success)
+                                .setMessage(roundedAmounts > 0
                                         ? getString(R.string.message_data_import_success_rounded, roundedAmounts)
                                         : getString(R.string.message_data_import_success))
-                                .positiveText(android.R.string.ok)
+                                .setPositiveButton(android.R.string.ok, null)
                                 .show();
                         break;
                     case LocalAction.ACTION_IMPORT_SERVICE_FAILED:
@@ -752,9 +750,9 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
                         }
                         Exception exception = (Exception) intent.getSerializableExtra(ImportExportIntentService.EXCEPTION);
                         ThemedDialog.buildMaterialDialog(ImportExportActivity.this)
-                                .title(R.string.title_failed)
-                                .content(R.string.message_data_import_failed, exception.getMessage())
-                                .positiveText(android.R.string.ok)
+                                .setTitle(R.string.title_failed)
+                                .setMessage(getString(R.string.message_data_import_failed, exception.getMessage()))
+                                .setPositiveButton(android.R.string.ok, null)
                                 .show();
                         break;
                     case LocalAction.ACTION_EXPORT_SERVICE_STARTED:
@@ -774,21 +772,19 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
                             saveExportToSelectedFolder(resultUri, resultType);
                         } catch (IOException e) {
                             ThemedDialog.buildMaterialDialog(ImportExportActivity.this)
-                                    .title(R.string.title_failed)
-                                    .content(R.string.message_data_export_failed, e.getMessage())
-                                    .positiveText(android.R.string.ok)
+                                    .setTitle(R.string.title_failed)
+                                    .setMessage(getString(R.string.message_data_export_failed, e.getMessage()))
+                                    .setPositiveButton(android.R.string.ok, null)
                                     .show();
                             break;
                         }
                         ThemedDialog.buildMaterialDialog(ImportExportActivity.this)
-                                .title(R.string.title_success)
-                                .content(R.string.message_data_export_success)
-                                .positiveText(android.R.string.ok)
-                                .negativeText(android.R.string.cancel)
-                                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                .setTitle(R.string.title_success)
+                                .setMessage(R.string.message_data_export_success)
+                                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                                     @Override
-                                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                    public void onClick(DialogInterface dialog, int which) {
                                         if (resultUri != null) {
                                             Intent target = new Intent(Intent.ACTION_VIEW);
                                             target.setDataAndType(resultUri, resultType);
@@ -804,6 +800,7 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
                                     }
 
                                 })
+                                .setNegativeButton(android.R.string.cancel, null)
                                 .show();
                         break;
                     case LocalAction.ACTION_EXPORT_SERVICE_FAILED:
@@ -813,9 +810,9 @@ public class ImportExportActivity extends SinglePanelActivity implements ImportE
                         }
                         exception = (Exception) intent.getSerializableExtra(ImportExportIntentService.EXCEPTION);
                         ThemedDialog.buildMaterialDialog(ImportExportActivity.this)
-                                .title(R.string.title_failed)
-                                .content(R.string.message_data_export_failed, exception.getMessage())
-                                .positiveText(android.R.string.ok)
+                                .setTitle(R.string.title_failed)
+                                .setMessage(getString(R.string.message_data_export_failed, exception.getMessage()))
+                                .setPositiveButton(android.R.string.ok, null)
                                 .show();
                         break;
                 }

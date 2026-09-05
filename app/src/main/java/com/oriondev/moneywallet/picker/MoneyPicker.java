@@ -151,26 +151,6 @@ public class MoneyPicker extends Fragment {
 
     public void showPicker() {
         // TODO let the user choice in preferences if start the calculator or the bottom sheet keypad
-        /*
-        Activity activity = getActivity();
-        if (activity != null) {
-            new MaterialDialog.Builder(activity)
-                    .title("Enter money")
-                    .inputType(InputType.TYPE_CLASS_NUMBER)
-                    .input("money", null, new MaterialDialog.InputCallback() {
-
-                        @Override
-                        public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
-                            try {
-                                mCurrentMoney = Long.parseLong(input.toString());
-                                fireCallbackSafely();
-                            } catch (NumberFormatException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                    }).show();
-        }*/
         Intent intent = new Intent(getActivity(), CalculatorActivity.class);
         intent.putExtra(CalculatorActivity.ACTIVITY_MODE, CalculatorActivity.MODE_KEYPAD);
         intent.putExtra(CalculatorActivity.CURRENCY, mCurrentCurrency);

@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -34,8 +35,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.Icon;
@@ -425,21 +424,23 @@ public class NewEditDebtActivity extends NewEditItemActivity implements IconPick
     protected void onSaveChanges(final Mode mode) {
         if (validate()) {
             if (mode == Mode.NEW_ITEM) {
+                // yes and no both save, and the answer only decides whether a master transaction
+                // comes with it, as the onAny callback this replaces did
+                DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        updateDatabase(mode, which == DialogInterface.BUTTON_POSITIVE);
+                        setResult(Activity.RESULT_OK);
+                        finish();
+                    }
+
+                };
                 ThemedDialog.buildMaterialDialog(this)
-                        .title(R.string.title_debt_insert_master_transaction)
-                        .content(R.string.message_debt_insert_master_transaction)
-                        .positiveText(android.R.string.yes)
-                        .negativeText(android.R.string.no)
-                        .onAny(new MaterialDialog.SingleButtonCallback() {
-
-                            @Override
-                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                updateDatabase(mode, which == DialogAction.POSITIVE);
-                                setResult(Activity.RESULT_OK);
-                                finish();
-                            }
-
-                        })
+                        .setTitle(R.string.title_debt_insert_master_transaction)
+                        .setMessage(R.string.message_debt_insert_master_transaction)
+                        .setPositiveButton(android.R.string.yes, listener)
+                        .setNegativeButton(android.R.string.no, listener)
                         .show();
             } else {
                 updateDatabase(mode, false);
@@ -478,9 +479,9 @@ public class NewEditDebtActivity extends NewEditItemActivity implements IconPick
                 throw e;
             }
             ThemedDialog.buildMaterialDialog(this)
-                    .title(R.string.title_error)
-                    .content(R.string.error_wallet_currency_not_consistent)
-                    .positiveText(android.R.string.ok)
+                    .setTitle(R.string.title_error)
+                    .setMessage(R.string.error_wallet_currency_not_consistent)
+                    .setPositiveButton(android.R.string.ok, null)
                     .show();
             return;
         }

@@ -32,6 +32,24 @@
         <item name="drawerArrowStyle">@style/MoneyWalletDrawerArrowStyle</item>
     </style>
 
+    <!-- ThemedDialog picks one of these two for every alert dialog in the app. ThemeEngine repaints
+         views by hand and never sets an XML theme, and the app theme is light, so without an
+         explicit dark overlay both dark modes would draw a light dialog. -->
+    <style name="MoneyWalletAlertDialogLight" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog"/>
+
+    <style name="MoneyWalletAlertDialogDark" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="colorSurface">@color/dialogDarkBackground</item>
+        <item name="colorOnSurface">@color/dialogDarkTextPrimary</item>
+        <item name="colorOnBackground">@color/dialogDarkTextPrimary</item>
+        <item name="android:colorBackground">@color/dialogDarkBackground</item>
+        <item name="android:textColorPrimary">@color/dialogDarkTextPrimary</item>
+        <item name="android:textColorSecondary">@color/dialogDarkTextSecondary</item>
+        <item name="android:textColorTertiary">@color/dialogDarkTextSecondary</item>
+        <item name="android:textColorHint">@color/dialogDarkTextHint</item>
+        <item name="colorControlNormal">@color/dialogDarkTextSecondary</item>
+        <item name="colorControlHighlight">@color/dialogDarkControlHighlight</item>
+    </style>
+
     <!-- The drawer icon morphs into the back arrow without spinning, as the drawer library's own
          style had it. -->
     <style name="MoneyWalletDrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">

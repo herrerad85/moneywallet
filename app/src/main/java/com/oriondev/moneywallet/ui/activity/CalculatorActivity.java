@@ -180,9 +180,9 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
             // the display so it can be corrected.
             if (money < 0 && !mAllowNegative) {
                 ThemedDialog.buildMaterialDialog(this)
-                        .title(R.string.title_error)
-                        .content(R.string.message_error_negative_amount)
-                        .positiveText(android.R.string.ok)
+                        .setTitle(R.string.title_error)
+                        .setMessage(R.string.message_error_negative_amount)
+                        .setPositiveButton(android.R.string.ok, null)
                         .show();
                 return;
             }

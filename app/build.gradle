@@ -117,8 +117,6 @@ dependencies {
     implementation supportDependencies.annotations
     implementation supportDependencies.design
     implementation supportDependencies.preference
-    implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
-    implementation 'com.afollestad.material-dialogs:commons:0.9.6.0'
     implementation 'com.pnikosis:materialish-progress:1.7'
     // jcenter-orphaned. No 1.6.1 git tag ever existed (Bintray-only publish); rubensousa's repo only
     // has buildable tags up to 1.5.1 on JitPack. kizitonwose/BottomSheetBuilder is a direct fork at

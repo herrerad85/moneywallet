@@ -839,9 +839,9 @@ public class NewEditTransferActivity extends NewEditItemActivity  implements Cur
             startActivity(attachment.getActionViewIntent(this));
         } catch (ActivityNotFoundException e) {
             ThemedDialog.buildMaterialDialog(this)
-                    .title(R.string.title_error)
-                    .content(R.string.message_error_activity_not_found)
-                    .positiveText(android.R.string.ok)
+                    .setTitle(R.string.title_error)
+                    .setMessage(R.string.message_error_activity_not_found)
+                    .setPositiveButton(android.R.string.ok, null)
                     .show();
         }
     }

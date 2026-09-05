@@ -22,18 +22,16 @@ package com.oriondev.moneywallet.ui.activity;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.appcompat.widget.Toolbar;
 import android.view.View;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.service.BackupHandlerIntentService;
@@ -183,13 +181,12 @@ public class BackupListActivity extends BaseActivity implements ToolbarControlle
                                 return;
                         }
                         ThemedDialog.buildMaterialDialog(BackupListActivity.this)
-                                .title(titleRes)
-                                .content(messageRes)
-                                .positiveText(android.R.string.ok)
-                                .onAny(new MaterialDialog.SingleButtonCallback() {
+                                .setTitle(titleRes)
+                                .setMessage(messageRes)
+                                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                                     @Override
-                                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                    public void onClick(DialogInterface dialog, int which) {
                                         Intent intent = getIntent();
                                         if (intent != null) {
                                             int mode = intent.getIntExtra(BACKUP_MODE, FULL);
@@ -225,9 +222,9 @@ public class BackupListActivity extends BaseActivity implements ToolbarControlle
                                 return;
                         }
                         ThemedDialog.buildMaterialDialog(BackupListActivity.this)
-                                .title(titleRes)
-                                .content(messageString)
-                                .positiveText(android.R.string.ok)
+                                .setTitle(titleRes)
+                                .setMessage(messageString)
+                                .setPositiveButton(android.R.string.ok, null)
                                 .show();
                         break;
                 }

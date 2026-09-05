@@ -22,12 +22,15 @@ package com.oriondev.moneywallet.ui.fragment.secondary;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.widget.EditText;
 import androidx.annotation.MenuRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -44,8 +47,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.api.BackendException;
 import com.oriondev.moneywallet.api.AbstractBackendServiceDelegate;
@@ -205,17 +206,21 @@ public class BackupHandlerFragment extends Fragment implements BackupFileAdapter
 
                 @Override
                 public void onClick(View v) {
-                    ThemedDialog.buildMaterialDialog(v.getContext())
-                            .title(R.string.title_backup_create)
-                            .content(R.string.message_backup_create)
-                            .negativeText(android.R.string.cancel)
-                            .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)
-                            .input(R.string.hint_password, 0, new MaterialDialog.InputCallback() {
+                    View inputView = LayoutInflater.from(v.getContext()).inflate(R.layout.dialog_input, null);
+                    final EditText inputEditText = inputView.findViewById(R.id.dialog_input_edit_text);
+                    inputEditText.setHint(R.string.hint_password);
+                    inputEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    AlertDialog dialog = ThemedDialog.buildMaterialDialog(v.getContext())
+                            .setTitle(R.string.title_backup_create)
+                            .setMessage(R.string.message_backup_create)
+                            .setView(inputView)
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                                 @Override
-                                public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                                public void onClick(DialogInterface dialog, int which) {
                                     Activity activity = getActivity();
                                     if (activity != null) {
+                                        CharSequence input = inputEditText.getText();
                                         IFile folder = mFileStack.isEmpty() ? ROOT_FOLDER : mFileStack.get(mFileStack.size() - 1);
                                         Intent intent = new Intent(activity, BackupHandlerIntentService.class);
                                         intent.putExtra(BackupHandlerIntentService.BACKEND_ID, mBackendService.getId());
@@ -230,7 +235,10 @@ public class BackupHandlerFragment extends Fragment implements BackupFileAdapter
                                 }
 
                             })
-                            .show();
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .create();
+                    // the three argument input() allowed an empty value, so an empty password is valid here
+                    ThemedDialog.showWithInput(dialog, inputEditText, true);
                 }
 
             });
@@ -351,14 +359,12 @@ public class BackupHandlerFragment extends Fragment implements BackupFileAdapter
             if (mAllowRestore && activity != null) {
                 if (file.getName().endsWith(BackupManager.BACKUP_EXTENSION_STANDARD)) {
                     ThemedDialog.buildMaterialDialog(activity)
-                            .title(R.string.title_backup_restore)
-                            .content(R.string.message_backup_restore_standard)
-                            .positiveText(android.R.string.ok)
-                            .negativeText(android.R.string.cancel)
-                            .onPositive(new MaterialDialog.SingleButtonCallback() {
+                            .setTitle(R.string.title_backup_restore)
+                            .setMessage(R.string.message_backup_restore_standard)
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                                 @Override
-                                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                public void onClick(DialogInterface dialog, int which) {
                                     Intent intent = new Intent(getActivity(), BackupHandlerIntentService.class);
                                     intent.putExtra(BackupHandlerIntentService.BACKEND_ID, mBackendService.getId());
                                     intent.putExtra(BackupHandlerIntentService.ACTION, BackupHandlerIntentService.ACTION_RESTORE);
@@ -368,38 +374,41 @@ public class BackupHandlerFragment extends Fragment implements BackupFileAdapter
                                 }
 
                             })
+                            .setNegativeButton(android.R.string.cancel, null)
                             .show();
                 } else if (file.getName().endsWith(BackupManager.BACKUP_EXTENSION_PROTECTED)) {
-                    ThemedDialog.buildMaterialDialog(activity)
-                            .title(R.string.title_backup_restore)
-                            .content(R.string.message_backup_restore_protected)
-                            .positiveText(android.R.string.ok)
-                            .inputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD)
-                            .input(R.string.hint_password, 0, false, new MaterialDialog.InputCallback() {
+                    View inputView = LayoutInflater.from(activity).inflate(R.layout.dialog_input, null);
+                    final EditText inputEditText = inputView.findViewById(R.id.dialog_input_edit_text);
+                    inputEditText.setHint(R.string.hint_password);
+                    inputEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    AlertDialog dialog = ThemedDialog.buildMaterialDialog(activity)
+                            .setTitle(R.string.title_backup_restore)
+                            .setMessage(R.string.message_backup_restore_protected)
+                            .setView(inputView)
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                                 @Override
-                                public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                                public void onClick(DialogInterface dialog, int which) {
                                     Intent intent = new Intent(getActivity(), BackupHandlerIntentService.class);
                                     intent.putExtra(BackupHandlerIntentService.BACKEND_ID, mBackendService.getId());
                                     intent.putExtra(BackupHandlerIntentService.ACTION, BackupHandlerIntentService.ACTION_RESTORE);
                                     intent.putExtra(BackupHandlerIntentService.BACKUP_FILE, file);
-                                    intent.putExtra(BackupHandlerIntentService.PASSWORD, input.toString());
+                                    intent.putExtra(BackupHandlerIntentService.PASSWORD, inputEditText.getText().toString());
                                     intent.putExtra(BackupHandlerIntentService.CALLER_ID, BACKUP_SERVICE_CALLER_ID);
                                     getActivity().startService(intent);
                                 }
 
                             })
-                            .show();
+                            .create();
+                    ThemedDialog.showWithInput(dialog, inputEditText, false);
                 } else if (file.getName().endsWith(BackupManager.BACKUP_EXTENSION_LEGACY)) {
                     ThemedDialog.buildMaterialDialog(activity)
-                            .title(R.string.title_backup_restore)
-                            .content(R.string.message_backup_restore_legacy)
-                            .positiveText(android.R.string.ok)
-                            .negativeText(android.R.string.cancel)
-                            .onPositive(new MaterialDialog.SingleButtonCallback() {
+                            .setTitle(R.string.title_backup_restore)
+                            .setMessage(R.string.message_backup_restore_legacy)
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                                 @Override
-                                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                public void onClick(DialogInterface dialog, int which) {
                                     Intent intent = new Intent(getActivity(), BackupHandlerIntentService.class);
                                     intent.putExtra(BackupHandlerIntentService.BACKEND_ID, mBackendService.getId());
                                     intent.putExtra(BackupHandlerIntentService.ACTION, BackupHandlerIntentService.ACTION_RESTORE);
@@ -409,6 +418,7 @@ public class BackupHandlerFragment extends Fragment implements BackupFileAdapter
                                 }
 
                             })
+                            .setNegativeButton(android.R.string.cancel, null)
                             .show();
                 }
             }

@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -40,8 +41,6 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.Attachment;
 import com.oriondev.moneywallet.model.CurrencyUnit;
@@ -149,14 +148,12 @@ public class TransactionItemFragment extends SecondaryPanelFragment implements L
 
     private void showDeleteDialog(Context context) {
         ThemedDialog.buildMaterialDialog(context)
-                .title(R.string.title_warning)
-                .content(R.string.message_delete_transaction)
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                .setTitle(R.string.title_warning)
+                .setMessage(R.string.message_delete_transaction)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         Activity activity = getActivity();
                         if (activity != null) {
                             try {
@@ -168,9 +165,9 @@ public class TransactionItemFragment extends SecondaryPanelFragment implements L
                             } catch (SQLiteDataException e) {
                                 if (e.getErrorCode() == Contract.ErrorCode.TRANSACTION_USED_IN_TRANSFER) {
                                     ThemedDialog.buildMaterialDialog(activity)
-                                            .title(R.string.title_error)
-                                            .content(R.string.message_error_delete_transaction_of_transfer)
-                                            .positiveText(android.R.string.ok)
+                                            .setTitle(R.string.title_error)
+                                            .setMessage(R.string.message_error_delete_transaction_of_transfer)
+                                            .setPositiveButton(android.R.string.ok, null)
                                             .show();
                                 }
                             }
@@ -178,6 +175,7 @@ public class TransactionItemFragment extends SecondaryPanelFragment implements L
                     }
 
                 })
+                .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
 

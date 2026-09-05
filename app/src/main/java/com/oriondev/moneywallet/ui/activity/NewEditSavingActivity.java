@@ -317,9 +317,9 @@ public class NewEditSavingActivity extends NewEditItemActivity implements IconPi
                     throw e;
                 }
                 ThemedDialog.buildMaterialDialog(this)
-                        .title(R.string.title_error)
-                        .content(R.string.error_wallet_currency_not_consistent)
-                        .positiveText(android.R.string.ok)
+                        .setTitle(R.string.title_error)
+                        .setMessage(R.string.error_wallet_currency_not_consistent)
+                        .setPositiveButton(android.R.string.ok, null)
                         .show();
                 return;
             }

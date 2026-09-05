@@ -49,6 +49,9 @@
     <dimen name="material_dialog_seek_bar_start_end_margin">6dp</dimen>
     <dimen name="material_dialog_seek_bar_top_bottom_margin">4dp</dimen>
     <dimen name="material_dialog_mtv_start_end_margin">8dp</dimen>
+    <dimen name="material_dialog_custom_view_start_end_padding">24dp</dimen>
+    <dimen name="material_dialog_custom_view_top_bottom_padding">8dp</dimen>
+    <dimen name="color_chooser_swatch_size">56dp</dimen>
 
     <dimen name="material_component_lists_padding_top">8dp</dimen>
     <dimen name="material_component_lists_padding_bottom">8dp</dimen>

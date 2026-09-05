@@ -19,7 +19,6 @@
 
 package com.oriondev.moneywallet.picker;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -28,14 +27,13 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import com.afollestad.materialdialogs.color.ColorChooserDialog;
 import com.oriondev.moneywallet.R;
-import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
+import com.oriondev.moneywallet.ui.fragment.dialog.ColorChooserDialog;
 
 /**
  * Created by andrea on 15/04/18.
  */
-public class ColorPicker extends Fragment implements ColorChooserDialog.ColorCallback {
+public class ColorPicker extends Fragment implements ColorChooserDialog.Callback {
 
     private static final String SS_CURRENT_COLOR = "ColorPicker::SavedState::CurrentColor";
     private static final String SS_ACCENT_PALETTE = "ColorPicker::SavedState::AccentPalette";
@@ -61,8 +59,6 @@ public class ColorPicker extends Fragment implements ColorChooserDialog.ColorCal
     private int mCurrentColor;
     private boolean mAccentPalette;
 
-    private ColorChooserDialog mColorChooserDialog;
-
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -87,16 +83,6 @@ public class ColorPicker extends Fragment implements ColorChooserDialog.ColorCal
                 mAccentPalette = false;
             }
         }
-        createColorChooserDialog(getActivity());
-    }
-
-    private void createColorChooserDialog(Activity activity) {
-        mColorChooserDialog = ThemedDialog.buildColorChooserDialog(activity, R.string.dialog_color_picker_title)
-                .accentMode(mAccentPalette)
-                .preselect(mCurrentColor)
-                .dynamicButtonColor(true)
-                .tag(getDialogTag())
-                .build();
     }
 
     @Override
@@ -127,7 +113,13 @@ public class ColorPicker extends Fragment implements ColorChooserDialog.ColorCal
     }
 
     public void showPicker() {
-        mColorChooserDialog.show(getChildFragmentManager());
+        FragmentManager fragmentManager = getChildFragmentManager();
+        String tag = getDialogTag();
+        // showNow adds the dialog before it returns, so a second tap in the same frame finds it.
+        if (fragmentManager.findFragmentByTag(tag) == null) {
+            ColorChooserDialog.newInstance(R.string.dialog_color_picker_title, mAccentPalette, mCurrentColor)
+                    .showNow(fragmentManager, tag);
+        }
     }
 
     @Override
@@ -137,14 +129,14 @@ public class ColorPicker extends Fragment implements ColorChooserDialog.ColorCal
     }
 
     @Override
-    public void onColorSelection(@NonNull ColorChooserDialog dialog, int selectedColor) {
+    public void onColorSelection(ColorChooserDialog dialog, int selectedColor) {
         mCurrentColor = selectedColor;
         fireCallbackSafely(false);
     }
 
     @Override
-    public void onColorChooserDismissed(@NonNull ColorChooserDialog dialog) {
-        createColorChooserDialog(getActivity());
+    public void onColorChooserDismissed(ColorChooserDialog dialog) {
+        // nothing to do: the dialog is built fresh on every showPicker
     }
 
     public interface Controller {

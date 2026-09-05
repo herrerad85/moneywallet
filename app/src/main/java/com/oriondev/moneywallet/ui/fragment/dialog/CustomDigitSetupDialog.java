@@ -21,16 +21,16 @@ package com.oriondev.moneywallet.ui.fragment.dialog;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.appcompat.widget.SwitchCompat;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
@@ -64,23 +64,19 @@ public class CustomDigitSetupDialog extends DialogFragment {
         if (activity == null) {
             return super.onCreateDialog(savedInstanceState);
         }
-        MaterialDialog dialog = ThemedDialog.buildMaterialDialog(activity)
-                .customView(R.layout.layout_dialog_custom_digit_setup, false)
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+        View view = getLayoutInflater().inflate(R.layout.layout_dialog_custom_digit_setup, null);
+        AlertDialog dialog = ThemedDialog.buildMaterialDialog(activity)
+                .setView(view)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         onSaveChanges();
                     }
 
                 })
-                .build();
-        View view = dialog.getCustomView();
-        if (view == null) {
-            throw new IllegalStateException("Custom view has been inflated but the returned view is null");
-        }
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
         mDisplayTextView = view.findViewById(R.id.display_text_view);
         SwitchCompat currencyEnabledSwitch = view.findViewById(R.id.show_currency_switch);
         SwitchCompat groupingEnabledSwitch = view.findViewById(R.id.group_digits_switch);

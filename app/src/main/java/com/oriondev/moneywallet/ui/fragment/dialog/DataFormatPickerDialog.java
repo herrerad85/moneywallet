@@ -7,6 +7,8 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.DataFormat;
 import com.oriondev.moneywallet.ui.adapter.recycler.DataFormatSelectorAdapter;
@@ -40,9 +42,12 @@ public class DataFormatPickerDialog extends DialogFragment implements DataFormat
             mDataFormats = (DataFormat[]) savedInstanceState.getSerializable(SS_DATA_FORMATS);
             mIndex = savedInstanceState.getInt(SS_CURRENT_INDEX, -1);
         }
+        RecyclerView recyclerView = (RecyclerView) getLayoutInflater().inflate(R.layout.dialog_recycler_view, null);
+        recyclerView.setLayoutManager(new LinearLayoutManager(activity));
+        recyclerView.setAdapter(new DataFormatSelectorAdapter(mDataFormats, this));
         return ThemedDialog.buildMaterialDialog(activity)
-                .title(R.string.dialog_data_format_picker_title)
-                .adapter(new DataFormatSelectorAdapter(mDataFormats, this), null)
+                .setTitle(R.string.dialog_data_format_picker_title)
+                .setView(recyclerView)
                 .show();
     }
 

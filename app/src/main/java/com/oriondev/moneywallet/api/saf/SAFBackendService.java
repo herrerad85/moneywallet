@@ -1,12 +1,11 @@
 package com.oriondev.moneywallet.api.saf;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.api.AbstractBackendServiceDelegate;
 import com.oriondev.moneywallet.api.BackendServiceFactory;
@@ -108,14 +107,12 @@ public class SAFBackendService extends AbstractBackendServiceDelegate {
             return;
         }
         ThemedDialog.buildMaterialDialog(activity)
-                .title(R.string.title_warning)
-                .content(R.string.message_backup_service_storage_access_framework_disconnect)
-                .positiveText(android.R.string.yes)
-                .negativeText(android.R.string.no)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                .setTitle(R.string.title_warning)
+                .setMessage(R.string.message_backup_service_storage_access_framework_disconnect)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         activity.getContentResolver()
                                 .releasePersistableUriPermission(uri, FLAG_URI_READ_WRITE);
                         clearUri(activity);
@@ -123,6 +120,7 @@ public class SAFBackendService extends AbstractBackendServiceDelegate {
                     }
 
                 })
+                .setNegativeButton(android.R.string.no, null)
                 .show();
     }
 

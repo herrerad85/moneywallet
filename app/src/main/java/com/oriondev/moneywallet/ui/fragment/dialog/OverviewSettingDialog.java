@@ -23,16 +23,16 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import android.view.View;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.jaredrummler.materialspinner.MaterialSpinner;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.Category;
@@ -94,15 +94,14 @@ public class OverviewSettingDialog extends DialogFragment implements DateTimePic
         mEndDatePicker = DateTimePicker.createPicker(fragmentManager, TAG_END_DATE_PICKER, mOverviewSetting.getEndDate());
         mCategoryPicker = CategoryPicker.createPicker(fragmentManager, TAG_CATEGORY_PICKER, getFirstAvailableCategory(activity));
         // create the dialog
-        MaterialDialog dialog = ThemedDialog.buildMaterialDialog(activity)
-                .title(R.string.dialog_overview_setting_title)
-                .customView(R.layout.dialog_overview_setting_picker, true)
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+        View view = ThemedDialog.inflateScrollableView(activity, R.layout.dialog_overview_setting_picker);
+        AlertDialog dialog = ThemedDialog.buildMaterialDialog(activity)
+                .setTitle(R.string.dialog_overview_setting_title)
+                .setView(view)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         mOverviewSetting = getCurrentOverviewSetting();
                         if (mCallback != null) {
                             mCallback.onOverviewSettingChanged(mOverviewSetting);
@@ -110,114 +109,112 @@ public class OverviewSettingDialog extends DialogFragment implements DateTimePic
                     }
 
                 })
+                .setNegativeButton(android.R.string.cancel, null)
                 .show();
-        View view = dialog.getCustomView();
-        if (view != null) {
-            // obtain the references of all the spinners
-            mStartDateSpinner = view.findViewById(R.id.start_date_spinner);
-            mEndDateSpinner = view.findViewById(R.id.end_date_spinner);
-            mGroupTypeSpinner = view.findViewById(R.id.group_type_spinner);
-            mOverviewTypeSpinner = view.findViewById(R.id.overview_type_spinner);
-            mCashFlowSpinner = view.findViewById(R.id.cash_flow_spinner);
-            mCategorySpinner = view.findViewById(R.id.category_spinner);
-            // adjust padding for each spinner
-            mStartDateSpinner.setPadding(0, mStartDateSpinner.getPaddingTop(), 0, mStartDateSpinner.getPaddingBottom());
-            mEndDateSpinner.setPadding(0, mEndDateSpinner.getPaddingTop(), 0, mEndDateSpinner.getPaddingBottom());
-            mGroupTypeSpinner.setPadding(0, mGroupTypeSpinner.getPaddingTop(), 0, mGroupTypeSpinner.getPaddingBottom());
-            mOverviewTypeSpinner.setPadding(0, mOverviewTypeSpinner.getPaddingTop(), 0, mOverviewTypeSpinner.getPaddingBottom());
-            mCashFlowSpinner.setPadding(0, mCashFlowSpinner.getPaddingTop(), 0, mCashFlowSpinner.getPaddingBottom());
-            mCategorySpinner.setPadding(0, mCategorySpinner.getPaddingTop(), 0, mCategorySpinner.getPaddingBottom());
-            // setup the standard spinners
-            mGroupTypeSpinner.setItems(
-                    getString(R.string.spinner_item_group_type_daily),
-                    getString(R.string.spinner_item_group_type_weekly),
-                    getString(R.string.spinner_item_group_type_monthly),
-                    getString(R.string.spinner_item_group_type_yearly)
-            );
-            mOverviewTypeSpinner.setItems(
-                    getString(R.string.spinner_item_type_cash_flow),
-                    getString(R.string.spinner_item_type_category)
-            );
-            mCashFlowSpinner.setItems(
-                    getString(R.string.spinner_item_cash_flow_incomes),
-                    getString(R.string.spinner_item_cash_flow_expenses),
-                    getString(R.string.spinner_item_cash_flow_net_incomes)
-            );
-            // now we can attach the listeners to all the spinners
-            mStartDateSpinner.setOnClickListener(new View.OnClickListener() {
+        // obtain the references of all the spinners
+        mStartDateSpinner = view.findViewById(R.id.start_date_spinner);
+        mEndDateSpinner = view.findViewById(R.id.end_date_spinner);
+        mGroupTypeSpinner = view.findViewById(R.id.group_type_spinner);
+        mOverviewTypeSpinner = view.findViewById(R.id.overview_type_spinner);
+        mCashFlowSpinner = view.findViewById(R.id.cash_flow_spinner);
+        mCategorySpinner = view.findViewById(R.id.category_spinner);
+        // adjust padding for each spinner
+        mStartDateSpinner.setPadding(0, mStartDateSpinner.getPaddingTop(), 0, mStartDateSpinner.getPaddingBottom());
+        mEndDateSpinner.setPadding(0, mEndDateSpinner.getPaddingTop(), 0, mEndDateSpinner.getPaddingBottom());
+        mGroupTypeSpinner.setPadding(0, mGroupTypeSpinner.getPaddingTop(), 0, mGroupTypeSpinner.getPaddingBottom());
+        mOverviewTypeSpinner.setPadding(0, mOverviewTypeSpinner.getPaddingTop(), 0, mOverviewTypeSpinner.getPaddingBottom());
+        mCashFlowSpinner.setPadding(0, mCashFlowSpinner.getPaddingTop(), 0, mCashFlowSpinner.getPaddingBottom());
+        mCategorySpinner.setPadding(0, mCategorySpinner.getPaddingTop(), 0, mCategorySpinner.getPaddingBottom());
+        // setup the standard spinners
+        mGroupTypeSpinner.setItems(
+                getString(R.string.spinner_item_group_type_daily),
+                getString(R.string.spinner_item_group_type_weekly),
+                getString(R.string.spinner_item_group_type_monthly),
+                getString(R.string.spinner_item_group_type_yearly)
+        );
+        mOverviewTypeSpinner.setItems(
+                getString(R.string.spinner_item_type_cash_flow),
+                getString(R.string.spinner_item_type_category)
+        );
+        mCashFlowSpinner.setItems(
+                getString(R.string.spinner_item_cash_flow_incomes),
+                getString(R.string.spinner_item_cash_flow_expenses),
+                getString(R.string.spinner_item_cash_flow_net_incomes)
+        );
+        // now we can attach the listeners to all the spinners
+        mStartDateSpinner.setOnClickListener(new View.OnClickListener() {
 
-                @Override
-                public void onClick(View v) {
-                    mStartDatePicker.showDatePicker();
-                    mStartDateSpinner.collapse();
-                }
-
-            });
-            mEndDateSpinner.setOnClickListener(new View.OnClickListener() {
-
-                @Override
-                public void onClick(View v) {
-                    mEndDatePicker.showDatePicker();
-                    mEndDateSpinner.collapse();
-                }
-
-            });
-            mOverviewTypeSpinner.setOnItemSelectedListener(new MaterialSpinner.OnItemSelectedListener() {
-
-                @Override
-                public void onItemSelected(MaterialSpinner view, int position, long id, Object item) {
-                    mCashFlowSpinner.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
-                    mCategorySpinner.setVisibility(position == 1 ? View.VISIBLE : View.GONE);
-                }
-
-            });
-            mCategorySpinner.setOnClickListener(new View.OnClickListener() {
-
-                @Override
-                public void onClick(View v) {
-                    mCategoryPicker.showPicker(true, true);
-                    mCategorySpinner.collapse();
-                }
-
-            });
-            // now use the current data to update all the views
-            switch (mOverviewSetting.getGroupType()) {
-                case DAILY:
-                    mGroupTypeSpinner.setSelectedIndex(0);
-                    break;
-                case WEEKLY:
-                    mGroupTypeSpinner.setSelectedIndex(1);
-                    break;
-                case MONTHLY:
-                    mGroupTypeSpinner.setSelectedIndex(2);
-                    break;
-                case YEARLY:
-                    mGroupTypeSpinner.setSelectedIndex(3);
-                    break;
+            @Override
+            public void onClick(View v) {
+                mStartDatePicker.showDatePicker();
+                mStartDateSpinner.collapse();
             }
-            switch (mOverviewSetting.getType()) {
-                case CASH_FLOW:
-                    mOverviewTypeSpinner.setSelectedIndex(0);
-                    mCashFlowSpinner.setVisibility(View.VISIBLE);
-                    mCategorySpinner.setVisibility(View.GONE);
-                    break;
-                case CATEGORY:
-                    mOverviewTypeSpinner.setSelectedIndex(1);
-                    mCashFlowSpinner.setVisibility(View.GONE);
-                    mCategorySpinner.setVisibility(View.VISIBLE);
-                    break;
+
+        });
+        mEndDateSpinner.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                mEndDatePicker.showDatePicker();
+                mEndDateSpinner.collapse();
             }
-            switch (mOverviewSetting.getCashFlow()) {
-                case INCOMES:
-                    mCashFlowSpinner.setSelectedIndex(0);
-                    break;
-                case EXPENSES:
-                    mCashFlowSpinner.setSelectedIndex(1);
-                    break;
-                case NET_INCOMES:
-                    mCashFlowSpinner.setSelectedIndex(2);
-                    break;
+
+        });
+        mOverviewTypeSpinner.setOnItemSelectedListener(new MaterialSpinner.OnItemSelectedListener() {
+
+            @Override
+            public void onItemSelected(MaterialSpinner view, int position, long id, Object item) {
+                mCashFlowSpinner.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
+                mCategorySpinner.setVisibility(position == 1 ? View.VISIBLE : View.GONE);
             }
+
+        });
+        mCategorySpinner.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                mCategoryPicker.showPicker(true, true);
+                mCategorySpinner.collapse();
+            }
+
+        });
+        // now use the current data to update all the views
+        switch (mOverviewSetting.getGroupType()) {
+            case DAILY:
+                mGroupTypeSpinner.setSelectedIndex(0);
+                break;
+            case WEEKLY:
+                mGroupTypeSpinner.setSelectedIndex(1);
+                break;
+            case MONTHLY:
+                mGroupTypeSpinner.setSelectedIndex(2);
+                break;
+            case YEARLY:
+                mGroupTypeSpinner.setSelectedIndex(3);
+                break;
+        }
+        switch (mOverviewSetting.getType()) {
+            case CASH_FLOW:
+                mOverviewTypeSpinner.setSelectedIndex(0);
+                mCashFlowSpinner.setVisibility(View.VISIBLE);
+                mCategorySpinner.setVisibility(View.GONE);
+                break;
+            case CATEGORY:
+                mOverviewTypeSpinner.setSelectedIndex(1);
+                mCashFlowSpinner.setVisibility(View.GONE);
+                mCategorySpinner.setVisibility(View.VISIBLE);
+                break;
+        }
+        switch (mOverviewSetting.getCashFlow()) {
+            case INCOMES:
+                mCashFlowSpinner.setSelectedIndex(0);
+                break;
+            case EXPENSES:
+                mCashFlowSpinner.setSelectedIndex(1);
+                break;
+            case NET_INCOMES:
+                mCashFlowSpinner.setSelectedIndex(2);
+                break;
         }
         return dialog;
     }

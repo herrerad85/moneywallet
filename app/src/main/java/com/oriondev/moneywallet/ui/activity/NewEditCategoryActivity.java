@@ -276,9 +276,9 @@ public class NewEditCategoryActivity extends NewEditItemActivity implements Icon
                         }
                         if (contentRes != 0) {
                             ThemedDialog.buildMaterialDialog(this)
-                                    .title(R.string.title_error)
-                                    .content(contentRes)
-                                    .positiveText(android.R.string.ok)
+                                    .setTitle(R.string.title_error)
+                                    .setMessage(contentRes)
+                                    .setPositiveButton(android.R.string.ok, null)
                                     .show();
                         }
                     }
@@ -301,9 +301,9 @@ public class NewEditCategoryActivity extends NewEditItemActivity implements Icon
                         }
                         if (contentRes != 0) {
                             ThemedDialog.buildMaterialDialog(this)
-                                    .title(R.string.title_error)
-                                    .content(contentRes)
-                                    .positiveText(android.R.string.ok)
+                                    .setTitle(R.string.title_error)
+                                    .setMessage(contentRes)
+                                    .setPositiveButton(android.R.string.ok, null)
                                     .show();
                         }
                     }

@@ -26,6 +26,8 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.ui.adapter.recycler.BudgetTypeSelectorAdapter;
@@ -55,9 +57,12 @@ public class BudgetTypePickerDialog extends DialogFragment implements BudgetType
         if (savedInstanceState != null) {
             mBudgetType = (Contract.BudgetType) savedInstanceState.getSerializable(SS_SELECTED_BUDGET_TYPE);
         }
+        RecyclerView recyclerView = (RecyclerView) getLayoutInflater().inflate(R.layout.dialog_recycler_view, null);
+        recyclerView.setLayoutManager(new LinearLayoutManager(activity));
+        recyclerView.setAdapter(new BudgetTypeSelectorAdapter(this));
         return ThemedDialog.buildMaterialDialog(activity)
-                .title(R.string.dialog_budget_type_picker_title)
-                .adapter(new BudgetTypeSelectorAdapter(this), null)
+                .setTitle(R.string.dialog_budget_type_picker_title)
+                .setView(recyclerView)
                 .show();
     }
 

@@ -21,11 +21,13 @@ package com.oriondev.moneywallet.ui.activity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.widget.EditText;
 import androidx.annotation.MenuRes;
-import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -39,7 +41,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.api.BackendServiceFactory;
 import com.oriondev.moneywallet.broadcast.LocalAction;
@@ -232,26 +233,30 @@ public class BackendExplorerActivity extends SinglePanelActivity implements Swip
 
     @Override
     protected void onFloatingActionButtonClick() {
-        ThemedDialog.buildMaterialDialog(this)
-                .title(R.string.title_backend_create_folder)
-                .content(R.string.message_backend_create_folder)
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
-                .inputType(InputType.TYPE_CLASS_TEXT)
-                .input(R.string.hint_new_folder, 0, false, new MaterialDialog.InputCallback() {
+        View inputView = LayoutInflater.from(this).inflate(R.layout.dialog_input, null);
+        final EditText inputEditText = inputView.findViewById(R.id.dialog_input_edit_text);
+        inputEditText.setHint(R.string.hint_new_folder);
+        inputEditText.setInputType(InputType.TYPE_CLASS_TEXT);
+        AlertDialog dialog = ThemedDialog.buildMaterialDialog(this)
+                .setTitle(R.string.title_backend_create_folder)
+                .setMessage(R.string.message_backend_create_folder)
+                .setView(inputView)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                    public void onClick(DialogInterface dialog, int which) {
                         Intent intent = new Intent(BackendExplorerActivity.this, BackendHandlerIntentService.class);
                         intent.putExtra(BackendHandlerIntentService.BACKEND_ID, mBackendId);
                         intent.putExtra(BackendHandlerIntentService.ACTION, BackendHandlerIntentService.ACTION_CREATE_FOLDER);
                         intent.putExtra(BackendHandlerIntentService.PARENT_FOLDER, getCurrentFolder());
-                        intent.putExtra(BackendHandlerIntentService.FOLDER_NAME, input.toString());
+                        intent.putExtra(BackendHandlerIntentService.FOLDER_NAME, inputEditText.getText().toString());
                         startService(intent);
                     }
 
                 })
-                .show();
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+        ThemedDialog.showWithInput(dialog, inputEditText, false);
     }
 
     private BroadcastReceiver mLocalBroadcastReceiver = new BroadcastReceiver() {

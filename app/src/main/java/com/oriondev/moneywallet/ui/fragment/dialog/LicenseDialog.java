@@ -29,7 +29,8 @@ import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.afollestad.materialdialogs.MaterialDialog;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.background.LicenseLoader;
 import com.oriondev.moneywallet.model.License;
@@ -68,12 +69,15 @@ public class LicenseDialog extends DialogFragment implements LoaderManager.Loade
             return super.onCreateDialog(savedInstanceState);
         }
         mAdapter = new LicenseAdapter(this);
-        MaterialDialog.Builder builder = ThemedDialog.buildMaterialDialog(activity)
-                .title(R.string.title_licenses)
-                .adapter(mAdapter, new LinearLayoutManager(activity))
-                .positiveText(android.R.string.ok);
+        RecyclerView recyclerView = (RecyclerView) getLayoutInflater().inflate(R.layout.dialog_recycler_view, null);
+        recyclerView.setLayoutManager(new LinearLayoutManager(activity));
+        recyclerView.setAdapter(mAdapter);
+        MaterialAlertDialogBuilder builder = ThemedDialog.buildMaterialDialog(activity)
+                .setTitle(R.string.title_licenses)
+                .setView(recyclerView)
+                .setPositiveButton(android.R.string.ok, null);
         LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
-        return builder.build();
+        return builder.create();
     }
 
     public void setCallback(Callback callback) {

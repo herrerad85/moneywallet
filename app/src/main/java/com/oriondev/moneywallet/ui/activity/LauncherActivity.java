@@ -21,6 +21,7 @@ package com.oriondev.moneywallet.ui.activity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
@@ -33,8 +34,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.view.View;
 import android.widget.Button;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.service.UpgradeLegacyEditionIntentService;
@@ -206,19 +205,20 @@ public class LauncherActivity extends ThemedActivity {
         if (mProgressWheel != null) {
             mProgressWheel.setVisibility(View.INVISIBLE);
         }
+        // both buttons do the same thing, as the onAny callback this replaces did
+        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                startMainActivity();
+            }
+
+        };
         ThemedDialog.buildMaterialDialog(LauncherActivity.this)
-                .title(R.string.title_failed)
-                .content(R.string.message_error_legacy_upgrade_failed, mUpgradeLegacyEditionError)
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
-                .onAny(new MaterialDialog.SingleButtonCallback() {
-
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        startMainActivity();
-                    }
-
-                })
+                .setTitle(R.string.title_failed)
+                .setMessage(getString(R.string.message_error_legacy_upgrade_failed, mUpgradeLegacyEditionError))
+                .setPositiveButton(android.R.string.ok, listener)
+                .setNegativeButton(android.R.string.cancel, listener)
                 .show();
     }
 

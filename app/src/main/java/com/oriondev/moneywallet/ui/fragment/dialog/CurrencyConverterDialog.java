@@ -23,10 +23,12 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -34,8 +36,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.CurrencyUnit;
@@ -112,15 +112,14 @@ public class CurrencyConverterDialog extends DialogFragment {
             mCurrency2 = savedInstanceState.getParcelable(SS_CURRENCY_2);
             mExchangeRate = savedInstanceState.getDouble(SS_RATE);
         }
-        MaterialDialog dialog = ThemedDialog.buildMaterialDialog(activity)
-                .title(R.string.title_currency_exchange_rate)
-                .customView(R.layout.dialog_currency_exchange_rate, true)
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+        View customView = ThemedDialog.inflateScrollableView(activity, R.layout.dialog_currency_exchange_rate);
+        AlertDialog dialog = ThemedDialog.buildMaterialDialog(activity)
+                .setTitle(R.string.title_currency_exchange_rate)
+                .setView(customView)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         try {
                             mExchangeRate = Double.parseDouble(mExchangeRateEditText.getText().toString());
                         } catch (NumberFormatException ignore) {}
@@ -130,26 +129,24 @@ public class CurrencyConverterDialog extends DialogFragment {
                     }
 
                 })
-                .build();
-        View customView = dialog.getCustomView();
-        if (customView != null) {
-            mExchangeRateEditText = customView.findViewById(R.id.exchange_rate_edit_text);
-            mRefreshButton = customView.findViewById(R.id.refresh_button);
-            updateDisplay();
-            mRefreshButton.setOnClickListener(new View.OnClickListener() {
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+        mExchangeRateEditText = customView.findViewById(R.id.exchange_rate_edit_text);
+        mRefreshButton = customView.findViewById(R.id.refresh_button);
+        updateDisplay();
+        mRefreshButton.setOnClickListener(new View.OnClickListener() {
 
-                @Override
-                public void onClick(View v) {
-                    Activity activity = getActivity();
-                    Intent intent = AbstractCurrencyRateDownloadIntentService.buildIntent(activity);
-                    activity.startService(intent);
-                    // temporary disable the refresh button until the load is completed
-                    // to avoid launching multiple serial services
-                    mRefreshButton.setClickable(false);
-                }
+            @Override
+            public void onClick(View v) {
+                Activity activity = getActivity();
+                Intent intent = AbstractCurrencyRateDownloadIntentService.buildIntent(activity);
+                activity.startService(intent);
+                // temporary disable the refresh button until the load is completed
+                // to avoid launching multiple serial services
+                mRefreshButton.setClickable(false);
+            }
 
-            });
-        }
+        });
         return dialog;
     }
 

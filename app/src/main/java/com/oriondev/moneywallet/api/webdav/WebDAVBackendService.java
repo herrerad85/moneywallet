@@ -20,6 +20,7 @@
 package com.oriondev.moneywallet.api.webdav;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.View;
@@ -27,12 +28,10 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.ComponentActivity;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
+import androidx.appcompat.app.AlertDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.api.AbstractBackendServiceDelegate;
 import com.oriondev.moneywallet.api.BackendServiceFactory;
@@ -117,32 +116,25 @@ public class WebDAVBackendService extends AbstractBackendServiceDelegate {
     }
 
     private void showSetupDialog(final ComponentActivity activity, @Nullable String url, @Nullable String username) {
-        MaterialDialog dialog = ThemedDialog.buildMaterialDialog(activity)
-                .title(R.string.service_backup_webdav)
-                .customView(R.layout.dialog_webdav_setup, true)
-                .positiveText(R.string.action_connect)
-                .negativeText(android.R.string.cancel)
-                .autoDismiss(false)
-                .onNegative(new MaterialDialog.SingleButtonCallback() {
+        View view = ThemedDialog.inflateScrollableView(activity, R.layout.dialog_webdav_setup);
+        final AlertDialog dialog = ThemedDialog.buildMaterialDialog(activity)
+                .setTitle(R.string.service_backup_webdav)
+                .setView(view)
+                .setPositiveButton(R.string.action_connect, null)
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
 
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        dialog.dismiss();
-                    }
-                })
-                .build();
-
-        View view = dialog.getCustomView();
-        if (view == null) {
-            return;
-        }
         final EditText urlField = view.findViewById(R.id.webdav_url_edit_text);
         final EditText usernameField = view.findViewById(R.id.webdav_username_edit_text);
         final EditText passwordField = view.findViewById(R.id.webdav_password_edit_text);
         urlField.setText(url);
         usernameField.setText(username);
 
-        dialog.getActionButton(DialogAction.POSITIVE).setOnClickListener(new View.OnClickListener() {
+        dialog.show();
+        // Replacing the listener on the button itself is what keeps Connect from closing the form,
+        // so a rejected url can be corrected without typing everything again. The button only
+        // exists once the dialog has been shown.
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -160,17 +152,15 @@ public class WebDAVBackendService extends AbstractBackendServiceDelegate {
                 verifyAndStore(activity, dialog, typedUrl, typedUsername, typedPassword);
             }
         });
-
-        dialog.show();
     }
 
     /**
      * Credentials are checked against the server before they are saved, so a typo is reported while
      * the form is still open rather than surfacing later as an empty folder listing.
      */
-    private void verifyAndStore(final ComponentActivity activity, final MaterialDialog dialog,
+    private void verifyAndStore(final ComponentActivity activity, final AlertDialog dialog,
                                 final String url, final String username, final String password) {
-        dialog.getActionButton(DialogAction.POSITIVE).setEnabled(false);
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
         new Thread(new Runnable() {
 
             @Override
@@ -190,7 +180,7 @@ public class WebDAVBackendService extends AbstractBackendServiceDelegate {
 
                     @Override
                     public void run() {
-                        dialog.getActionButton(DialogAction.POSITIVE).setEnabled(true);
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
                         if (result != null) {
                             Toast.makeText(activity, result, Toast.LENGTH_LONG).show();
                             return;
@@ -207,18 +197,17 @@ public class WebDAVBackendService extends AbstractBackendServiceDelegate {
     @Override
     public void teardown(final ComponentActivity activity) {
         ThemedDialog.buildMaterialDialog(activity)
-                .title(R.string.title_warning)
-                .content(R.string.message_backup_service_webdav_disconnect)
-                .positiveText(android.R.string.yes)
-                .negativeText(android.R.string.no)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                .setTitle(R.string.title_warning)
+                .setMessage(R.string.message_backup_service_webdav_disconnect)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         clearCredentials(activity);
                         setBackendServiceEnabled(false);
                     }
                 })
+                .setNegativeButton(android.R.string.no, null)
                 .show();
     }
 }

@@ -858,9 +858,9 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
                 // budget is history now. Writing a schedule onto it would put a second one on the
                 // chain, and every period after this would open twice.
                 ThemedDialog.buildMaterialDialog(this)
-                        .title(R.string.title_warning)
-                        .content(R.string.message_budget_period_superseded)
-                        .positiveText(android.R.string.ok)
+                        .setTitle(R.string.title_warning)
+                        .setMessage(R.string.message_budget_period_superseded)
+                        .setPositiveButton(android.R.string.ok, null)
                         .show();
                 return;
             }
@@ -903,9 +903,9 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
                 }
                 if (contentRes != 0) {
                     ThemedDialog.buildMaterialDialog(this)
-                            .title(R.string.title_error)
-                            .content(contentRes)
-                            .positiveText(android.R.string.ok)
+                            .setTitle(R.string.title_error)
+                            .setMessage(contentRes)
+                            .setPositiveButton(android.R.string.ok, null)
                             .show();
                 }
             }

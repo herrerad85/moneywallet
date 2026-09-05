@@ -29,7 +29,8 @@ import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.afollestad.materialdialogs.MaterialDialog;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.background.ChangeLogLoader;
 import com.oriondev.moneywallet.model.ChangeLog;
@@ -65,12 +66,15 @@ public class ChangeLogDialog extends DialogFragment implements LoaderManager.Loa
             return super.onCreateDialog(savedInstanceState);
         }
         mAdapter = new ChangeLogAdapter();
-        MaterialDialog.Builder builder = ThemedDialog.buildMaterialDialog(activity)
-                .title(R.string.dialog_change_log_title)
-                .positiveText(android.R.string.ok)
-                .adapter(mAdapter, new LinearLayoutManager(activity));
+        RecyclerView recyclerView = (RecyclerView) getLayoutInflater().inflate(R.layout.dialog_recycler_view, null);
+        recyclerView.setLayoutManager(new LinearLayoutManager(activity));
+        recyclerView.setAdapter(mAdapter);
+        MaterialAlertDialogBuilder builder = ThemedDialog.buildMaterialDialog(activity)
+                .setTitle(R.string.dialog_change_log_title)
+                .setPositiveButton(android.R.string.ok, null)
+                .setView(recyclerView);
         LoaderManager.getInstance(this).restartLoader(LOADER_ID, null, this);
-        return builder.build();
+        return builder.create();
     }
 
     @Override

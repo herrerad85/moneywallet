@@ -225,9 +225,9 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
                     Activity activity = getActivity();
                     if (activity != null) {
                         ThemedDialog.buildMaterialDialog(activity)
-                                .title(R.string.title_error)
-                                .content(R.string.message_error_activity_not_found)
-                                .positiveText(android.R.string.ok)
+                                .setTitle(R.string.title_error)
+                                .setMessage(R.string.message_error_activity_not_found)
+                                .setPositiveButton(android.R.string.ok, null)
                                 .show();
                     }
                 }

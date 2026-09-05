@@ -1140,9 +1140,9 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
         String message = getString(R.string.error_saving_withdraw_over_balance,
                 mMoneyFormatter.getNotTintedString(currency, limit));
         ThemedDialog.buildMaterialDialog(this)
-                .title(R.string.title_error)
-                .content(message)
-                .positiveText(android.R.string.ok)
+                .setTitle(R.string.title_error)
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, null)
                 .show();
         return false;
     }
@@ -1187,9 +1187,9 @@ public class NewEditTransactionActivity extends NewEditItemActivity implements M
                     throw e;
                 }
                 ThemedDialog.buildMaterialDialog(this)
-                        .title(R.string.title_error)
-                        .content(R.string.error_debt_wallet_currency_not_consistent)
-                        .positiveText(android.R.string.ok)
+                        .setTitle(R.string.title_error)
+                        .setMessage(R.string.error_debt_wallet_currency_not_consistent)
+                        .setPositiveButton(android.R.string.ok, null)
                         .show();
                 return;
             }

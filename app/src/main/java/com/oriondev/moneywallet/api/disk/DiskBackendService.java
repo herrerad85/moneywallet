@@ -21,10 +21,9 @@ package com.oriondev.moneywallet.api.disk;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.api.AbstractBackendServiceDelegate;
 import com.oriondev.moneywallet.api.BackendException;
@@ -93,8 +92,8 @@ public class DiskBackendService extends AbstractBackendServiceDelegate {
                         if (!isGranted) {
                             setBackendServiceEnabled(false);
                             ThemedDialog.buildMaterialDialog(activity)
-                                    .title(R.string.title_warning)
-                                    .content(R.string.message_permission_required_not_granted)
+                                    .setTitle(R.string.title_warning)
+                                    .setMessage(R.string.message_permission_required_not_granted)
                                     .show();
                         }
                     }
@@ -102,18 +101,18 @@ public class DiskBackendService extends AbstractBackendServiceDelegate {
         );
         if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             ThemedDialog.buildMaterialDialog(activity)
-                    .title(R.string.title_request_permission)
-                    .content(R.string.message_permission_required_external_storage)
-                    .positiveText(android.R.string.ok)
-                    .negativeText(android.R.string.cancel)
-                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    .setTitle(R.string.title_request_permission)
+                    .setMessage(R.string.message_permission_required_external_storage)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                         @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        public void onClick(DialogInterface dialog, int which) {
                             launcher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
                         }
 
-                    }).show();
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
         } else {
             launcher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }

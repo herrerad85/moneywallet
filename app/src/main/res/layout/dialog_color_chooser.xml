@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2018.
+  ~
+  ~ This file is part of MoneyWallet.
+  ~
+  ~ MoneyWallet is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ MoneyWallet is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:defaultFocusHighlightEnabled="false"
+    android:fadeScrollbars="false"
+    android:scrollbars="vertical"
+    tools:targetApi="o">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <com.oriondev.moneywallet.ui.view.FullHeightGridView
+            android:id="@+id/color_chooser_grid_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:columnWidth="@dimen/color_chooser_swatch_size"
+            android:gravity="center"
+            android:horizontalSpacing="8dp"
+            android:numColumns="auto_fit"
+            android:padding="16dp"
+            android:stretchMode="columnWidth"
+            android:verticalSpacing="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="?attr/dialogPreferredPadding"
+            android:paddingRight="?attr/dialogPreferredPadding"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="#"
+                tools:ignore="HardcodedText" />
+
+            <EditText
+                android:id="@+id/color_chooser_hex_edit_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="16dp"
+                android:layout_weight="1"
+                android:digits="0123456789abcdefABCDEF"
+                android:hint="2196F3"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:maxLines="1"
+                android:singleLine="true"
+                tools:ignore="HardcodedText" />
+
+            <com.oriondev.moneywallet.ui.view.ColorSwatchView
+                android:id="@+id/color_chooser_preview_view"
+                android:layout_width="24dp"
+                android:layout_height="24dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

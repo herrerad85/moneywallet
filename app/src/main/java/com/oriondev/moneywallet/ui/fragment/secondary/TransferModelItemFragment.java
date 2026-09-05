@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -40,8 +41,6 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.storage.database.Contract;
@@ -127,14 +126,12 @@ public class TransferModelItemFragment extends SecondaryPanelFragment implements
 
     private void showDeleteDialog(Context context) {
         ThemedDialog.buildMaterialDialog(context)
-                .title(R.string.title_warning)
-                .content(R.string.message_delete_transfer_model)
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                .setTitle(R.string.title_warning)
+                .setMessage(R.string.message_delete_transfer_model)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         Activity activity = getActivity();
                         if (activity != null) {
                             Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSFER_MODELS, getItemId());
@@ -146,6 +143,7 @@ public class TransferModelItemFragment extends SecondaryPanelFragment implements
                     }
 
                 })
+                .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
 

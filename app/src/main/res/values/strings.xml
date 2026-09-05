@@ -83,6 +83,7 @@
     <string name="action_open">"Open"</string>
     <string name="action_undo">"Undo"</string>
     <string name="action_skip">"Skip"</string>
+    <string name="action_back">"Back"</string>
 
     <string name="msg_no_wallet_found">"No wallet found"</string>
     <string name="msg_add_one_wallet">"Please add one wallet"</string>

@@ -26,4 +26,12 @@
     <color name="textSecondary">#8A000000</color>
     <color name="textPrimaryInverted">#DEFFFFFF</color>
     <color name="textSecondaryInverted">#8AFFFFFF</color>
+
+    <!-- The dark alert dialog palette. These are the values Theme.AppCompat.Dialog.Alert resolves
+         to, kept by hand because the AppCompat resources behind them are private. -->
+    <color name="dialogDarkBackground">#FF424242</color>
+    <color name="dialogDarkTextPrimary">#FFFFFFFF</color>
+    <color name="dialogDarkTextSecondary">#B3FFFFFF</color>
+    <color name="dialogDarkTextHint">#80FFFFFF</color>
+    <color name="dialogDarkControlHighlight">#33FFFFFF</color>
 </resources>

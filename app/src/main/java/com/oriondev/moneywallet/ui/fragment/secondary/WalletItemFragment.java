@@ -24,6 +24,7 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -42,8 +43,6 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.Icon;
@@ -125,14 +124,12 @@ public class WalletItemFragment extends SecondaryPanelFragment implements Loader
 
     private void showArchiveDialog(Context context) {
         ThemedDialog.buildMaterialDialog(context)
-                .title(R.string.title_warning)
-                .content(R.string.message_action_archive_wallet)
-                .positiveText(android.R.string.yes)
-                .negativeText(android.R.string.no)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                .setTitle(R.string.title_warning)
+                .setMessage(R.string.message_action_archive_wallet)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         Activity activity = getActivity();
                         if (activity != null) {
                             Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_WALLETS, getItemId());
@@ -147,19 +144,18 @@ public class WalletItemFragment extends SecondaryPanelFragment implements Loader
                     }
 
                 })
+                .setNegativeButton(android.R.string.no, null)
                 .show();
     }
 
     private void showUnarchiveDialog(Context context) {
         ThemedDialog.buildMaterialDialog(context)
-                .title(R.string.title_warning)
-                .content(R.string.message_action_unarchive_wallet)
-                .positiveText(android.R.string.yes)
-                .negativeText(android.R.string.no)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                .setTitle(R.string.title_warning)
+                .setMessage(R.string.message_action_unarchive_wallet)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         Activity activity = getActivity();
                         if (activity != null) {
                             Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_WALLETS, getItemId());
@@ -174,19 +170,18 @@ public class WalletItemFragment extends SecondaryPanelFragment implements Loader
                     }
 
                 })
+                .setNegativeButton(android.R.string.no, null)
                 .show();
     }
 
     private void showDeleteDialog(Context context) {
         ThemedDialog.buildMaterialDialog(context)
-                .title(R.string.title_warning)
-                .content(R.string.message_delete_wallet)
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                .setTitle(R.string.title_warning)
+                .setMessage(R.string.message_delete_wallet)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         Activity activity = getActivity();
                         if (activity != null) {
                             try {
@@ -198,9 +193,9 @@ public class WalletItemFragment extends SecondaryPanelFragment implements Loader
                             } catch (SQLiteDataException e) {
                                 if (e.getErrorCode() == Contract.ErrorCode.WALLET_USED_IN_TRANSFER) {
                                     ThemedDialog.buildMaterialDialog(activity)
-                                            .title(R.string.title_error)
-                                            .content(R.string.message_error_delete_wallet_of_transfer)
-                                            .positiveText(android.R.string.ok)
+                                            .setTitle(R.string.title_error)
+                                            .setMessage(R.string.message_error_delete_wallet_of_transfer)
+                                            .setPositiveButton(android.R.string.ok, null)
                                             .show();
                                 }
                             }
@@ -208,6 +203,7 @@ public class WalletItemFragment extends SecondaryPanelFragment implements Loader
                     }
 
                 })
+                .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
 

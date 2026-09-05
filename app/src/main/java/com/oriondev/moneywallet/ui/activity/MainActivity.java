@@ -22,6 +22,7 @@ package com.oriondev.moneywallet.ui.activity;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.ColorStateList;
@@ -34,10 +35,13 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.widget.EditText;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.view.GravityCompat;
@@ -57,7 +61,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.shape.MaterialShapeDrawable;
 import com.oriondev.moneywallet.R;
@@ -428,13 +431,17 @@ public class MainActivity extends BaseActivity implements DrawerController, Navi
     }
 
     private void showAtmSearchDialog() {
-        ThemedDialog.buildMaterialDialog(this)
-                .title(R.string.title_atm_search)
-                .input(R.string.hint_atm_name, 0, false, new MaterialDialog.InputCallback() {
+        View inputView = LayoutInflater.from(this).inflate(R.layout.dialog_input, null);
+        final EditText inputEditText = inputView.findViewById(R.id.dialog_input_edit_text);
+        inputEditText.setHint(R.string.hint_atm_name);
+        AlertDialog dialog = ThemedDialog.buildMaterialDialog(this)
+                .setTitle(R.string.title_atm_search)
+                .setView(inputView)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
-                        Uri mapUri = Uri.parse("geo:0,0?q=atm " + input);
+                    public void onClick(DialogInterface dialog, int which) {
+                        Uri mapUri = Uri.parse("geo:0,0?q=atm " + inputEditText.getText());
                         Intent mapIntent = new Intent(Intent.ACTION_VIEW, mapUri);
                         try {
                             startActivity(mapIntent);
@@ -443,17 +450,23 @@ public class MainActivity extends BaseActivity implements DrawerController, Navi
                         }
                     }
 
-                }).show();
+                })
+                .create();
+        ThemedDialog.showWithInput(dialog, inputEditText, false);
     }
 
     private void showBankSearchDialog() {
-        ThemedDialog.buildMaterialDialog(this)
-                .title(R.string.title_bank_search)
-                .input(R.string.hint_bank_name, 0, false, new MaterialDialog.InputCallback() {
+        View inputView = LayoutInflater.from(this).inflate(R.layout.dialog_input, null);
+        final EditText inputEditText = inputView.findViewById(R.id.dialog_input_edit_text);
+        inputEditText.setHint(R.string.hint_bank_name);
+        AlertDialog dialog = ThemedDialog.buildMaterialDialog(this)
+                .setTitle(R.string.title_bank_search)
+                .setView(inputView)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
                     @Override
-                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
-                        Uri mapUri = Uri.parse("geo:0,0?q=bank " + input);
+                    public void onClick(DialogInterface dialog, int which) {
+                        Uri mapUri = Uri.parse("geo:0,0?q=bank " + inputEditText.getText());
                         Intent mapIntent = new Intent(Intent.ACTION_VIEW, mapUri);
                         try {
                             startActivity(mapIntent);
@@ -462,14 +475,16 @@ public class MainActivity extends BaseActivity implements DrawerController, Navi
                         }
                     }
 
-                }).show();
+                })
+                .create();
+        ThemedDialog.showWithInput(dialog, inputEditText, false);
     }
 
     private void showActivityNotFoundDialog() {
         ThemedDialog.buildMaterialDialog(this)
-                .title(R.string.title_error)
-                .content(R.string.message_error_activity_not_found)
-                .positiveText(android.R.string.ok)
+                .setTitle(R.string.title_error)
+                .setMessage(R.string.message_error_activity_not_found)
+                .setPositiveButton(android.R.string.ok, null)
                 .show();
     }
 

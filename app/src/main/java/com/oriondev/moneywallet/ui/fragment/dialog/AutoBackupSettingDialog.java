@@ -25,6 +25,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
@@ -37,8 +38,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.api.BackendServiceFactory;
 import com.oriondev.moneywallet.broadcast.AutoBackupBroadcastReceiver;
@@ -89,99 +88,98 @@ public class AutoBackupSettingDialog extends DialogFragment {
             mBackendId = savedInstanceState.getString(SS_BACKEND_ID);
             mFolder = savedInstanceState.getParcelable(SS_FOLDER);
         }
-        MaterialDialog dialog = ThemedDialog.buildMaterialDialog(activity)
-                .title(R.string.dialog_auto_backup_title)
-                .customView(R.layout.dialog_auto_backup_setting, true)
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
-                // OK does not close the dialog by itself, so a setting it refuses to save leaves
-                // the rest of what was typed on screen. Tapping outside and the back button are
-                // not affected and still cancel.
-                .autoDismiss(false)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+        View view = ThemedDialog.inflateScrollableView(activity, R.layout.dialog_auto_backup_setting);
+        AlertDialog dialog = ThemedDialog.buildMaterialDialog(activity)
+                .setTitle(R.string.dialog_auto_backup_title)
+                .setView(view)
+                .setPositiveButton(android.R.string.ok, null)
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+        mServiceEnabledSwitchCompat = view.findViewById(R.id.auto_backup_enable_switch);
+        mOnlyWiFiCheckBox = view.findViewById(R.id.auto_backup_wifi_check_box);
+        mOnlyDataChangedCheckBox = view.findViewById(R.id.auto_backup_data_change_check_box);
+        mOffsetTextView = view.findViewById(R.id.auto_backup_offset_text_view);
+        mOffsetSeekBar = view.findViewById(R.id.auto_backup_offset_seek_bar);
+        mFolderTextView = view.findViewById(R.id.auto_backup_folder_text_view);
+        mFailureTextView = view.findViewById(R.id.auto_backup_failure_text_view);
+        mPasswordEditText = view.findViewById(R.id.auto_backup_password_edit_text);
+        // set listeners
+        mOffsetSeekBar.setMax((OFFSET_MAX_HOURS - OFFSET_MIN_HOURS) / OFFSET_BETWEEN_HOURS);
+        mOffsetSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        if (onSaveSetting()) {
-                            dialog.dismiss();
-                        }
-                    }
-
-                })
-                .onNegative(new MaterialDialog.SingleButtonCallback() {
-
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        dialog.dismiss();
-                    }
-
-                })
-                .build();
-        View view = dialog.getCustomView();
-        if (view != null) {
-            mServiceEnabledSwitchCompat = view.findViewById(R.id.auto_backup_enable_switch);
-            mOnlyWiFiCheckBox = view.findViewById(R.id.auto_backup_wifi_check_box);
-            mOnlyDataChangedCheckBox = view.findViewById(R.id.auto_backup_data_change_check_box);
-            mOffsetTextView = view.findViewById(R.id.auto_backup_offset_text_view);
-            mOffsetSeekBar = view.findViewById(R.id.auto_backup_offset_seek_bar);
-            mFolderTextView = view.findViewById(R.id.auto_backup_folder_text_view);
-            mFailureTextView = view.findViewById(R.id.auto_backup_failure_text_view);
-            mPasswordEditText = view.findViewById(R.id.auto_backup_password_edit_text);
-            // set listeners
-            mOffsetSeekBar.setMax((OFFSET_MAX_HOURS - OFFSET_MIN_HOURS) / OFFSET_BETWEEN_HOURS);
-            mOffsetSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
-                @Override
-                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    AutoBackupSettingDialog.this.onProgressChanged(progress);
-                }
-
-                @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {
-                    // not used
-                }
-
-                @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {
-                    // not used
-                }
-
-            });
-            mServiceEnabledSwitchCompat.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    AutoBackupSettingDialog.this.onServiceEnabledChanged();
-                }
-
-            });
-            mFolderTextView.setOnClickListener(new View.OnClickListener() {
-
-                @Override
-                public void onClick(View v) {
-                    Activity activity = getActivity();
-                    if (activity != null) {
-                        Intent intent = new Intent(activity, BackendExplorerActivity.class);
-                        intent.putExtra(BackendExplorerActivity.BACKEND_ID, mBackendId);
-                        intent.putExtra(BackendExplorerActivity.MODE, BackendExplorerActivity.MODE_FOLDER_PICKER);
-                        startActivityForResult(intent, REQUEST_CODE_FOLDER_PICKER);
-                    }
-                }
-
-            });
-            if (savedInstanceState == null) {
-                mServiceEnabledSwitchCompat.setChecked(BackendManager.isAutoBackupEnabled(mBackendId));
-                mOnlyWiFiCheckBox.setChecked(BackendManager.isAutoBackupOnWiFiOnly(mBackendId));
-                mOnlyDataChangedCheckBox.setChecked(BackendManager.isAutoBackupWhenDataIsChangedOnly(mBackendId));
-                mOffsetSeekBar.setProgress((BackendManager.getAutoBackupHoursOffset(mBackendId) - OFFSET_MIN_HOURS) / OFFSET_BETWEEN_HOURS);
-                mFolder = BackendServiceFactory.getFile(mBackendId, BackendManager.getAutoBackupFolder(mBackendId));
-                mPasswordEditText.setText(BackendManager.getAutoBackupPassword(mBackendId));
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                AutoBackupSettingDialog.this.onProgressChanged(progress);
             }
-            onProgressChanged(mOffsetSeekBar.getProgress());
-            onFolderChanged();
-            onServiceEnabledChanged();
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // not used
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // not used
+            }
+
+        });
+        mServiceEnabledSwitchCompat.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                AutoBackupSettingDialog.this.onServiceEnabledChanged();
+            }
+
+        });
+        mFolderTextView.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                Activity activity = getActivity();
+                if (activity != null) {
+                    Intent intent = new Intent(activity, BackendExplorerActivity.class);
+                    intent.putExtra(BackendExplorerActivity.BACKEND_ID, mBackendId);
+                    intent.putExtra(BackendExplorerActivity.MODE, BackendExplorerActivity.MODE_FOLDER_PICKER);
+                    startActivityForResult(intent, REQUEST_CODE_FOLDER_PICKER);
+                }
+            }
+
+        });
+        if (savedInstanceState == null) {
+            mServiceEnabledSwitchCompat.setChecked(BackendManager.isAutoBackupEnabled(mBackendId));
+            mOnlyWiFiCheckBox.setChecked(BackendManager.isAutoBackupOnWiFiOnly(mBackendId));
+            mOnlyDataChangedCheckBox.setChecked(BackendManager.isAutoBackupWhenDataIsChangedOnly(mBackendId));
+            mOffsetSeekBar.setProgress((BackendManager.getAutoBackupHoursOffset(mBackendId) - OFFSET_MIN_HOURS) / OFFSET_BETWEEN_HOURS);
+            mFolder = BackendServiceFactory.getFile(mBackendId, BackendManager.getAutoBackupFolder(mBackendId));
+            mPasswordEditText.setText(BackendManager.getAutoBackupPassword(mBackendId));
         }
+        onProgressChanged(mOffsetSeekBar.getProgress());
+        onFolderChanged();
+        onServiceEnabledChanged();
         return dialog;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        final AlertDialog dialog = (AlertDialog) getDialog();
+        if (dialog == null) {
+            return;
+        }
+        // OK does not close the dialog by itself, so a setting it refuses to save leaves the rest
+        // of what was typed on screen. Replacing the listener on the button is what drops the
+        // dismiss that comes with it, and the button only exists once the dialog has been shown.
+        // Tapping outside and the back button are not affected and still cancel.
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                if (onSaveSetting()) {
+                    dialog.dismiss();
+                }
+            }
+
+        });
     }
 
     @Override

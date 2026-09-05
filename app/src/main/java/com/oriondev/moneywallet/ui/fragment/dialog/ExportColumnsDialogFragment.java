@@ -3,15 +3,17 @@ package com.oriondev.moneywallet.ui.fragment.dialog;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.storage.database.data.AbstractDataExporter;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by andrea on 21/12/18.
@@ -55,21 +57,38 @@ public class ExportColumnsDialogFragment extends DialogFragment {
         for (int i = 0; i < COLUMN_NAMES.length; i++) {
             items[i] = getString(COLUMN_NAMES[i]);
         }
+        final boolean[] checked = new boolean[items.length];
+        if (mIndices != null) {
+            for (Integer index : mIndices) {
+                checked[index] = true;
+            }
+        }
         return ThemedDialog.buildMaterialDialog(activity)
-                .title(R.string.dialog_export_optional_columns_title)
-                .items(items)
-                .itemsCallbackMultiChoice(mIndices, new MaterialDialog.ListCallbackMultiChoice() {
+                .setTitle(R.string.dialog_export_optional_columns_title)
+                .setMultiChoiceItems(items, checked, new DialogInterface.OnMultiChoiceClickListener() {
 
                     @Override
-                    public boolean onSelection(MaterialDialog dialog, Integer[] indices, CharSequence[] text) {
-                        mIndices = indices;
-                        mCallback.onExportColumnsSelected(mIndices);
-                        return false;
+                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                        checked[which] = isChecked;
                     }
 
                 })
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        List<Integer> indices = new ArrayList<>();
+                        for (int i = 0; i < checked.length; i++) {
+                            if (checked[i]) {
+                                indices.add(i);
+                            }
+                        }
+                        mIndices = indices.toArray(new Integer[0]);
+                        mCallback.onExportColumnsSelected(mIndices);
+                    }
+
+                })
+                .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
 

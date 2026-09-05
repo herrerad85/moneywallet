@@ -20,6 +20,7 @@
 package com.oriondev.moneywallet.ui.fragment.multipanel;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -36,7 +37,6 @@ import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
@@ -173,49 +173,28 @@ public class SearchMultiPanelFragment extends MultiPanelCursorListItemFragment i
                 getString(R.string.hint_event),
                 getString(R.string.hint_place)
         };
+        final boolean[] checked = mSearchFlags.clone();
         ThemedDialog.buildMaterialDialog(getActivity())
-                .title(R.string.dialog_filter_search_title)
-                .items(items)
-                .itemsCallbackMultiChoice(getSelectedIndices(), new MaterialDialog.ListCallbackMultiChoice() {
+                .setTitle(R.string.dialog_filter_search_title)
+                .setMultiChoiceItems(items, checked, new DialogInterface.OnMultiChoiceClickListener() {
 
                     @Override
-                    public boolean onSelection(MaterialDialog dialog, Integer[] which, CharSequence[] text) {
-                        mSearchFlags = new boolean[] {
-                                isChecked(0, which),
-                                isChecked(1, which),
-                                isChecked(2, which),
-                                isChecked(3, which),
-                                isChecked(4, which),
-                                isChecked(5, which),
-                                isChecked(6, which)
-                        };
-                        recreateLoader();
-                        return true;
+                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                        checked[which] = isChecked;
                     }
 
                 })
-                .positiveText(android.R.string.ok)
-                .negativeText(android.R.string.cancel)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        mSearchFlags = checked;
+                        recreateLoader();
+                    }
+
+                })
+                .setNegativeButton(android.R.string.cancel, null)
                 .show();
-    }
-
-    private Integer[] getSelectedIndices() {
-        List<Integer> indices = new ArrayList<>();
-        for (int i = 0; i < mSearchFlags.length; i++) {
-            if (mSearchFlags[i]) {
-                indices.add(i);
-            }
-        }
-        return indices.toArray(new Integer[indices.size()]);
-    }
-
-    private boolean isChecked(int index, Integer[] which) {
-        for (Integer integer : which) {
-            if (integer == index) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @NonNull
