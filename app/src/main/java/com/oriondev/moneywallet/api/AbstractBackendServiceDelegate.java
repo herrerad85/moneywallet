@@ -25,6 +25,7 @@ import android.content.Intent;
 import androidx.activity.ComponentActivity;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
+import androidx.fragment.app.Fragment;
 
 /**
  * Created by andrea on 21/11/18.
@@ -49,6 +50,16 @@ public abstract class AbstractBackendServiceDelegate {
     public abstract int getBackupCoverAction();
 
     public abstract boolean isServiceEnabled(Context context);
+
+    /**
+     * Registers the activity result launchers this backend needs. A Fragment refuses a
+     * registration once its view has been created, so call this from onAttach or onCreate,
+     * never from {@link #setup}, which runs on a click. A backend that registers a launcher
+     * here needs this called before its {@link #setup}.
+     */
+    public void registerLaunchers(@NonNull Fragment fragment) {
+        // most backends have nothing to register
+    }
 
     public abstract void setup(ComponentActivity activity) throws BackendException;
 

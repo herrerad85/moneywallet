@@ -1,5 +1,6 @@
 package com.oriondev.moneywallet.api.saf;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,9 +14,11 @@ import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 
 import androidx.activity.ComponentActivity;
 import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 /**
  * Backend service used to access files over the android storage access framework.
@@ -33,6 +36,8 @@ public class SAFBackendService extends AbstractBackendServiceDelegate {
      * Preference key were the root uri is stored.
      */
     private static final String URI = "uri";
+
+    private ActivityResultLauncher<Uri> mFolderLauncher;
 
     public SAFBackendService(BackendServiceStatusListener listener) {
         super(listener);
@@ -80,14 +85,15 @@ public class SAFBackendService extends AbstractBackendServiceDelegate {
     }
 
     @Override
-    public void setup(final ComponentActivity activity) {
-        activity.registerForActivityResult(
+    public void registerLaunchers(@NonNull final Fragment fragment) {
+        mFolderLauncher = fragment.registerForActivityResult(
             new DocumentTreeContract(),
             new ActivityResultCallback<Uri>() {
                 @Override
                 public void onActivityResult(Uri uri) {
                     boolean enabled = false;
                     if (uri != null) {
+                        Activity activity = fragment.requireActivity();
                         activity.getContentResolver().takePersistableUriPermission(
                                 uri,
                                 FLAG_URI_READ_WRITE
@@ -97,7 +103,12 @@ public class SAFBackendService extends AbstractBackendServiceDelegate {
                     }
                     setBackendServiceEnabled(enabled);
                 }
-            }).launch(null);
+            });
+    }
+
+    @Override
+    public void setup(final ComponentActivity activity) {
+        mFolderLauncher.launch(null);
     }
 
     @Override

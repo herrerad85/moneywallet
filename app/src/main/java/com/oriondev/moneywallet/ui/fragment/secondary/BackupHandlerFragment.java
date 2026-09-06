@@ -115,6 +115,9 @@ public class BackupHandlerFragment extends Fragment implements BackupFileAdapter
             mAllowRestore = arguments.getBoolean(ARG_ALLOW_RESTORE, true);
             String backendId = arguments.getString(ARG_BACKEND_ID, null);
             mBackendService = BackendServiceFactory.getServiceById(backendId, this);
+            if (mBackendService != null) {
+                mBackendService.registerLaunchers(this);
+            }
             mFileStack = new ArrayList<>();
             openOnDefaultFolder();
         } else {

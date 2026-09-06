@@ -37,11 +37,14 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 
 /**
  * Created by andrea on 21/11/18.
  */
 public class DiskBackendService extends AbstractBackendServiceDelegate {
+
+    private ActivityResultLauncher<String> mPermissionLauncher;
 
     public DiskBackendService(BackendServiceStatusListener listener) {
         super(listener);
@@ -82,16 +85,15 @@ public class DiskBackendService extends AbstractBackendServiceDelegate {
     }
 
     @Override
-    public void setup(final ComponentActivity activity) throws BackendException {
-        final ActivityResultLauncher<String> launcher = activity.registerForActivityResult(
+    public void registerLaunchers(@NonNull final Fragment fragment) {
+        mPermissionLauncher = fragment.registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 new ActivityResultCallback<Boolean>() {
                     @Override
                     public void onActivityResult(Boolean isGranted) {
                         setBackendServiceEnabled(isGranted);
                         if (!isGranted) {
-                            setBackendServiceEnabled(false);
-                            ThemedDialog.buildMaterialDialog(activity)
+                            ThemedDialog.buildMaterialDialog(fragment.requireActivity())
                                     .setTitle(R.string.title_warning)
                                     .setMessage(R.string.message_permission_required_not_granted)
                                     .show();
@@ -99,6 +101,10 @@ public class DiskBackendService extends AbstractBackendServiceDelegate {
                     }
                 }
         );
+    }
+
+    @Override
+    public void setup(final ComponentActivity activity) throws BackendException {
         if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             ThemedDialog.buildMaterialDialog(activity)
                     .setTitle(R.string.title_request_permission)
@@ -107,14 +113,14 @@ public class DiskBackendService extends AbstractBackendServiceDelegate {
 
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            launcher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                            mPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
                         }
 
                     })
                     .setNegativeButton(android.R.string.cancel, null)
                     .show();
         } else {
-            launcher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            mPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
     }
 
