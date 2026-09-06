@@ -32,8 +32,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import android.view.View;
+import android.widget.AdapterView;
 
-import com.jaredrummler.materialspinner.MaterialSpinner;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.Category;
 import com.oriondev.moneywallet.model.Group;
@@ -42,7 +42,9 @@ import com.oriondev.moneywallet.picker.CategoryPicker;
 import com.oriondev.moneywallet.picker.DateTimePicker;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.ui.view.text.MaterialEditText;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
+import com.oriondev.moneywallet.ui.view.theme.ThemedSpinner;
 import com.oriondev.moneywallet.utils.DateFormatter;
 import com.oriondev.moneywallet.utils.IconLoader;
 
@@ -67,12 +69,12 @@ public class OverviewSettingDialog extends DialogFragment implements DateTimePic
 
     private OverviewSetting mOverviewSetting;
 
-    private MaterialSpinner mStartDateSpinner;
-    private MaterialSpinner mEndDateSpinner;
-    private MaterialSpinner mGroupTypeSpinner;
-    private MaterialSpinner mOverviewTypeSpinner;
-    private MaterialSpinner mCashFlowSpinner;
-    private MaterialSpinner mCategorySpinner;
+    private MaterialEditText mStartDateSpinner;
+    private MaterialEditText mEndDateSpinner;
+    private ThemedSpinner mGroupTypeSpinner;
+    private ThemedSpinner mOverviewTypeSpinner;
+    private ThemedSpinner mCashFlowSpinner;
+    private MaterialEditText mCategorySpinner;
 
     private DateTimePicker mStartDatePicker;
     private DateTimePicker mEndDatePicker;
@@ -118,36 +120,33 @@ public class OverviewSettingDialog extends DialogFragment implements DateTimePic
         mOverviewTypeSpinner = view.findViewById(R.id.overview_type_spinner);
         mCashFlowSpinner = view.findViewById(R.id.cash_flow_spinner);
         mCategorySpinner = view.findViewById(R.id.category_spinner);
-        // adjust padding for each spinner
-        mStartDateSpinner.setPadding(0, mStartDateSpinner.getPaddingTop(), 0, mStartDateSpinner.getPaddingBottom());
-        mEndDateSpinner.setPadding(0, mEndDateSpinner.getPaddingTop(), 0, mEndDateSpinner.getPaddingBottom());
-        mGroupTypeSpinner.setPadding(0, mGroupTypeSpinner.getPaddingTop(), 0, mGroupTypeSpinner.getPaddingBottom());
-        mOverviewTypeSpinner.setPadding(0, mOverviewTypeSpinner.getPaddingTop(), 0, mOverviewTypeSpinner.getPaddingBottom());
-        mCashFlowSpinner.setPadding(0, mCashFlowSpinner.getPaddingTop(), 0, mCashFlowSpinner.getPaddingBottom());
-        mCategorySpinner.setPadding(0, mCategorySpinner.getPaddingTop(), 0, mCategorySpinner.getPaddingBottom());
+        // these three rows open a picker instead of a dropdown, so they must not take focus or
+        // raise the keyboard the way an editable field would
+        mStartDateSpinner.setTextViewMode(true);
+        mEndDateSpinner.setTextViewMode(true);
+        mCategorySpinner.setTextViewMode(true);
         // setup the standard spinners
-        mGroupTypeSpinner.setItems(
+        mGroupTypeSpinner.setAdapter(new ThemedSpinner.Adapter(activity,
                 getString(R.string.spinner_item_group_type_daily),
                 getString(R.string.spinner_item_group_type_weekly),
                 getString(R.string.spinner_item_group_type_monthly),
                 getString(R.string.spinner_item_group_type_yearly)
-        );
-        mOverviewTypeSpinner.setItems(
+        ));
+        mOverviewTypeSpinner.setAdapter(new ThemedSpinner.Adapter(activity,
                 getString(R.string.spinner_item_type_cash_flow),
                 getString(R.string.spinner_item_type_category)
-        );
-        mCashFlowSpinner.setItems(
+        ));
+        mCashFlowSpinner.setAdapter(new ThemedSpinner.Adapter(activity,
                 getString(R.string.spinner_item_cash_flow_incomes),
                 getString(R.string.spinner_item_cash_flow_expenses),
                 getString(R.string.spinner_item_cash_flow_net_incomes)
-        );
+        ));
         // now we can attach the listeners to all the spinners
         mStartDateSpinner.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 mStartDatePicker.showDatePicker();
-                mStartDateSpinner.collapse();
             }
 
         });
@@ -156,16 +155,20 @@ public class OverviewSettingDialog extends DialogFragment implements DateTimePic
             @Override
             public void onClick(View v) {
                 mEndDatePicker.showDatePicker();
-                mEndDateSpinner.collapse();
             }
 
         });
-        mOverviewTypeSpinner.setOnItemSelectedListener(new MaterialSpinner.OnItemSelectedListener() {
+        mOverviewTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
-            public void onItemSelected(MaterialSpinner view, int position, long id, Object item) {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 mCashFlowSpinner.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
                 mCategorySpinner.setVisibility(position == 1 ? View.VISIBLE : View.GONE);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // only reached when the adapter empties, which it never does here
             }
 
         });
@@ -174,46 +177,45 @@ public class OverviewSettingDialog extends DialogFragment implements DateTimePic
             @Override
             public void onClick(View v) {
                 mCategoryPicker.showPicker(true, true);
-                mCategorySpinner.collapse();
             }
 
         });
         // now use the current data to update all the views
         switch (mOverviewSetting.getGroupType()) {
             case DAILY:
-                mGroupTypeSpinner.setSelectedIndex(0);
+                mGroupTypeSpinner.setSelection(0);
                 break;
             case WEEKLY:
-                mGroupTypeSpinner.setSelectedIndex(1);
+                mGroupTypeSpinner.setSelection(1);
                 break;
             case MONTHLY:
-                mGroupTypeSpinner.setSelectedIndex(2);
+                mGroupTypeSpinner.setSelection(2);
                 break;
             case YEARLY:
-                mGroupTypeSpinner.setSelectedIndex(3);
+                mGroupTypeSpinner.setSelection(3);
                 break;
         }
         switch (mOverviewSetting.getType()) {
             case CASH_FLOW:
-                mOverviewTypeSpinner.setSelectedIndex(0);
+                mOverviewTypeSpinner.setSelection(0);
                 mCashFlowSpinner.setVisibility(View.VISIBLE);
                 mCategorySpinner.setVisibility(View.GONE);
                 break;
             case CATEGORY:
-                mOverviewTypeSpinner.setSelectedIndex(1);
+                mOverviewTypeSpinner.setSelection(1);
                 mCashFlowSpinner.setVisibility(View.GONE);
                 mCategorySpinner.setVisibility(View.VISIBLE);
                 break;
         }
         switch (mOverviewSetting.getCashFlow()) {
             case INCOMES:
-                mCashFlowSpinner.setSelectedIndex(0);
+                mCashFlowSpinner.setSelection(0);
                 break;
             case EXPENSES:
-                mCashFlowSpinner.setSelectedIndex(1);
+                mCashFlowSpinner.setSelection(1);
                 break;
             case NET_INCOMES:
-                mCashFlowSpinner.setSelectedIndex(2);
+                mCashFlowSpinner.setSelection(2);
                 break;
         }
         return dialog;
@@ -229,7 +231,7 @@ public class OverviewSettingDialog extends DialogFragment implements DateTimePic
         Date startDate = mStartDatePicker.getCurrentDateTime();
         Date endDate = mEndDatePicker.getCurrentDateTime();
         Group groupType = null;
-        switch (mGroupTypeSpinner.getSelectedIndex()) {
+        switch (mGroupTypeSpinner.getSelectedItemPosition()) {
             case 0:
                 groupType = Group.DAILY;
                 break;
@@ -243,9 +245,9 @@ public class OverviewSettingDialog extends DialogFragment implements DateTimePic
                 groupType = Group.YEARLY;
                 break;
         }
-        if (mOverviewTypeSpinner.getSelectedIndex() == 0) {
+        if (mOverviewTypeSpinner.getSelectedItemPosition() == 0) {
             OverviewSetting.CashFlow cashFlow = null;
-            switch (mCashFlowSpinner.getSelectedIndex()) {
+            switch (mCashFlowSpinner.getSelectedItemPosition()) {
                 case 0:
                     cashFlow = OverviewSetting.CashFlow.INCOMES;
                     break;

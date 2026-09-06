@@ -50,6 +50,72 @@
         <item name="colorControlHighlight">@color/dialogDarkControlHighlight</item>
     </style>
 
+    <!-- The app theme has a Bridge parent, which defines no bottomSheetDialogTheme, so every
+         bottom sheet is handed one of these two by name. They override exactly what the alert
+         dialog pair above overrides, so a sheet and a dialog read the same in every mode. -->
+    <style name="MoneyWalletBottomSheetLight" parent="ThemeOverlay.MaterialComponents.BottomSheetDialog"/>
+
+    <style name="MoneyWalletBottomSheetDark" parent="ThemeOverlay.MaterialComponents.BottomSheetDialog">
+        <item name="colorSurface">@color/dialogDarkBackground</item>
+        <item name="colorOnSurface">@color/dialogDarkTextPrimary</item>
+        <item name="colorOnBackground">@color/dialogDarkTextPrimary</item>
+        <item name="android:colorBackground">@color/dialogDarkBackground</item>
+        <item name="android:textColorPrimary">@color/dialogDarkTextPrimary</item>
+        <item name="android:textColorSecondary">@color/dialogDarkTextSecondary</item>
+        <item name="android:textColorTertiary">@color/dialogDarkTextSecondary</item>
+        <item name="android:textColorHint">@color/dialogDarkTextHint</item>
+        <item name="colorControlNormal">@color/dialogDarkTextSecondary</item>
+        <item name="colorControlHighlight">@color/dialogDarkControlHighlight</item>
+    </style>
+
+    <!-- Same reason as the two pairs above: the Bridge parent defines neither
+         materialCalendarTheme nor materialTimePickerTheme, so both pickers are handed a style by
+         name through ThemedDialog. -->
+    <style name="MoneyWalletDatePickerLight" parent="ThemeOverlay.MaterialComponents.MaterialCalendar"/>
+
+    <style name="MoneyWalletDatePickerDark" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
+        <item name="buttonBarPositiveButtonStyle">@style/MoneyWalletDatePickerDarkActionButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/MoneyWalletDatePickerDarkActionButton</item>
+        <item name="colorSurface">@color/dialogDarkBackground</item>
+        <item name="colorOnSurface">@color/dialogDarkTextPrimary</item>
+        <item name="colorOnBackground">@color/dialogDarkTextPrimary</item>
+        <item name="android:colorBackground">@color/dialogDarkBackground</item>
+        <item name="android:textColorPrimary">@color/dialogDarkTextPrimary</item>
+        <item name="android:textColorSecondary">@color/dialogDarkTextSecondary</item>
+        <item name="android:textColorTertiary">@color/dialogDarkTextSecondary</item>
+        <item name="android:textColorHint">@color/dialogDarkTextHint</item>
+        <item name="colorControlNormal">@color/dialogDarkTextSecondary</item>
+        <item name="colorControlHighlight">@color/dialogDarkControlHighlight</item>
+    </style>
+
+    <!-- mtrl_picker_actions.xml gives CANCEL and OK the style behind buttonBarNegativeButtonStyle
+         and buttonBarPositiveButtonStyle, and ThemeOverlay.MaterialComponents.MaterialCalendar
+         points both at Widget.MaterialComponents.Button.TextButton.Dialog, whose android:textColor
+         is mtrl_text_btn_text_color_selector: colorPrimary at full alpha while the button is
+         enabled. On the #424242 dialog surface the default primary #3F51B5 reads 1.46 to 1, so the
+         two words are close to invisible in both dark modes. This style keeps everything else about
+         the material text button and swaps only that color, which the dark overlay above already
+         pins to white through colorOnSurface, for 10.05 to 1. The header band reads colorPrimary
+         too and is left alone. The light picker is untouched. -->
+    <style name="MoneyWalletDatePickerDarkActionButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/date_picker_dark_action_button_text</item>
+    </style>
+
+    <style name="MoneyWalletTimePickerLight" parent="ThemeOverlay.MaterialComponents.TimePicker"/>
+
+    <style name="MoneyWalletTimePickerDark" parent="ThemeOverlay.MaterialComponents.TimePicker">
+        <item name="colorSurface">@color/dialogDarkBackground</item>
+        <item name="colorOnSurface">@color/dialogDarkTextPrimary</item>
+        <item name="colorOnBackground">@color/dialogDarkTextPrimary</item>
+        <item name="android:colorBackground">@color/dialogDarkBackground</item>
+        <item name="android:textColorPrimary">@color/dialogDarkTextPrimary</item>
+        <item name="android:textColorSecondary">@color/dialogDarkTextSecondary</item>
+        <item name="android:textColorTertiary">@color/dialogDarkTextSecondary</item>
+        <item name="android:textColorHint">@color/dialogDarkTextHint</item>
+        <item name="colorControlNormal">@color/dialogDarkTextSecondary</item>
+        <item name="colorControlHighlight">@color/dialogDarkControlHighlight</item>
+    </style>
+
     <!-- The drawer icon morphs into the back arrow without spinning, as the drawer library's own
          style had it. -->
     <style name="MoneyWalletDrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">

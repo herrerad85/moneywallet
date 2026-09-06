@@ -22,12 +22,12 @@ package com.oriondev.moneywallet.ui.view.theme;
 import android.content.Context;
 import android.util.AttributeSet;
 
-import com.pnikosis.materialishprogress.ProgressWheel;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 
 /**
  * Created by andrea on 20/08/18.
  */
-public class ThemedProgressWheel extends ProgressWheel implements ThemeEngine.ThemeConsumer {
+public class ThemedProgressWheel extends CircularProgressIndicator implements ThemeEngine.ThemeConsumer {
 
     public ThemedProgressWheel(Context context) {
         super(context);
@@ -40,6 +40,6 @@ public class ThemedProgressWheel extends ProgressWheel implements ThemeEngine.Th
     @Override
     public void onApplyTheme(ITheme theme) {
         int background = theme.getColorWindowForeground();
-        setBarColor(Util.visibleOr(theme.getColorAccent(), background, theme.getBestIconColor(background)));
+        setIndicatorColor(Util.visibleOr(theme.getColorAccent(), background, theme.getBestIconColor(background)));
     }
 }

@@ -41,10 +41,10 @@
             <com.oriondev.moneywallet.ui.view.theme.ThemedViewPagerIndicator
                 android:id="@+id/view_pager_indicator"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/view_pie_chart_indicator_height"
                 android:layout_gravity="bottom|center_horizontal"
-                android:gravity="center_vertical"
-                app:dotRadius="@dimen/view_pie_chart_indicator_radius" />
+                app:tabPaddingStart="0dp"
+                app:tabPaddingEnd="0dp" />
 
         </androidx.viewpager.widget.ViewPager>
 

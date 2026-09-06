@@ -26,11 +26,12 @@
     android:layout_height="match_parent"
     android:padding="@dimen/view_recurrence_picker_padding">
 
-    <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialSpinner
+    <com.oriondev.moneywallet.ui.view.theme.ThemedSpinner
         android:id="@+id/type_spinner"
+        style="@style/Widget.AppCompat.Spinner.Underlined"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:clickable="false" />
+        android:spinnerMode="dropdown" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -43,12 +44,11 @@
             android:text="@string/recurrence_hint_from"
             app:theme_backgroundColor="colorWindowForeground" />
 
-        <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialSpinner
+        <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialEditText
             android:id="@+id/start_date_spinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:clickable="false" />
+            android:layout_marginStart="8dp" />
 
     </LinearLayout>
 
@@ -152,11 +152,12 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal" >
 
-        <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialSpinner
+        <com.oriondev.moneywallet.ui.view.theme.ThemedSpinner
             android:id="@+id/end_type_spinner"
+            style="@style/Widget.AppCompat.Spinner.Underlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:clickable="false" />
+            android:spinnerMode="dropdown" />
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -187,11 +188,10 @@
 
             </LinearLayout>
 
-            <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialSpinner
+            <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialEditText
                 android:id="@+id/end_date_spinner"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:clickable="false" />
+                android:layout_height="wrap_content" />
 
         </FrameLayout>
 

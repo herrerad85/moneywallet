@@ -24,37 +24,40 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialSpinner
+    <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialEditText
         android:id="@+id/start_date_spinner"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clickable="false" />
+        android:layout_height="wrap_content" />
 
-    <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialSpinner
+    <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialEditText
         android:id="@+id/end_date_spinner"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clickable="false" />
+        android:layout_height="wrap_content" />
 
-    <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialSpinner
+    <com.oriondev.moneywallet.ui.view.theme.ThemedSpinner
         android:id="@+id/group_type_spinner"
+        style="@style/Widget.AppCompat.Spinner.Underlined"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:spinnerMode="dropdown" />
 
-    <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialSpinner
+    <com.oriondev.moneywallet.ui.view.theme.ThemedSpinner
         android:id="@+id/overview_type_spinner"
+        style="@style/Widget.AppCompat.Spinner.Underlined"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:spinnerMode="dropdown" />
 
-    <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialSpinner
+    <com.oriondev.moneywallet.ui.view.theme.ThemedSpinner
         android:id="@+id/cash_flow_spinner"
+        style="@style/Widget.AppCompat.Spinner.Underlined"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:spinnerMode="dropdown" />
 
-    <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialSpinner
+    <com.oriondev.moneywallet.ui.view.theme.ThemedMaterialEditText
         android:id="@+id/category_spinner"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clickable="false" />
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

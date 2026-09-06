@@ -163,7 +163,7 @@
 
         <!-- Bottom layout: card buttons -->
 
-        <androidx.legacy.widget.Space
+        <Space
             android:id="@+id/button_bar_empty_fix"
             android:layout_width="match_parent"
             android:layout_height="@dimen/material_component_lists_card_action_button_padding"

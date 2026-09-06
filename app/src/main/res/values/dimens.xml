@@ -125,8 +125,6 @@
     <dimen name="material_component_card_margin">8dp</dimen>
     <dimen name="material_component_card_with_map_height">200dp</dimen>
 
-    <dimen name="material_component_progress_wheel_width">80dp</dimen>
-    <dimen name="material_component_progress_wheel_height">80dp</dimen>
 
     <dimen name="material_component_dialog_min_height">100dp</dimen>
 
@@ -193,6 +191,7 @@
     <dimen name="view_pie_chart_margin_top">12dp</dimen>
     <dimen name="view_pie_chart_margin_bottom">12dp</dimen>
     <dimen name="view_pie_chart_indicator_radius">5dp</dimen>
+    <dimen name="view_pie_chart_indicator_height">24dp</dimen>
 
     <dimen name="view_recurrence_picker_padding">8dp</dimen>
 

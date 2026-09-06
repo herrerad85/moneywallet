@@ -117,17 +117,6 @@ dependencies {
     implementation supportDependencies.annotations
     implementation supportDependencies.design
     implementation supportDependencies.preference
-    implementation 'com.pnikosis:materialish-progress:1.7'
-    // jcenter-orphaned. No 1.6.1 git tag ever existed (Bintray-only publish); rubensousa's repo only
-    // has buildable tags up to 1.5.1 on JitPack. kizitonwose/BottomSheetBuilder is a direct fork at
-    // the same 1.6.0 (same com.github.rubensousa.bottomsheetbuilder package), confirmed building on JitPack.
-    implementation 'com.github.kizitonwose:BottomSheetBuilder:1.6.0'
-    // jcenter-orphaned -> JitPack (same 2.4.1; the v-prefixed tag is the buildable ref).
-    implementation('com.github.philliphsu:BottomSheetPickers:v2.4.1') {
-        exclude group: 'com.android.support', module: 'appcompat-v7'
-        exclude group: 'com.android.support', module: 'design'
-    }
-    implementation 'com.github.florent37:expansionpanel:1.1.1'
     implementation 'commons-io:commons-io:2.6'
     // WebDAV needs PROPFIND and MKCOL. Android's HttpURLConnection validates the method against a
     // fixed list and throws ProtocolException for both, so a real HTTP client is not optional here.
@@ -158,8 +147,6 @@ dependencies {
     implementation 'com.github.aritraroy.PatternLockView:patternlockview:b69afae9c1'
     implementation 'androidx.biometric:biometric:1.1.0'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3'
-    implementation 'com.github.ronaldsmartin:Material-ViewPagerIndicator:1.0.4'
-    implementation 'com.jaredrummler:material-spinner:1.2.5'
     implementation 'org.dmfs:lib-recur:0.11.1'
     implementation 'com.opencsv:opencsv:4.4'
     implementation 'net.sourceforge.jexcelapi:jxl:2.6.12'

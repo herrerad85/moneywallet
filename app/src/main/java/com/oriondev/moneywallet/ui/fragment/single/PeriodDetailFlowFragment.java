@@ -36,7 +36,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.itsronald.widget.ViewPagerIndicator;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.background.PeriodDetailFlowLoader;
 import com.oriondev.moneywallet.model.Money;
@@ -78,7 +77,7 @@ public class PeriodDetailFlowFragment extends Fragment implements PeriodDetailFl
     private RecyclerView mRecyclerView;
 
     private PieChartViewPagerAdapter mPieChartViewPagerAdapter;
-    private ViewPagerIndicator mPieChartViewPagerIndicator;
+    private View mPieChartViewPagerIndicator;
     private PeriodDetailFlowAdapter mRecyclerViewAdapter;
 
     private Date mStartDate;

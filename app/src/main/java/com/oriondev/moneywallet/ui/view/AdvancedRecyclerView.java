@@ -30,7 +30,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.oriondev.moneywallet.R;
-import com.pnikosis.materialishprogress.ProgressWheel;
 
 /**
  * Created by andrea on 26/01/18.
@@ -38,7 +37,7 @@ import com.pnikosis.materialishprogress.ProgressWheel;
 public class AdvancedRecyclerView extends SwipeRefreshLayout {
 
     private RecyclerView mRecyclerView;
-    private ProgressWheel mProgressWheel;
+    private View mProgressWheel;
     private TextView mEmptyTextView;
 
     private int mEmptyTextRes;
@@ -64,10 +63,6 @@ public class AdvancedRecyclerView extends SwipeRefreshLayout {
 
     public RecyclerView getRecyclerView() {
         return mRecyclerView;
-    }
-
-    public ProgressWheel getProgressWheel() {
-        return mProgressWheel;
     }
 
     public TextView getTextView() {

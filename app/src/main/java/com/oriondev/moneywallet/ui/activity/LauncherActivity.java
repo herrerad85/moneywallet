@@ -42,7 +42,6 @@ import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.base.ThemedActivity;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
-import com.pnikosis.materialishprogress.ProgressWheel;
 
 import java.util.Arrays;
 
@@ -57,7 +56,7 @@ public class LauncherActivity extends ThemedActivity {
 
     private String mUpgradeLegacyEditionError = null;
 
-    private ProgressWheel mProgressWheel;
+    private View mProgressWheel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

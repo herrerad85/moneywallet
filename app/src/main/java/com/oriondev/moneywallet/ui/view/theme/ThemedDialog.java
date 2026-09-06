@@ -23,28 +23,36 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 
+import androidx.annotation.DrawableRes;
 import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.StringRes;
 import androidx.annotation.StyleRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.core.widget.NestedScrollView;
 
-import com.github.rubensousa.bottomsheetbuilder.BottomSheetBuilder;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.timepicker.MaterialTimePicker;
+import com.google.android.material.timepicker.TimeFormat;
 import com.oriondev.moneywallet.R;
-import com.philliphsu.bottomsheetpickers.date.DatePickerDialog;
-import com.philliphsu.bottomsheetpickers.time.BottomSheetTimePickerDialog;
-import com.philliphsu.bottomsheetpickers.time.numberpad.NumberPadTimePickerDialog;
 
 /**
  * Created by andrea on 20/08/18.
@@ -218,29 +226,122 @@ public class ThemedDialog {
         }
     }
 
-    public static DatePickerDialog.Builder buildDatePickerDialog(DatePickerDialog.OnDateSetListener listener, int year, int monthOfYear, int dayOfMonth) {
-        DatePickerDialog.Builder builder = new DatePickerDialog.Builder(listener, year, monthOfYear, dayOfMonth);
-        ITheme theme = ThemeEngine.getTheme();
-        builder.setThemeDark(theme.isDark());
-        builder.setAccentColor(theme.getColorAccent());
-        return builder;
+    /**
+     * The date picker, on the style the theme engine picks. The selection is milliseconds in UTC
+     * because that is the only thing MaterialDatePicker accepts; the caller owns the conversion.
+     * MaterialDatePicker.getThemeResId returns the id handed to setTheme as soon as it is non
+     * zero, and onCreateDialog then reads materialCalendarStyle off a Dialog built with it, which
+     * ThemeOverlay.MaterialComponents.MaterialCalendar sets. So the app theme needs no calendar
+     * attribute of its own.
+     */
+    public static MaterialDatePicker<Long> buildDatePickerDialog(long selectionUtcMillis) {
+        return MaterialDatePicker.Builder.datePicker()
+                .setTheme(ThemeEngine.getTheme().isDark() ? R.style.MoneyWalletDatePickerDark : R.style.MoneyWalletDatePickerLight)
+                .setSelection(selectionUtcMillis)
+                .build();
     }
 
-    public static NumberPadTimePickerDialog.Builder buildNumberPadTimePickerDialog(BottomSheetTimePickerDialog.OnTimeSetListener listener, boolean is24HourMode) {
-        NumberPadTimePickerDialog.Builder builder = new NumberPadTimePickerDialog.Builder(listener, is24HourMode);
-        ITheme theme = ThemeEngine.getTheme();
-        builder.setThemeDark(theme.isDark());
-        builder.setAccentColor(theme.getColorAccent());
-        return builder;
+    /**
+     * The time picker, opened on its keyboard input mode, which is the closest thing the library
+     * this replaces had to a number pad. MaterialTimePicker.getThemeResId short circuits on the
+     * override the same way, and otherwise goes through the null tolerant MaterialAttributes
+     * resolve, so it would not have thrown on the missing attribute. It is still handed a style,
+     * for dark mode.
+     */
+    public static MaterialTimePicker buildTimePickerDialog(boolean is24HourMode, int hourOfDay, int minute) {
+        return new MaterialTimePicker.Builder()
+                .setTheme(ThemeEngine.getTheme().isDark() ? R.style.MoneyWalletTimePickerDark : R.style.MoneyWalletTimePickerLight)
+                .setInputMode(MaterialTimePicker.INPUT_MODE_KEYBOARD)
+                .setTimeFormat(is24HourMode ? TimeFormat.CLOCK_24H : TimeFormat.CLOCK_12H)
+                .setHour(hourOfDay)
+                .setMinute(minute)
+                .build();
     }
 
-    public static BottomSheetBuilder buildBottomSheet(Context context) {
-        BottomSheetBuilder builder = new BottomSheetBuilder(context);
-        ITheme theme = ThemeEngine.getTheme();
-        builder.setBackgroundColor(theme.getColorCardBackground());
-        builder.setTitleTextColor(theme.getTextColorPrimary());
-        builder.setItemTextColor(theme.getTextColorPrimary());
-        builder.setIconTintColor(theme.getIconColor());
-        return builder;
+    public static BottomSheetMenuBuilder buildBottomSheet(Context context) {
+        return new BottomSheetMenuBuilder(context);
+    }
+
+    /**
+     * Which of the two bottom sheet styles the app draws a sheet with, picked the same way
+     * getDialogTheme picks between the two alert dialog styles.
+     */
+    @StyleRes
+    private static int getBottomSheetTheme() {
+        return ThemeEngine.getTheme().isDark() ? R.style.MoneyWalletBottomSheetDark : R.style.MoneyWalletBottomSheetLight;
+    }
+
+    /**
+     * A bottom sheet whose rows are a NavigationView menu built in code, which is the same widget
+     * the navigation drawer uses. It keeps the call shape of the builder it replaces: a title,
+     * then items, then a click listener, then createDialog.
+     */
+    public static class BottomSheetMenuBuilder {
+
+        private final BottomSheetDialog mDialog;
+        private final NavigationView mNavigationView;
+
+        private Menu mMenu;
+
+        private BottomSheetMenuBuilder(Context context) {
+            // BottomSheetDialog.getThemeResId(Context, int) uses the style id it is handed when
+            // that is non zero and otherwise resolves bottomSheetDialogTheme, falling back to
+            // Theme_Design_Light_BottomSheetDialog when the attribute is missing. The app theme
+            // has a Bridge parent and does not define it, so a sheet built without an explicit
+            // style would be light in all three dark modes.
+            mDialog = new BottomSheetDialog(context, getBottomSheetTheme());
+            mNavigationView = new NavigationView(mDialog.getContext());
+            // The sheet behind the menu already carries the surface color, from the style above,
+            // and rounds its own top corners, which an opaque menu background would square off.
+            mNavigationView.setBackgroundColor(Color.TRANSPARENT);
+            // NavigationView extends ScrimInsetsFrameLayout, whose constructor installs an inset
+            // listener that hands the bottom system window inset to NavigationMenuPresenter, and
+            // that pads the menu list by it. BottomSheetBehavior has already padded the sheet
+            // itself by the same inset earlier in the same dispatch, and returns the insets
+            // unconsumed, so the menu list would carry a second copy and the last row would sit a
+            // navigation bar height above the sheet floor. Replacing the listener leaves the list
+            // on its own design_navigation_padding_bottom.
+            ViewCompat.setOnApplyWindowInsetsListener(mNavigationView, (v, insets) -> WindowInsetsCompat.CONSUMED);
+            ITheme theme = ThemeEngine.getTheme();
+            mNavigationView.setItemTextColor(ColorStateList.valueOf(theme.getTextColorPrimary()));
+            mNavigationView.setItemIconTintList(ColorStateList.valueOf(theme.getIconColor()));
+            mMenu = mNavigationView.getMenu();
+        }
+
+        /**
+         * The header above the rows. NavigationView draws the title of a submenu as a group
+         * header, so every item added after this call goes into that submenu. Its color comes
+         * from android:textColorSecondary, which design_navigation_item_subheader.xml reads and
+         * both bottom sheet styles set.
+         */
+        public BottomSheetMenuBuilder addTitleItem(@StringRes int titleRes) {
+            mMenu = mMenu.addSubMenu(titleRes);
+            return this;
+        }
+
+        public BottomSheetMenuBuilder addItem(int id, @StringRes int titleRes, @DrawableRes int iconRes) {
+            mMenu.add(Menu.NONE, id, Menu.NONE, titleRes).setIcon(iconRes);
+            return this;
+        }
+
+        public BottomSheetMenuBuilder setItemClickListener(final NavigationView.OnNavigationItemSelectedListener listener) {
+            mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    // The builder this replaces dismissed the sheet on a tap, and every caller
+                    // opens something else from here.
+                    mDialog.dismiss();
+                    return listener.onNavigationItemSelected(item);
+                }
+
+            });
+            return this;
+        }
+
+        public BottomSheetDialog createDialog() {
+            mDialog.setContentView(mNavigationView);
+            return mDialog;
+        }
     }
 }

@@ -20,13 +20,18 @@
 package com.oriondev.moneywallet.ui.view;
 
 import android.content.Context;
-import androidx.annotation.Nullable;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.Nullable;
+import androidx.core.os.BundleCompat;
 
 import com.bumptech.glide.Glide;
 import com.oriondev.moneywallet.R;
@@ -40,12 +45,21 @@ import java.util.List;
  */
 public class AttachmentView extends LinearLayout {
 
+    private static final float INDICATOR_ROTATION_EXPANDED = 180f;
+    private static final float INDICATOR_ROTATION_COLLAPSED = 0f;
+
+    private static final String SS_SUPER = "AttachmentView::SavedState::Super";
+    private static final String SS_EXPANDED = "AttachmentView::SavedState::Expanded";
+
     private LinearLayout mContainer;
+    private ImageView mIndicator;
     private List<Attachment> mAttachments;
 
     private Controller mController;
 
     private boolean mAllowRemove = true;
+
+    private boolean mExpanded = true;
 
     public AttachmentView(Context context) {
         super(context);
@@ -66,6 +80,71 @@ public class AttachmentView extends LinearLayout {
         setOrientation(VERTICAL);
         View view = inflate(context, R.layout.layout_attachment_view, this);
         mContainer = view.findViewById(R.id.attachment_container);
+        mIndicator = view.findViewById(R.id.expansion_indicator_image_view);
+        applyExpanded(false);
+        view.findViewById(R.id.attachment_header).setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                setExpanded(mContainer.getVisibility() != VISIBLE);
+            }
+
+        });
+    }
+
+    private void setExpanded(boolean expanded) {
+        mExpanded = expanded;
+        applyExpanded(true);
+    }
+
+    /**
+     * The container fades in and out on its own because its parent carries
+     * android:animateLayoutChanges. Only the indicator has to be turned by hand, and on a
+     * restore it is set outright so a rotation does not replay as an animation.
+     */
+    private void applyExpanded(boolean animate) {
+        mContainer.setVisibility(mExpanded ? VISIBLE : GONE);
+        float rotation = mExpanded ? INDICATOR_ROTATION_EXPANDED : INDICATOR_ROTATION_COLLAPSED;
+        if (animate) {
+            mIndicator.animate().rotation(rotation);
+        } else {
+            mIndicator.setRotation(rotation);
+        }
+    }
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        Bundle state = new Bundle();
+        state.putParcelable(SS_SUPER, super.onSaveInstanceState());
+        state.putBoolean(SS_EXPANDED, mExpanded);
+        return state;
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        if (state instanceof Bundle) {
+            Bundle bundle = (Bundle) state;
+            super.onRestoreInstanceState(BundleCompat.getParcelable(bundle, SS_SUPER, Parcelable.class));
+            mExpanded = bundle.getBoolean(SS_EXPANDED, true);
+            applyExpanded(false);
+        } else {
+            super.onRestoreInstanceState(state);
+        }
+    }
+
+    /**
+     * The rows this view builds in addAttachment all come from one layout, so every row after
+     * the first repeats the ids of the row before it. Freezing and thawing self only keeps the
+     * saved state of this view to the one flag above and out of reach of those repeats.
+     */
+    @Override
+    protected void dispatchSaveInstanceState(SparseArray<Parcelable> container) {
+        dispatchFreezeSelfOnly(container);
+    }
+
+    @Override
+    protected void dispatchRestoreInstanceState(SparseArray<Parcelable> container) {
+        dispatchThawSelfOnly(container);
     }
 
     public void setController(Controller controller) {
