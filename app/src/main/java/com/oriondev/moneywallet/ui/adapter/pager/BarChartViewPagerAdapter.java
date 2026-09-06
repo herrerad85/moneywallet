@@ -26,14 +26,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.github.mikephil.charting.charts.BarChart;
-import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.formatter.IAxisValueFormatter;
-import com.github.mikephil.charting.formatter.IValueFormatter;
-import com.github.mikephil.charting.utils.ViewPortHandler;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.PeriodDetailSummaryData;
@@ -67,10 +63,10 @@ public class BarChartViewPagerAdapter  extends PagerAdapter {
             xAxis.setCenterAxisLabels(true);
             xAxis.setAxisMinimum(0f);
             xAxis.setAxisMaximum(mData.getPeriodCount());
-            xAxis.setValueFormatter(new IAxisValueFormatter() {
+            xAxis.setValueFormatter(new ValueFormatter() {
 
                 @Override
-                public String getFormattedValue(float value, AxisBase axis) {
+                public String getFormattedValue(float value) {
                     return String.valueOf((int) value + 1);
                 }
 
@@ -117,7 +113,7 @@ public class BarChartViewPagerAdapter  extends PagerAdapter {
         notifyDataSetChanged();
     }
 
-    private static class IMoneyFormatter implements IAxisValueFormatter, IValueFormatter {
+    private static class IMoneyFormatter extends ValueFormatter {
 
         private final CurrencyUnit mCurrencyUnit;
         private final MoneyFormatter mMoneyFormatter;
@@ -128,12 +124,7 @@ public class BarChartViewPagerAdapter  extends PagerAdapter {
         }
 
         @Override
-        public String getFormattedValue(float value, AxisBase axis) {
-            return mMoneyFormatter.getNotTintedString(mCurrencyUnit, (long) value);
-        }
-
-        @Override
-        public String getFormattedValue(float value, Entry entry, int dataSetIndex, ViewPortHandler viewPortHandler) {
+        public String getFormattedValue(float value) {
             return mMoneyFormatter.getNotTintedString(mCurrencyUnit, (long) value);
         }
     }

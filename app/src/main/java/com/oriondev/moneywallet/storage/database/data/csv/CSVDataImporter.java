@@ -3,6 +3,7 @@ package com.oriondev.moneywallet.storage.database.data.csv;
 import android.content.Context;
 
 import com.opencsv.CSVReaderHeaderAware;
+import com.opencsv.exceptions.CsvValidationException;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.MoneyScale;
 import com.oriondev.moneywallet.storage.database.Contract;
@@ -151,7 +152,7 @@ public class CSVDataImporter extends AbstractDataImporter {
      * second pass, and the transaction that pass runs in takes the rows before it back out.
      */
     private void readRows(CSVReaderHeaderAware reader, boolean write) throws IOException {
-        Map<String, String> lineMap = reader.readMap();
+        Map<String, String> lineMap = readMap(reader);
         while (lineMap != null) {
             try {
                 readRow(lineMap, write);
@@ -164,7 +165,20 @@ public class CSVDataImporter extends AbstractDataImporter {
                 }
                 throw new RuntimeException("Line " + reader.getLinesRead() + ": " + e.getMessage(), e);
             }
-            lineMap = reader.readMap();
+            lineMap = readMap(reader);
+        }
+    }
+
+    /**
+     * opencsv declares a checked CsvValidationException on readMap, and IOException is what
+     * every caller above this class already handles. A row the parser cannot read throws
+     * CsvMalformedLineException, which is already an IOException and passes through untouched.
+     */
+    private static Map<String, String> readMap(CSVReaderHeaderAware reader) throws IOException {
+        try {
+            return reader.readMap();
+        } catch (CsvValidationException e) {
+            throw new IOException(e);
         }
     }
 

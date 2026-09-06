@@ -28,13 +28,12 @@ import android.view.ViewGroup;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.RadarChart;
-import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.RadarData;
-import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.OverviewData;
 
@@ -77,10 +76,10 @@ public class OverviewChartViewPagerAdapter extends PagerAdapter {
                             xAxis.setAxisMinimum(-1f);
                         }
                         xAxis.setAxisMaximum(mOverviewData.getPeriodCount());
-                        xAxis.setValueFormatter(new IAxisValueFormatter() {
+                        xAxis.setValueFormatter(new ValueFormatter() {
 
                             @Override
-                            public String getFormattedValue(float value, AxisBase axis) {
+                            public String getFormattedValue(float value) {
                                 return String.valueOf((int) value + 1);
                             }
 
@@ -106,10 +105,10 @@ public class OverviewChartViewPagerAdapter extends PagerAdapter {
                         xAxis.setGranularity(1f);
                         xAxis.setAxisMinimum(-1f);
                         xAxis.setAxisMaximum(mOverviewData.getPeriodCount());
-                        xAxis.setValueFormatter(new IAxisValueFormatter() {
+                        xAxis.setValueFormatter(new ValueFormatter() {
 
                             @Override
-                            public String getFormattedValue(float value, AxisBase axis) {
+                            public String getFormattedValue(float value) {
                                 return String.valueOf((int) value + 1);
                             }
 

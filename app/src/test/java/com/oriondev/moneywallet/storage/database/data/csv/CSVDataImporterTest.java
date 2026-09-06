@@ -134,7 +134,7 @@ public class CSVDataImporterTest {
      * same file is a separate test below.
      */
     @Test
-    public void aByteOrderMarkDoesNotHideTheFirstColumn() throws IOException {
+    public void aByteOrderMarkDoesNotHideTheFirstColumn() throws Exception {
         File file = write("\uFEFF\"wallet\",\"currency\"\n\"Probe\",\"EUR\"\n");
         try (CSVReaderHeaderAware reader = new CSVReaderHeaderAware(CSVDataImporter.openFile(file))) {
             assertEquals("Probe", reader.readMap().get("wallet"));
@@ -148,7 +148,7 @@ public class CSVDataImporterTest {
      * its first character.
      */
     @Test
-    public void aFileWithoutOneKeepsItsFirstCharacter() throws IOException {
+    public void aFileWithoutOneKeepsItsFirstCharacter() throws Exception {
         File file = write("\"wallet\",\"currency\"\n\"Probe\",\"EUR\"\n");
         try (CSVReaderHeaderAware reader = new CSVReaderHeaderAware(CSVDataImporter.openFile(file))) {
             assertEquals("Probe", reader.readMap().get("wallet"));
@@ -161,7 +161,7 @@ public class CSVDataImporterTest {
      * column, so every row is refused for having no wallet column and nothing on screen shows why.
      */
     @Test
-    public void everyMarkAtTheFrontComesOff() throws IOException {
+    public void everyMarkAtTheFrontComesOff() throws Exception {
         File file = write("\uFEFF\uFEFF\"wallet\",\"currency\"\n\"Probe\",\"EUR\"\n");
         try (CSVReaderHeaderAware reader = new CSVReaderHeaderAware(CSVDataImporter.openFile(file))) {
             assertEquals("Probe", reader.readMap().get("wallet"));

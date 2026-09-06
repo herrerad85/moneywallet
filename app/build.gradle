@@ -109,58 +109,53 @@ configurations {
 }
 
 dependencies {
-    // common dependencies
-    implementation supportDependencies.appcompat
-    implementation supportDependencies.constraintlayout
-    implementation supportDependencies.recyclerview
-    implementation supportDependencies.cardview
-    implementation supportDependencies.annotations
-    implementation supportDependencies.design
-    implementation supportDependencies.preference
-    implementation 'commons-io:commons-io:2.6'
-    // WebDAV needs PROPFIND and MKCOL. Android's HttpURLConnection validates the method against a
-    // fixed list and throws ProtocolException for both, so a real HTTP client is not optional here.
-    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-    // Without this line documentfile resolves to 1.0.0, by way of legacy-support-core-utils.
-    // In 1.0.0 fromTreeUri drops the document id, so every folder under a granted tree
-    // resolves to the top of the tree. 1.0.1 keeps the id when the uri is a document uri.
-    implementation 'androidx.documentfile:documentfile:1.1.0'
-    implementation 'androidx.activity:activity:1.13.0'
-    implementation 'androidx.fragment:fragment:1.9.0'
-    // Used directly by the app and never declared until now.
-    implementation 'androidx.core:core:1.18.0'
-    implementation 'androidx.loader:loader:1.2.0'
-    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
-    implementation 'androidx.viewpager:viewpager:1.1.0'
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0'
-    implementation 'androidx.collection:collection:1.6.0'
-    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.3.0'
-    implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
-    implementation 'net.lingala.zip4j:zip4j:1.3.2'
-    implementation 'com.github.daniel-stoneuk:material-about-library:2.2.4'
-    implementation 'com.github.apl-devs:appintro:v4.2.3'
-    // jcenter-orphaned -> JitPack (aritraroy/PinLockView), same 2.1.0; Java package stays com.andrognito.pinlockview.
-    implementation 'com.github.aritraroy:PinLockView:2.1.0'
-    // jcenter-orphaned -> JitPack. aritraroy/PatternLockView has NO git tag/release, so it is pinned to the
-    // last code-bearing commit (b69afae9c1, libraryVersion 1.0.0). It is a multi-module project, hence the
-    // group.Repo:module coordinate form. Java package stays com.andrognito.patternlockview.
-    implementation 'com.github.aritraroy.PatternLockView:patternlockview:b69afae9c1'
-    implementation 'androidx.biometric:biometric:1.1.0'
-    implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3'
-    implementation 'org.dmfs:lib-recur:0.11.1'
-    implementation 'com.opencsv:opencsv:4.4'
-    implementation 'net.sourceforge.jexcelapi:jxl:2.6.12'
-    implementation 'com.itextpdf:itextpdf:5.5.13'
-    implementation 'com.github.bumptech.glide:glide:4.8.0'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.8.0'
+    implementation libs.androidx.activity
+    implementation libs.androidx.annotation
+    implementation libs.androidx.appcompat
+    implementation libs.androidx.biometric
+    implementation libs.androidx.cardview
+    implementation libs.androidx.collection
+    implementation libs.androidx.constraintlayout
+    implementation libs.androidx.coordinatorlayout
+    implementation libs.androidx.core
+    implementation libs.androidx.documentfile
+    implementation libs.androidx.drawerlayout
+    implementation libs.androidx.fragment
+    implementation libs.androidx.loader
+    implementation libs.androidx.localbroadcastmanager
+    implementation libs.androidx.preference
+    implementation libs.androidx.recyclerview
+    implementation libs.androidx.swiperefreshlayout
+    implementation libs.androidx.viewpager
+    implementation libs.appintro
+    implementation libs.commons.io
+    implementation libs.glide
+    implementation libs.itextpdf
+    implementation libs.jxl
+    implementation libs.lib.recur
+    implementation libs.material
+    implementation libs.material.about.library
+    implementation libs.mpandroidchart
+    implementation libs.okhttp
+    implementation(libs.opencsv) {
+        // Nothing on the CSVReaderHeaderAware or CSVWriter path names either artifact, and
+        // those two classes are all this app uses opencsv for. Taking the two artifacts out
+        // drops about 480 KB from the release APK, which is not minified, so nothing else
+        // would.
+        exclude group: 'commons-beanutils'
+        exclude group: 'org.apache.commons', module: 'commons-collections4'
+    }
+    implementation libs.patternlockview
+    implementation libs.pinlockview
+    implementation libs.zip4j
     // osm flavor
-    osmImplementation 'org.osmdroid:osmdroid-android:6.1.1'
+    osmImplementation libs.osmdroid
     // test dependencies (local tests)
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.mockito:mockito-core:5.23.0'
-    testImplementation 'org.robolectric:robolectric:4.16.1'
-    testImplementation 'androidx.test:core:1.7.0'
+    testImplementation libs.junit
+    testImplementation libs.mockito.core
+    testImplementation libs.robolectric
+    testImplementation libs.androidx.test.core
     // android test dependencies (on-device tests)
-    androidTestImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test:runner:1.7.0'
+    androidTestImplementation libs.junit
+    androidTestImplementation libs.androidx.test.runner
 }
