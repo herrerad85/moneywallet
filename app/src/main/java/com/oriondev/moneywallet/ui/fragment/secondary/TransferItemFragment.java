@@ -20,7 +20,6 @@
 package com.oriondev.moneywallet.ui.fragment.secondary;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -150,14 +149,8 @@ public class TransferItemFragment extends SecondaryPanelFragment implements Atta
 
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        Activity activity = getActivity();
-                        if (activity != null) {
-                            Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSFERS, getItemId());
-                            ContentResolver contentResolver = activity.getContentResolver();
-                            contentResolver.delete(uri, null, null);
-                            navigateBackSafely();
-                            showItemId(0L);
-                        }
+                        Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSFERS, getItemId());
+                        deleteItemInBackground(uri, null);
                     }
 
                 })

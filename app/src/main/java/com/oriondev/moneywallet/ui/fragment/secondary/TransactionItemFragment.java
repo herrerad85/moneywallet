@@ -20,7 +20,6 @@
 package com.oriondev.moneywallet.ui.fragment.secondary;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -46,7 +45,6 @@ import com.oriondev.moneywallet.model.Attachment;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
-import com.oriondev.moneywallet.storage.database.SQLiteDataException;
 import com.oriondev.moneywallet.ui.activity.NewEditItemActivity;
 import com.oriondev.moneywallet.ui.activity.NewEditTransactionActivity;
 import com.oriondev.moneywallet.ui.fragment.base.SecondaryPanelFragment;
@@ -154,24 +152,16 @@ public class TransactionItemFragment extends SecondaryPanelFragment implements L
 
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        Activity activity = getActivity();
-                        if (activity != null) {
-                            try {
-                                Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSACTIONS, getItemId());
-                                ContentResolver contentResolver = activity.getContentResolver();
-                                contentResolver.delete(uri, null, null);
-                                navigateBackSafely();
-                                showItemId(0L);
-                            } catch (SQLiteDataException e) {
-                                if (e.getErrorCode() == Contract.ErrorCode.TRANSACTION_USED_IN_TRANSFER) {
-                                    ThemedDialog.buildMaterialDialog(activity)
-                                            .setTitle(R.string.title_error)
-                                            .setMessage(R.string.message_error_delete_transaction_of_transfer)
-                                            .setPositiveButton(android.R.string.ok, null)
-                                            .show();
-                                }
+                        Uri uri = ContentUris.withAppendedId(DataContentProvider.CONTENT_TRANSACTIONS, getItemId());
+                        deleteItemInBackground(uri, e -> {
+                            if (e.getErrorCode() == Contract.ErrorCode.TRANSACTION_USED_IN_TRANSFER) {
+                                ThemedDialog.buildMaterialDialog(requireActivity())
+                                        .setTitle(R.string.title_error)
+                                        .setMessage(R.string.message_error_delete_transaction_of_transfer)
+                                        .setPositiveButton(android.R.string.ok, null)
+                                        .show();
                             }
-                        }
+                        });
                     }
 
                 })
