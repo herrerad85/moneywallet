@@ -1,17 +1,32 @@
 package com.oriondev.moneywallet.storage.database.data;
 
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 
-import com.oriondev.moneywallet.storage.database.Contract;
+import androidx.test.core.app.ApplicationProvider;
 
+import com.oriondev.moneywallet.model.CurrencyUnit;
+import com.oriondev.moneywallet.storage.database.Contract;
+import com.oriondev.moneywallet.storage.database.DataContentProvider;
+import com.oriondev.moneywallet.storage.database.TestDatabases;
+import com.oriondev.moneywallet.utils.CurrencyManager;
+
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
+import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -27,22 +42,82 @@ import static org.mockito.Mockito.when;
  * implies the other direction is flipped the first time it is opened and saved, and the wallet
  * total moves by twice the amount.
  *
- * The second is the two statements of the query that this change altered, the projection and the
- * arguments. The query cannot be run from a JVM test: entering getOrCreateCategory touches
- * DataContentProvider.CONTENT_CATEGORIES, a static Uri, and there is no Robolectric on the unit
- * test classpath, so a mocked resolver does not help. Those two are read out of the source, the
- * way NewEditTransactionActivitySourceTest reads its own, and so is the pair of statements that
- * carry what chooseCategory returns back to the caller. Text is a tripwire against a revert, not a
- * proof of behaviour: it cannot see whether the query returns the right rows. Comments are not
- * stripped, so a comment quoting the code being checked has to be reworded.
- *
- * Statements this change did not touch are left unpinned even where a mutation of them would be
- * serious, since pinning them would fail on a reformat of code this branch has no opinion about.
+ * The second is the lookup around it, driven for real. The importer is run through the content
+ * provider on a fresh database seeded the way a first launch seeds it, and the transaction row it
+ * writes is read back out of the same provider, so the projection, the selection arguments and the
+ * line that hands the cursor to the guard are all covered by what lands in the table.
  */
+@RunWith(RobolectricTestRunner.class)
 public class AbstractDataImporterTest {
 
-    private static final String SOURCE_PATH =
-            "src/main/java/com/oriondev/moneywallet/storage/database/data/AbstractDataImporter.java";
+    private static final String ICON = "{\"type\":\"color\",\"color\":\"#000000\",\"name\":\"T\"}";
+    private static final Date DATE = new Date(1565000000000L);
+    private static final long MONEY = 1200L;
+
+    private Context mContext;
+    private ContentResolver mResolver;
+    private TestImporter mImporter;
+    private CurrencyUnit mEuro;
+    private long mTaxId;
+    private String mTaxName;
+    private long mTransferId;
+    private String mTransferName;
+    private long mFood;
+
+    /** AbstractDataImporter is abstract, so something concrete has to exist before insertTransaction can be called. */
+    private static class TestImporter extends AbstractDataImporter {
+
+        TestImporter(Context context) throws IOException {
+            super(context, new File("unused.csv"));
+        }
+
+        @Override
+        public void importData() {
+        }
+
+        @Override
+        public int getRoundedAmounts() {
+            return 0;
+        }
+
+        @Override
+        public void close() {
+        }
+    }
+
+    @Before
+    public void setUp() throws IOException {
+        mContext = ApplicationProvider.getApplicationContext();
+        TestDatabases.useFreshDatabase(mContext);
+        mResolver = mContext.getContentResolver();
+        mImporter = new TestImporter(mContext);
+        mEuro = CurrencyManager.getCurrency("EUR");
+        assertNotNull("no EUR currency to import against", mEuro);
+        // the seeded names come from string resources and the ids from the order the seed runs
+        // in, so both are read out of the database and neither is written down here
+        Cursor cursor = mResolver.query(DataContentProvider.CONTENT_CATEGORIES,
+                new String[] {Contract.Category.ID, Contract.Category.NAME,
+                        Contract.Category.TYPE, Contract.Category.TAG}, null, null, null);
+        assertNotNull(cursor);
+        try {
+            while (cursor.moveToNext()) {
+                String tag = cursor.getString(cursor.getColumnIndex(Contract.Category.TAG));
+                if (Contract.CategoryTag.TAX.equals(tag)) {
+                    mTaxId = cursor.getLong(cursor.getColumnIndex(Contract.Category.ID));
+                    mTaxName = cursor.getString(cursor.getColumnIndex(Contract.Category.NAME));
+                } else if (Contract.CategoryTag.TRANSFER.equals(tag)) {
+                    mTransferId = cursor.getLong(cursor.getColumnIndex(Contract.Category.ID));
+                    mTransferName = cursor.getString(cursor.getColumnIndex(Contract.Category.NAME));
+                }
+            }
+        } finally {
+            cursor.close();
+        }
+        if (mTaxName == null || mTransferName == null) {
+            fail("the fresh database does not carry a seeded tax and transfer category");
+        }
+        mFood = insertCategory("Food", Contract.CategoryType.EXPENSE);
+    }
 
     private static final int TYPE = 0;
     private static final int TAG = 1;
@@ -171,118 +246,140 @@ public class AbstractDataImporterTest {
         assertEquals(40L, AbstractDataImporter.chooseCategory(cursor, Contract.Direction.EXPENSE));
     }
 
-    /**
-     * The two type arguments of the lookup have to be the integer the column holds. A CategoryType
-     * handed to String.valueOf becomes its constant name instead, which matches no row, and that
-     * is how the system argument was written, so that arm of the OR was dead and a CSV row naming a
-     * system category was matched or created as an ordinary category instead. The constant is named as well as the accessor,
-     * because reading getValue() off the wrong constant passes any check that looks only at the
-     * suffix and leaves the arm just as dead.
-     */
     @Test
-    public void bothTypeArgumentsOfTheLookupAreIntegers() throws IOException {
-        String statement = statementIn("selectionArgs = ");
-        for (int at = statement.indexOf("String.valueOf("); at >= 0;
-             at = statement.indexOf("String.valueOf(", at + 1)) {
-            int from = at + "String.valueOf(".length();
-            assertTrue("every type argument has to read getValue(), or it is a CategoryType "
-                    + "stringified to its constant name: " + statement,
-                    statement.startsWith("type.getValue()", from)
-                            || statement.startsWith("Contract.CategoryType.SYSTEM.getValue()", from));
+    public void anExpenseRowNamingTheSeededTaxCategoryLandsOnIt() {
+        int before = countCategories();
+        importRow(mTaxName, Contract.Direction.EXPENSE);
+        Cursor transaction = newestTransaction();
+        try {
+            assertEquals("the row did not reach the seeded tax category", mTaxId,
+                    transaction.getLong(transaction.getColumnIndex(Contract.Transaction.CATEGORY_ID)));
+            assertEquals(Contract.Direction.EXPENSE,
+                    transaction.getInt(transaction.getColumnIndex(Contract.Transaction.DIRECTION)));
+            assertEquals(MONEY,
+                    transaction.getLong(transaction.getColumnIndex(Contract.Transaction.MONEY)));
+        } finally {
+            transaction.close();
         }
-        assertEquals("the lookup takes a name and two type arguments: " + statement,
-                2, occurrences(statement, "String.valueOf("));
-        assertTrue("the system argument has to read the SYSTEM value, since any other constant "
-                + "leaves that arm of the OR matching nothing: " + statement,
-                statement.contains("Contract.CategoryType.SYSTEM.getValue()"));
-        assertTrue("the name has to be bound first, or every argument binds to the wrong "
-                + "placeholder: " + statement, statement.contains("{name,"));
+        assertEquals("a category was created for a name the database already holds",
+                before, countCategories());
     }
 
-    /**
-     * A column read through getColumnIndex but left out of the projection returns index -1 and
-     * throws when it is read. The same invariant NewEditTransactionActivitySourceTest pins for its
-     * own projection, and this change is what added the two columns the guard reads.
-     */
     @Test
-    public void everyColumnTheGuardReadsIsInTheProjection() throws IOException {
-        String projection = statementIn("projection = ");
-        String source = readSource().replaceAll("\\s+", "");
-        for (int at = source.indexOf("getColumnIndex(Contract.Category."); at >= 0;
-             at = source.indexOf("getColumnIndex(Contract.Category.", at + 1)) {
-            int from = at + "getColumnIndex(".length();
-            String column = source.substring(from, source.indexOf(')', from));
-            assertTrue(column + " is read out of the cursor but is not in the projection, so its "
-                    + "index is -1 and reading it throws: " + projection,
-                    projection.contains(column));
+    public void anIncomeRowNamingTheSeededTaxCategoryIsRefusedItAndGetsAnOrdinaryOne() {
+        int before = countCategories();
+        importRow(mTaxName, Contract.Direction.INCOME);
+        long categoryId = newestTransactionCategory();
+        assertNotEquals("an income row was filed on the tax category, which the editor would "
+                + "rewrite to an expense on the first save", mTaxId, categoryId);
+        Cursor category = categoryRow(categoryId);
+        try {
+            assertEquals(Contract.CategoryType.INCOME.getValue(),
+                    category.getInt(category.getColumnIndex(Contract.Category.TYPE)));
+            assertNull(category.getString(category.getColumnIndex(Contract.Category.TAG)));
+        } finally {
+            category.close();
         }
+        assertEquals(before + 1, countCategories());
     }
 
-    /**
-     * The lines that carry the answer back. Reverting the first to take the row the query returned
-     * puts the whole direction guard back to sleep, and the rest decide what an imported row is
-     * filed on. None of them is visible to a test of chooseCategory, since none is inside it.
-     */
     @Test
-    public void theLookupTakesTheGuardsAnswerAndReturnsIt() throws IOException {
-        String body = methodBody().replaceAll("\\s+", "");
-        assertTrue("getOrCreateCategory has to pick its row through chooseCategory, or the guard "
-                + "is dead code and an imported row can be filed on a category that rewrites its "
-                + "direction", body.contains("longcategoryId=chooseCategory(cursor,direction);"));
-        assertTrue("it has to return the id the guard chose, and only when the guard found one",
-                body.contains("if(categoryId!=NO_CATEGORY){returncategoryId;}"));
-    }
-
-    /** The named statement of getOrCreateCategory, whitespace stripped, without its semicolon. */
-    private static String statementIn(String assignment) throws IOException {
-        String body = methodBody();
-        int at = body.indexOf(assignment);
-        int end = at < 0 ? -1 : body.indexOf(';', at);
-        if (at < 0 || end < 0) {
-            fail("no \"" + assignment + "\" statement in getOrCreateCategory");
-        }
-        return body.substring(at, end).replaceAll("\\s+", "");
-    }
-
-    /**
-     * getOrCreateCategory, from its signature to its closing brace, found by counting braces so
-     * that whatever is written after it stays out.
-     */
-    private static String methodBody() throws IOException {
-        String source = readSource();
-        int at = source.indexOf(" getOrCreateCategory(");
-        if (at < 0) {
-            fail("getOrCreateCategory is gone from " + SOURCE_PATH + ", so this test no longer "
-                    + "checks anything. Point it at wherever the lookup moved to.");
-        }
-        int depth = 0;
-        for (int i = source.indexOf('{', at); i < source.length(); i++) {
-            if (source.charAt(i) == '{') {
-                depth++;
-            } else if (source.charAt(i) == '}' && --depth == 0) {
-                return source.substring(at, i);
+    public void aRowNamingTheTransferCategoryNeverLandsOnItInEitherDirection() {
+        int before = countCategories();
+        for (int direction : new int[] {Contract.Direction.EXPENSE, Contract.Direction.INCOME}) {
+            importRow(mTransferName, direction);
+            long categoryId = newestTransactionCategory();
+            assertNotEquals("a transfer is written as two legs, so both directions appear under "
+                    + "that tag and neither can be filed on it", mTransferId, categoryId);
+            Cursor category = categoryRow(categoryId);
+            try {
+                assertEquals(direction == Contract.Direction.INCOME
+                                ? Contract.CategoryType.INCOME.getValue()
+                                : Contract.CategoryType.EXPENSE.getValue(),
+                        category.getInt(category.getColumnIndex(Contract.Category.TYPE)));
+            } finally {
+                category.close();
             }
         }
-        fail("getOrCreateCategory has no closing brace");
-        return null;
+        assertEquals(before + 2, countCategories());
     }
 
-    private static int occurrences(String text, String token) {
-        int count = 0;
-        for (int at = text.indexOf(token); at >= 0; at = text.indexOf(token, at + 1)) {
-            count++;
+    @Test
+    public void aUserExpenseCategoryIsReusedByAnExpenseRowAndNotByAnIncomeRow() {
+        int before = countCategories();
+        importRow("Food", Contract.Direction.EXPENSE);
+        assertEquals("an expense row did not reuse the expense category of its own name",
+                mFood, newestTransactionCategory());
+        assertEquals(before, countCategories());
+
+        importRow("Food", Contract.Direction.INCOME);
+        long income = newestTransactionCategory();
+        assertNotEquals(mFood, income);
+        Cursor category = categoryRow(income);
+        try {
+            assertEquals("Food", category.getString(category.getColumnIndex(Contract.Category.NAME)));
+            assertEquals(Contract.CategoryType.INCOME.getValue(),
+                    category.getInt(category.getColumnIndex(Contract.Category.TYPE)));
+        } finally {
+            category.close();
         }
+        assertEquals(before + 1, countCategories());
+
+        importRow("Food", Contract.Direction.INCOME);
+        assertEquals("the second income row did not reuse the income category the first made",
+                income, newestTransactionCategory());
+        assertEquals(before + 1, countCategories());
+    }
+
+    private void importRow(String category, int direction) {
+        mImporter.insertTransaction("Cash", mEuro, category, DATE, MONEY, direction,
+                "desc", null, null, null, null);
+    }
+
+    private long insertCategory(String name, Contract.CategoryType type) {
+        ContentValues values = new ContentValues();
+        values.put(Contract.Category.NAME, name);
+        values.put(Contract.Category.ICON, ICON);
+        values.put(Contract.Category.TYPE, type.getValue());
+        values.put(Contract.Category.SHOW_REPORT, true);
+        return ContentUris.parseId(mResolver.insert(DataContentProvider.CONTENT_CATEGORIES, values));
+    }
+
+    private Cursor newestTransaction() {
+        Cursor cursor = mResolver.query(DataContentProvider.CONTENT_TRANSACTIONS,
+                new String[] {Contract.Transaction.ID, Contract.Transaction.CATEGORY_ID,
+                        Contract.Transaction.DIRECTION, Contract.Transaction.MONEY},
+                null, null, Contract.Transaction.ID + " DESC");
+        assertNotNull(cursor);
+        assertTrue("the importer wrote no transaction row", cursor.moveToFirst());
+        return cursor;
+    }
+
+    private long newestTransactionCategory() {
+        Cursor cursor = newestTransaction();
+        try {
+            return cursor.getLong(cursor.getColumnIndex(Contract.Transaction.CATEGORY_ID));
+        } finally {
+            cursor.close();
+        }
+    }
+
+    private Cursor categoryRow(long categoryId) {
+        Cursor cursor = mResolver.query(
+                ContentUris.withAppendedId(DataContentProvider.CONTENT_CATEGORIES, categoryId),
+                new String[] {Contract.Category.ID, Contract.Category.NAME,
+                        Contract.Category.TYPE, Contract.Category.TAG}, null, null, null);
+        assertNotNull(cursor);
+        assertTrue("no category row " + categoryId, cursor.moveToFirst());
+        return cursor;
+    }
+
+    private int countCategories() {
+        Cursor cursor = mResolver.query(DataContentProvider.CONTENT_CATEGORIES,
+                new String[] {Contract.Category.ID}, null, null, null);
+        assertNotNull(cursor);
+        int count = cursor.getCount();
+        cursor.close();
         return count;
-    }
-
-    private static String readSource() throws IOException {
-        File source = new File(SOURCE_PATH);
-        if (!source.exists()) {
-            source = new File("app/" + SOURCE_PATH);
-        }
-        if (!source.exists()) {
-            fail("could not find " + SOURCE_PATH + " from " + new File(".").getAbsolutePath());
-        }
-        return new String(Files.readAllBytes(source.toPath()), StandardCharsets.UTF_8);
     }
 }
