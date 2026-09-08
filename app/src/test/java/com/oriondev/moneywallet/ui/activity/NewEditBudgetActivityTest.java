@@ -1049,6 +1049,7 @@ public class NewEditBudgetActivityTest {
         Cursor row = budgetRow(root);
         assertEquals(350000L, row.getLong(row.getColumnIndex(Contract.Budget.MONEY)));
         assertTrue(row.isNull(row.getColumnIndex(Contract.Budget.RULE)));
+        assertEquals("2019-01-15", row.getString(row.getColumnIndex(Contract.Budget.RULE_START)));
         assertEquals("2019-03-15", row.getString(row.getColumnIndex(Contract.Budget.START_DATE)));
         assertEquals("2019-04-14", row.getString(row.getColumnIndex(Contract.Budget.END_DATE)));
         row.close();
@@ -1068,6 +1069,33 @@ public class NewEditBudgetActivityTest {
                 assertTrue(checkBox(activity, R.id.repeat_checkbox).isChecked());
             });
         }
+    }
+
+    @Test
+    public void aClosedPeriodWithASpentRuleDropsTheRuleAndKeepsItsAnchor() {
+        long root = insertBudget(Contract.BudgetType.EXPENSES, 300000L, "EUR",
+                new long[] {mWalletA}, null, "2019-03-15", "2019-04-14",
+                monthlyUntil(date("2019-01-15"), date("2019-02-01")).getRule(), "2019-01-15", null);
+        insertRolledPeriod(root, "2019-04-15", "2019-05-14");
+        int before = countBudgets();
+        try (ActivityScenario<NewEditBudgetActivity> scenario =
+                     ActivityScenario.launch(editIntent(root))) {
+            scenario.onActivity(activity -> {
+                assertEquals(View.GONE, activity.findViewById(R.id.repeat_checkbox).getVisibility());
+                moneyPicker(activity).setMoney(350000L);
+                save(activity);
+                assertTrue(activity.isFinishing());
+                assertNull(ShadowDialog.getLatestDialog());
+            });
+        }
+        assertEquals(before, countBudgets());
+        Cursor row = budgetRow(root);
+        assertEquals(350000L, row.getLong(row.getColumnIndex(Contract.Budget.MONEY)));
+        assertTrue(row.isNull(row.getColumnIndex(Contract.Budget.RULE)));
+        assertEquals("2019-01-15", row.getString(row.getColumnIndex(Contract.Budget.RULE_START)));
+        assertEquals("2019-03-15", row.getString(row.getColumnIndex(Contract.Budget.START_DATE)));
+        assertEquals("2019-04-14", row.getString(row.getColumnIndex(Contract.Budget.END_DATE)));
+        row.close();
     }
 
     @Test
@@ -1145,7 +1173,6 @@ public class NewEditBudgetActivityTest {
         ContentValues moved = new ContentValues();
         moved.put(Contract.Budget.TYPE, Contract.BudgetType.EXPENSES.getValue());
         moved.put(Contract.Budget.MONEY, 300000L);
-        moved.put(Contract.Budget.CURRENCY, "EUR");
         moved.put(Contract.Budget.WALLET_IDS, idList(new long[] {mWalletA}));
         moved.put(Contract.Budget.START_DATE, "2030-01-01");
         moved.put(Contract.Budget.END_DATE, "2030-01-31");
@@ -1197,6 +1224,60 @@ public class NewEditBudgetActivityTest {
     }
 
     @Test
+    public void aRollOpeningALaterPeriodThenTurningRepeatOffKeepsTheAnchor() {
+        long root = insertBudget(Contract.BudgetType.EXPENSES, 300000L, "EUR",
+                new long[] {mWalletA}, null, "2019-03-15", "2019-04-14", null, "2019-01-15", null);
+        long live = insertRolledPeriod(root, "2019-04-15", "2019-05-14");
+        int before;
+        try (ActivityScenario<NewEditBudgetActivity> scenario =
+                     ActivityScenario.launch(editIntent(live))) {
+            long later = insertRolledPeriod(live, "2019-05-15", "2019-06-14");
+            assertEquals(uuidOf(root) + ":2019-05-15", uuidOf(later));
+            before = countBudgets();
+            scenario.onActivity(activity -> {
+                checkBox(activity, R.id.repeat_checkbox).performClick();
+                assertFalse(checkBox(activity, R.id.repeat_checkbox).isChecked());
+                save(activity);
+                assertTrue(activity.isFinishing());
+                assertNull(ShadowDialog.getLatestDialog());
+            });
+        }
+        assertEquals(before, countBudgets());
+        Cursor row = budgetRow(live);
+        assertTrue(row.isNull(row.getColumnIndex(Contract.Budget.RULE)));
+        assertEquals("2019-01-15", row.getString(row.getColumnIndex(Contract.Budget.RULE_START)));
+        assertEquals("2019-04-15", row.getString(row.getColumnIndex(Contract.Budget.START_DATE)));
+        assertEquals("2019-05-14", row.getString(row.getColumnIndex(Contract.Budget.END_DATE)));
+        row.close();
+    }
+
+    @Test
+    public void theLivePeriodOfAChainTurnedOffDropsTheAnchor() {
+        long root = insertBudget(Contract.BudgetType.EXPENSES, 300000L, "EUR",
+                new long[] {mWalletA}, null, "2019-03-15", "2019-04-14", null, "2019-01-15", null);
+        long live = insertRolledPeriod(root, "2019-04-15", "2019-05-14");
+        int before = countBudgets();
+        try (ActivityScenario<NewEditBudgetActivity> scenario =
+                     ActivityScenario.launch(editIntent(live))) {
+            scenario.onActivity(activity -> {
+                assertTrue(checkBox(activity, R.id.repeat_checkbox).isChecked());
+                checkBox(activity, R.id.repeat_checkbox).performClick();
+                assertFalse(checkBox(activity, R.id.repeat_checkbox).isChecked());
+                save(activity);
+                assertTrue(activity.isFinishing());
+                assertNull(ShadowDialog.getLatestDialog());
+            });
+        }
+        assertEquals(before, countBudgets());
+        Cursor row = budgetRow(live);
+        assertTrue(row.isNull(row.getColumnIndex(Contract.Budget.RULE)));
+        assertTrue(row.isNull(row.getColumnIndex(Contract.Budget.RULE_START)));
+        assertEquals("2019-04-15", row.getString(row.getColumnIndex(Contract.Budget.START_DATE)));
+        assertEquals("2019-05-14", row.getString(row.getColumnIndex(Contract.Budget.END_DATE)));
+        row.close();
+    }
+
+    @Test
     public void aWalletDeletedWhileTheEditorIsOpenReachesTheRefusalDialog() {
         long budget = insertAprilCategoryBudget(new long[] {mWalletA, mUnusedWallet});
         int before = countBudgets();
@@ -1210,6 +1291,7 @@ public class NewEditBudgetActivityTest {
                 TextView message = dialog.findViewById(android.R.id.message);
                 assertEquals(activity.getString(R.string.error_input_missing_multiple_wallets),
                         message.getText().toString());
+                assertFalse(activity.isFinishing());
             });
         }
         assertEquals(before, countBudgets());
@@ -1269,6 +1351,85 @@ public class NewEditBudgetActivityTest {
         assertEquals(APRIL_END, row.getString(row.getColumnIndex(Contract.Budget.END_DATE)));
         row.close();
         assertEquals(Arrays.asList(mWalletA, mWalletB), walletIdsOf(budget));
+    }
+
+    @Test
+    public void theOnlyWalletMovedOntoAnotherCurrencyWhileTheEditorIsOpenSavesInThatCurrency() {
+        long budget = insertBudget(Contract.BudgetType.EXPENSES, 900000L, "EUR",
+                new long[] {mWalletA}, null, APRIL_START, APRIL_END, null, null, null);
+        int before = countBudgets();
+        try (ActivityScenario<NewEditBudgetActivity> scenario =
+                     ActivityScenario.launch(editIntent(budget))) {
+            ContentValues yen = new ContentValues();
+            yen.put(Contract.Wallet.CURRENCY, "JPY");
+            mResolver.update(ContentUris.withAppendedId(DataContentProvider.CONTENT_WALLETS,
+                    mWalletA), yen, null, null);
+            scenario.onActivity(activity -> {
+                moneyPicker(activity).setMoney(999999L);
+                save(activity);
+                assertTrue(activity.isFinishing());
+                assertNull(ShadowDialog.getLatestDialog());
+            });
+        }
+        assertEquals(before, countBudgets());
+        Cursor row = budgetRow(budget);
+        assertEquals(999999L, row.getLong(row.getColumnIndex(Contract.Budget.MONEY)));
+        assertEquals("JPY", row.getString(row.getColumnIndex(Contract.Budget.CURRENCY)));
+        assertEquals(APRIL_START, row.getString(row.getColumnIndex(Contract.Budget.START_DATE)));
+        assertEquals(APRIL_END, row.getString(row.getColumnIndex(Contract.Budget.END_DATE)));
+        row.close();
+        assertEquals(Collections.singletonList(mWalletA), walletIdsOf(budget));
+    }
+
+    @Test
+    public void aNewBudgetOverTheOnlyWalletMovedOntoAnotherCurrencySavesInThatCurrency() {
+        PreferenceManager.setCurrentWallet(mContext, mWalletA);
+        int before = countBudgets();
+        try (ActivityScenario<NewEditBudgetActivity> scenario =
+                     ActivityScenario.launch(newItemIntent())) {
+            scenario.onActivity(activity -> {
+                moneyPicker(activity).setMoney(500000L);
+                startDatePicker(activity).setCurrentDateTime(date(APRIL_START));
+                endDatePicker(activity).setCurrentDateTime(date(APRIL_END));
+                ContentValues yen = new ContentValues();
+                yen.put(Contract.Wallet.CURRENCY, "JPY");
+                mResolver.update(ContentUris.withAppendedId(DataContentProvider.CONTENT_WALLETS,
+                        mWalletA), yen, null, null);
+                save(activity);
+                assertTrue(activity.isFinishing());
+                assertNull(ShadowDialog.getLatestDialog());
+            });
+        }
+        assertEquals(before + 1, countBudgets());
+        long budget = newestBudget();
+        Cursor row = budgetRow(budget);
+        assertEquals(500000L, row.getLong(row.getColumnIndex(Contract.Budget.MONEY)));
+        assertEquals("JPY", row.getString(row.getColumnIndex(Contract.Budget.CURRENCY)));
+        assertEquals(APRIL_START, row.getString(row.getColumnIndex(Contract.Budget.START_DATE)));
+        assertEquals(APRIL_END, row.getString(row.getColumnIndex(Contract.Budget.END_DATE)));
+        row.close();
+        assertEquals(Collections.singletonList(mWalletA), walletIdsOf(budget));
+    }
+
+    @Test
+    public void aCurrencySentWithABudgetIsReplacedByItsWalletsCurrency() {
+        long budget = insertBudget(Contract.BudgetType.EXPENSES, 900000L, "JPY",
+                new long[] {mWalletA}, null, APRIL_START, APRIL_END, null, null, null);
+        Cursor row = budgetRow(budget);
+        assertEquals("EUR", row.getString(row.getColumnIndex(Contract.Budget.CURRENCY)));
+        row.close();
+        ContentValues sent = new ContentValues();
+        sent.put(Contract.Budget.TYPE, Contract.BudgetType.EXPENSES.getValue());
+        sent.put(Contract.Budget.MONEY, 900000L);
+        sent.put(Contract.Budget.CURRENCY, "JPY");
+        sent.put(Contract.Budget.WALLET_IDS, idList(new long[] {mWalletA}));
+        sent.put(Contract.Budget.START_DATE, APRIL_START);
+        sent.put(Contract.Budget.END_DATE, APRIL_END);
+        mResolver.update(ContentUris.withAppendedId(DataContentProvider.CONTENT_BUDGETS, budget),
+                sent, null, null);
+        row = budgetRow(budget);
+        assertEquals("EUR", row.getString(row.getColumnIndex(Contract.Budget.CURRENCY)));
+        row.close();
     }
 
     @Test

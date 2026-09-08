@@ -147,7 +147,8 @@ public class RecurrenceHandlerIntentService extends JobIntentService {
     }
 
     /**
-     * Everything a budget row carries except its dates and its rule, which every caller sets.
+     * Everything a budget row carries except its dates, its rule and its currency. Every caller
+     * sets the dates and the rule, and the insert takes the currency from the wallets.
      */
     private ContentValues copyBudget(Cursor cursor) {
         ContentValues contentValues = new ContentValues();
@@ -158,7 +159,6 @@ public class RecurrenceHandlerIntentService extends JobIntentService {
             contentValues.put(Contract.Budget.CATEGORY_ID, cursor.getLong(cursor.getColumnIndex(Contract.Budget.CATEGORY_ID)));
         }
         contentValues.put(Contract.Budget.MONEY, cursor.getLong(cursor.getColumnIndex(Contract.Budget.MONEY)));
-        contentValues.put(Contract.Budget.CURRENCY, cursor.getString(cursor.getColumnIndex(Contract.Budget.CURRENCY)));
         contentValues.put(Contract.Budget.TAG, cursor.getString(cursor.getColumnIndex(Contract.Budget.TAG)));
         contentValues.put(Contract.Budget.RULE_START, cursor.getString(cursor.getColumnIndex(Contract.Budget.RULE_START)));
         contentValues.put(Contract.Budget.WALLET_IDS, cursor.getString(cursor.getColumnIndex(Contract.Budget.WALLET_IDS)));

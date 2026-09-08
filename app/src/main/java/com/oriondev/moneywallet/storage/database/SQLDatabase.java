@@ -3331,7 +3331,7 @@ import java.util.function.Supplier;
         if (walletIds == null || walletIds.length == 0) {
             throw new SQLiteDataException(Contract.ErrorCode.WALLETS_NOT_FOUND, "No wallet id provided");
         }
-        checkWalletsConsistency(walletIds);
+        String currency = checkWalletsConsistency(walletIds);
         long[] categoryIds = budgetCategoryIds(contentValues);
         ContentValues cv = new ContentValues();
         cv.put(Schema.Budget.TYPE, contentValues.getAsInteger(Contract.Budget.TYPE));
@@ -3343,7 +3343,7 @@ import java.util.function.Supplier;
         cv.put(Schema.Budget.START_DATE, contentValues.getAsString(Contract.Budget.START_DATE));
         cv.put(Schema.Budget.END_DATE, contentValues.getAsString(Contract.Budget.END_DATE));
         cv.put(Schema.Budget.MONEY, contentValues.getAsLong(Contract.Budget.MONEY));
-        cv.put(Schema.Budget.CURRENCY, contentValues.getAsString(Contract.Budget.CURRENCY));
+        cv.put(Schema.Budget.CURRENCY, currency);
         cv.put(Schema.Budget.RULE, contentValues.getAsString(Contract.Budget.RULE));
         cv.put(Schema.Budget.RULE_START, contentValues.getAsString(Contract.Budget.RULE_START));
         cv.put(Schema.Budget.TAG, contentValues.getAsString(Contract.Budget.TAG));
@@ -3417,7 +3417,7 @@ import java.util.function.Supplier;
         if (walletIds == null || walletIds.length == 0) {
             throw new SQLiteDataException(Contract.ErrorCode.WALLETS_NOT_FOUND, "No wallet id provided");
         }
-        checkWalletsConsistency(walletIds);
+        String currency = checkWalletsConsistency(walletIds);
         long[] categoryIds = budgetCategoryIds(contentValues);
         ContentValues cv = new ContentValues();
         cv.put(Schema.Budget.TYPE, contentValues.getAsInteger(Contract.Budget.TYPE));
@@ -3429,7 +3429,7 @@ import java.util.function.Supplier;
         cv.put(Schema.Budget.START_DATE, contentValues.getAsString(Contract.Budget.START_DATE));
         cv.put(Schema.Budget.END_DATE, contentValues.getAsString(Contract.Budget.END_DATE));
         cv.put(Schema.Budget.MONEY, contentValues.getAsLong(Contract.Budget.MONEY));
-        cv.put(Schema.Budget.CURRENCY, contentValues.getAsString(Contract.Budget.CURRENCY));
+        cv.put(Schema.Budget.CURRENCY, currency);
         if (contentValues.containsKey(Contract.Budget.RULE)) {
             cv.put(Schema.Budget.RULE, contentValues.getAsString(Contract.Budget.RULE));
         }
@@ -3561,9 +3561,10 @@ import java.util.function.Supplier;
      * This method is used internally to check if the given array of wallet ids is consistent.
      * If two or more different currencies are found, an exception is thrown.
      * @param walletIds array of wallet id.
+     * @return the currency every wallet in the array has.
      * @throws SQLiteDataException if one of the id is not found or wallets are not consistent.
      */
-    private void checkWalletsConsistency(long[] walletIds) {
+    private String checkWalletsConsistency(long[] walletIds) {
         String savedCurrency = null;
         String[] projection = new String[] {
                 Contract.Wallet.CURRENCY
@@ -3587,6 +3588,7 @@ import java.util.function.Supplier;
                 }
             }
         }
+        return savedCurrency;
     }
 
     /**

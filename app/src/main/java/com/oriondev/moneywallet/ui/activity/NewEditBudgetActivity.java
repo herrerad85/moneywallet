@@ -215,9 +215,9 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
 
         });
         // before the one below, because a wallet naming a currency this installation does not
-        // have has no currency to compare and the comparison there would pass it through to
-        // onSaveChanges, which reads the iso straight off it. Validators run in order and stop at
-        // the first refusal, so this is also what decides the message the user is shown
+        // have has no currency to compare and the comparison there would pass it through.
+        // Validators run in order and stop at the first refusal, so this is also what decides the
+        // message the user is shown
         mWalletsEditText.addValidator(new Validator() {
 
             @NonNull
@@ -875,10 +875,13 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
                 contentValues.put(Contract.Budget.START_DATE, DateUtils.getSQLDateString(mStartDatePicker.getCurrentDateTime()));
                 contentValues.put(Contract.Budget.END_DATE, DateUtils.getSQLDateString(mEndDatePicker.getCurrentDateTime()));
                 contentValues.putNull(Contract.Budget.RULE);
-                contentValues.putNull(Contract.Budget.RULE_START);
+                // updateBudget writes a column whose key is present even when null, so this nulled
+                // the day the chain was counted from on a period the chain had already moved past
+                if (!isSupersededPeriod()) {
+                    contentValues.putNull(Contract.Budget.RULE_START);
+                }
             }
             contentValues.put(Contract.Budget.MONEY, mMoneyPicker.getCurrentMoney());
-            contentValues.put(Contract.Budget.CURRENCY, mWalletsPicker.getCurrentWallets()[0].getCurrency().getIso());
             contentValues.put(Contract.Budget.WALLET_IDS, Contract.getObjectIds(mWalletsPicker.getCurrentWallets()));
             ContentResolver contentResolver = getContentResolver();
             try {
@@ -908,6 +911,7 @@ public class NewEditBudgetActivity extends NewEditItemActivity implements MoneyP
                             .setPositiveButton(android.R.string.ok, null)
                             .show();
                 }
+                return;
             }
             RecurrenceBroadcastReceiver.scheduleRecurrenceTask(this);
             setResult(Activity.RESULT_OK);

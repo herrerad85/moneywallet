@@ -249,6 +249,8 @@ public class Contract {
         public static final String START_DATE = Schema.Budget.START_DATE;
         public static final String END_DATE = Schema.Budget.END_DATE;
         public static final String MONEY = Schema.Budget.MONEY;
+        // on an insert and on an update through DataContentProvider the value sent is ignored and
+        // the currency is taken from the budget's wallets
         public static final String CURRENCY = Schema.Budget.CURRENCY;
         public static final String RULE = Schema.Budget.RULE;
         public static final String RULE_START = Schema.Budget.RULE_START;
