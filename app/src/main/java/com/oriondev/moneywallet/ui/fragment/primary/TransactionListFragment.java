@@ -59,6 +59,8 @@ public class TransactionListFragment extends CursorListFragment implements Trans
 
     private static final String[] HIDDEN_PROJECTION = new String[] {Contract.Transaction.DATE};
 
+    private TransactionCursorAdapter mAdapter;
+
     @Override
     protected void onPrepareRecyclerView(AdvancedRecyclerView recyclerView) {
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -68,7 +70,21 @@ public class TransactionListFragment extends CursorListFragment implements Trans
     @Override
     protected AbstractCursorAdapter onCreateAdapter() {
         // the only one of the four that opens the report from a header click
-        return new TransactionCursorAdapter(this, true);
+        mAdapter = new TransactionCursorAdapter(this, true);
+        return mAdapter;
+    }
+
+    /**
+     * Which periods have their transactions hidden is stored once for the whole application, and
+     * this list is not the only one reading it, since a filtered transactions list opens over this
+     * one. Asking again here is what stops the one underneath drawing a state another has already
+     * changed, which would make its next arrow tap do nothing. The rows themselves need no
+     * reloading, since the loader is watching the transactions already.
+     */
+    @Override
+    public void onResume() {
+        super.onResume();
+        mAdapter.reloadCollapsedPeriods();
     }
 
     @Override

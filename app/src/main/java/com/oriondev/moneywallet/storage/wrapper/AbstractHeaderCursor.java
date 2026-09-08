@@ -79,6 +79,12 @@ public abstract class AbstractHeaderCursor<H> extends AbstractCursor {
         return mIsHeader;
     }
 
+    /** Whether that position holds a header, answered from the index list without moving any cursor. */
+    public boolean isHeaderAt(int position) {
+        return position >= 0 && position < mIndices.size()
+                && mIndices.get(position).getL() == TYPE_HEADER;
+    }
+
     protected void addHeader(H header) {
         int id = mHeaders.size();
         mHeaders.put(id, header);

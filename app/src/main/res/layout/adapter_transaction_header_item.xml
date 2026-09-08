@@ -25,14 +25,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="@dimen/material_component_lists_header_height"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp"
     android:background="?attr/selectableItemBackground">
 
     <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
         android:id="@+id/left_text_view"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:layout_marginLeft="@dimen/material_component_lists_header_start_margin"
         android:layout_marginStart="@dimen/material_component_lists_header_start_margin"
         android:layout_marginEnd="8dp"
@@ -54,9 +53,7 @@
         android:layout_marginRight="8dp"
         android:textSize="@dimen/material_component_lists_header_text_size"
         app:layout_constraintTop_toTopOf="@+id/left_text_view"
-        app:layout_constraintEnd_toStartOf="@+id/report_image_view"
-        app:layout_goneMarginEnd="@dimen/material_component_lists_header_end_margin"
-        app:layout_goneMarginRight="@dimen/material_component_lists_header_end_margin"
+        app:layout_constraintEnd_toStartOf="@+id/period_toggle_image_view"
         app:theme_textColor="textColorPrimary"
         tools:text="$ 600.00" />
 
@@ -78,16 +75,17 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
+        android:layout_marginBottom="8dp"
         android:layout_marginLeft="@dimen/material_component_lists_header_start_margin"
         android:layout_marginStart="@dimen/material_component_lists_header_start_margin"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:orientation="horizontal"
         app:layout_constraintTop_toBottomOf="@+id/header_line_barrier"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/report_image_view"
-        app:layout_goneMarginEnd="@dimen/material_component_lists_header_end_margin"
-        app:layout_goneMarginRight="@dimen/material_component_lists_header_end_margin">
+        app:layout_constraintEnd_toStartOf="@+id/period_toggle_image_view">
 
         <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
             android:id="@+id/income_label_text_view"
@@ -147,6 +145,29 @@
             tools:text="$ 720.00" />
 
     </LinearLayout>
+
+    <!--
+      The fold arrow. Its gone margin puts its glyph the same 16dp from the edge of the row that
+      the report arrow's keeps. The height is fixed at 48dp because a height taken from the parent
+      constraints excluded the paddings and came out at 37.7dp on a device. The row's 8dp of top
+      and bottom space is carried as margins on the text, not as padding on the row, since a fixed
+      size child taller than a padded wrap content box grows the box instead of centering in it.
+    -->
+    <com.oriondev.moneywallet.ui.view.theme.ThemedImageView
+        android:id="@+id/period_toggle_image_view"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_expand_more_black_24dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/report_image_view"
+        app:layout_goneMarginEnd="4dp"
+        app:layout_goneMarginRight="4dp"
+        app:theme_backgroundColor="colorWindowForeground"
+        tools:ignore="ContentDescription" />
 
     <com.oriondev.moneywallet.ui.view.theme.ThemedImageView
         android:id="@+id/report_image_view"

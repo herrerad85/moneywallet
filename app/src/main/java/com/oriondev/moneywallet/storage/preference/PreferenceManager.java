@@ -73,6 +73,7 @@ public class PreferenceManager {
 
     private static final String MAP_TILE_SERVER = "map_tile_server";
     private static final String COLLAPSED_CATEGORIES = "collapsed_categories";
+    private static final String COLLAPSED_PERIODS = "collapsed_periods";
 
     private static final String LAST_DATA_CHANGE_TIME = "last_data_change_time";
 
@@ -153,6 +154,26 @@ public class PreferenceManager {
 
     public static void setCollapsedCategories(Set<String> categoryIds) {
         mPreferences.edit().putStringSet(COLLAPSED_CATEGORIES, categoryIds).apply();
+    }
+
+    /**
+     * @return the keys of the periods whose transactions the user has hidden on the transactions
+     *          list and on a filtered transactions list. A key is the group type number, a colon,
+     *          and the header's start date exactly as the list's header cursor reports it, so a
+     *          folded month and a folded day that begin on the same date are two different keys.
+     *          Nothing stored means nothing hidden, which is how the list has always been drawn.
+     *          Stored once, not held per list, so that two lists cannot write each other's hiding
+     *          away. Each list still has to read it again to redraw, which
+     *          TransactionListFragment does when it resumes.
+     */
+    public static Set<String> getCollapsedPeriods() {
+        // A copy, because getStringSet is documented as returning a set the caller must not
+        // modify, and the callers here are building the next value out of this one.
+        return new HashSet<>(mPreferences.getStringSet(COLLAPSED_PERIODS, Collections.<String>emptySet()));
+    }
+
+    public static void setCollapsedPeriods(Set<String> periodKeys) {
+        mPreferences.edit().putStringSet(COLLAPSED_PERIODS, periodKeys).apply();
     }
 
     public static void setCurrentWallet(Context context, long walletId) {

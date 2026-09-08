@@ -33,6 +33,8 @@ import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.model.Icon;
 import com.oriondev.moneywallet.model.Money;
 import com.oriondev.moneywallet.storage.database.Contract;
+import com.oriondev.moneywallet.storage.preference.PreferenceManager;
+import com.oriondev.moneywallet.storage.wrapper.AbstractHeaderCursor;
 import com.oriondev.moneywallet.storage.wrapper.TransactionHeaderCursor;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.DateFormatter;
@@ -40,7 +42,11 @@ import com.oriondev.moneywallet.utils.DateUtils;
 import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by andrea on 03/03/18.
@@ -67,6 +73,22 @@ public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView
     private int mIndexCurrency;
 
     private MoneyFormatter mMoneyFormatter;
+
+    /**
+     * Cursor row of each row on screen, in order. Hiding a period's transactions leaves their
+     * cursor rows out of this list, so every position this adapter is asked about is read
+     * through it.
+     */
+    private final List<Integer> mVisibleRows = new ArrayList<>();
+
+    /**
+     * Keys of the periods whose transactions are hidden, as of the last rebuild. Read from the
+     * preference every time instead of kept, because the two lists that draw headers with this
+     * adapter, the transactions list and a filtered transactions list, share one stored set and
+     * are alive at once, since the filtered list opens over the main one. An adapter that
+     * trusted its own copy would write the others' hiding away.
+     */
+    private final Set<String> mCollapsedPeriods = new HashSet<>();
 
     public TransactionCursorAdapter(ActionListener actionListener) {
         this(actionListener, false);
@@ -101,6 +123,113 @@ public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView
         mIndexTransactionDate = cursor.getColumnIndex(Contract.Transaction.DATE);
         mIndexTransactionMoney = cursor.getColumnIndex(Contract.Transaction.MONEY);
         mIndexCurrency = cursor.getColumnIndex(Contract.Transaction.WALLET_CURRENCY);
+        // The superclass calls this from two places: when it takes a new cursor, after that
+        // cursor is in place and before it tells the list anything changed, and from its own
+        // constructor. The constructor call cannot land here, because this adapter is always
+        // built with no cursor and the fields the walk below needs do not exist until super
+        // returns.
+        rebuildVisibleRows();
+    }
+
+    private void rebuildVisibleRows() {
+        mVisibleRows.clear();
+        mCollapsedPeriods.clear();
+        mCollapsedPeriods.addAll(PreferenceManager.getCollapsedPeriods());
+        Cursor cursor = getCursor();
+        if (cursor == null) {
+            return;
+        }
+        if (mIndexType == -1) {
+            return;
+        }
+        // Moving the wrapper to an item row moves the SQLite cursor under it, so asking every row
+        // what it is paged the whole result set on the main thread on every load. The header rows
+        // are the only ones this walk reads, and the wrapper names them without being moved.
+        AbstractHeaderCursor<?> headerCursor = (AbstractHeaderCursor<?>) cursor;
+        boolean headerIsCollapsed = false;
+        for (int position = 0; position < cursor.getCount(); position++) {
+            if (headerCursor.isHeaderAt(position)) {
+                cursor.moveToPosition(position);
+                headerIsCollapsed = mCollapsedPeriods.contains(periodKey(
+                        cursor.getInt(mIndexHeaderGroupType),
+                        cursor.getString(mIndexHeaderStartDate)));
+                mVisibleRows.add(position);
+            } else if (!headerIsCollapsed) {
+                mVisibleRows.add(position);
+            }
+        }
+    }
+
+    /**
+     * The key a period is stored under: the grouping it was drawn with, then the date it starts
+     * on. The grouping is part of it because a day and the month it opens start on the same date,
+     * and folding one must not fold the other when the user changes the grouping and comes back.
+     */
+    private static String periodKey(int groupType, String startDate) {
+        return groupType + ":" + startDate;
+    }
+
+    /**
+     * Draws the rows again against what is stored now. The list this adapter is in is not the
+     * only one reading that store, so a list coming back to the front has to ask again instead
+     * of drawing what it last built. A set that has not changed is left alone, because the main
+     * list calls this every time it resumes, and rebuilding walks the whole cursor and rebinds
+     * every row on the main thread. Without that, every return from a transaction, the report or
+     * the settings paid for a fold nobody had made.
+     */
+    public void reloadCollapsedPeriods() {
+        if (PreferenceManager.getCollapsedPeriods().equals(mCollapsedPeriods)) {
+            return;
+        }
+        rebuildVisibleRows();
+        notifyDataSetChanged();
+    }
+
+    /*package-local*/ void togglePeriod(String key) {
+        // Read, change, write, so that the other list this adapter shares the stored set with
+        // keeps its own hiding.
+        Set<String> stored = PreferenceManager.getCollapsedPeriods();
+        if (!stored.remove(key)) {
+            stored.add(key);
+        }
+        PreferenceManager.setCollapsedPeriods(stored);
+        rebuildVisibleRows();
+        notifyDataSetChanged();
+    }
+
+    /**
+     * The cursor row an on screen position stands for, or -1 when there is none. Everything that
+     * takes an on screen position goes through this, and so does every read of the cursor from a
+     * click.
+     */
+    private int cursorPosition(int position) {
+        if (mIndexType == -1) {
+            // The calendar and the search results hand this adapter a plain cursor with no header
+            // rows, so nothing folds and positions map straight through. The search rebuilds its
+            // cursor per keystroke, so a boxed copy of every row there would be paid per character.
+            return position;
+        }
+        return position >= 0 && position < mVisibleRows.size() ? mVisibleRows.get(position) : -1;
+    }
+
+    @Override
+    public int getItemCount() {
+        // Guarded, because a cursor swapped away for null leaves the rows built for it behind,
+        // since the superclass only walks a cursor it actually has.
+        if (!isDataValid()) {
+            return 0;
+        }
+        return mIndexType == -1 ? getCursor().getCount() : mVisibleRows.size();
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return super.getItemId(cursorPosition(position));
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        super.onBindViewHolder(holder, cursorPosition(position));
     }
 
     @Override
@@ -143,6 +272,19 @@ public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView
         Money expense = Money.parse(cursor.getString(mIndexHeaderExpense));
         mMoneyFormatter.applyTintedIncome(holder.mIncomeTextView, orZero(income, money));
         mMoneyFormatter.applyTintedExpense(holder.mExpenseTextView, orZero(expense, money));
+        bindPeriodToggle(holder, cursor);
+    }
+
+    private void bindPeriodToggle(HeaderViewHolder holder, Cursor cursor) {
+        boolean collapsed = mCollapsedPeriods.contains(periodKey(
+                cursor.getInt(mIndexHeaderGroupType), cursor.getString(mIndexHeaderStartDate)));
+        holder.mPeriodToggle.setRotation(collapsed ? 0f : 180f);
+        // Named, because a screen reader reaches the arrow on its own and every one of them
+        // would otherwise read the same words. The date range is the one the row just drew.
+        holder.mPeriodToggle.setContentDescription(holder.itemView.getContext().getString(
+                collapsed ? R.string.description_show_period_transactions
+                        : R.string.description_hide_period_transactions,
+                holder.mLeftTextView.getText()));
     }
 
     /**
@@ -183,7 +325,7 @@ public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView
     @Override
     public int getItemViewType(int position) {
         if (mIndexType != -1) {
-            return getSafeCursor(position).getInt(mIndexType);
+            return getSafeCursor(cursorPosition(position)).getInt(mIndexType);
         } else {
             return TransactionHeaderCursor.TYPE_ITEM;
         }
@@ -195,6 +337,7 @@ public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView
         private TextView mRightTextView;
         private TextView mIncomeTextView;
         private TextView mExpenseTextView;
+        private ImageView mPeriodToggle;
 
         /*package-local*/ HeaderViewHolder(View itemView) {
             super(itemView);
@@ -202,6 +345,21 @@ public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView
             mRightTextView = itemView.findViewById(R.id.right_text_view);
             mIncomeTextView = itemView.findViewById(R.id.income_text_view);
             mExpenseTextView = itemView.findViewById(R.id.expense_text_view);
+            mPeriodToggle = itemView.findViewById(R.id.period_toggle_image_view);
+            // Its own listener, because a tap on the row still means what it always did: open
+            // the report of this period, or nothing at all.
+            mPeriodToggle.setOnClickListener(new View.OnClickListener() {
+
+                @Override
+                public void onClick(View view) {
+                    Cursor cursor = getSafeCursor(cursorPosition(getAdapterPosition()));
+                    if (cursor != null) {
+                        togglePeriod(periodKey(cursor.getInt(mIndexHeaderGroupType),
+                                cursor.getString(mIndexHeaderStartDate)));
+                    }
+                }
+
+            });
             // the arrow is a ThemedImageView, which tints itself from the row it sits on and
             // repaints when the mode changes. A theme attribute in the vector would resolve
             // against the xml theme, which is the light one whatever mode the user picked
@@ -218,7 +376,7 @@ public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView
         @Override
         public void onClick(View v) {
             if (mActionListener != null) {
-                Cursor cursor = getSafeCursor(getAdapterPosition());
+                Cursor cursor = getSafeCursor(cursorPosition(getAdapterPosition()));
                 if (cursor != null) {
                     Date start = DateUtils.getDateFromSQLDateTimeString(cursor.getString(mIndexHeaderStartDate));
                     Date end = DateUtils.getDateFromSQLDateTimeString(cursor.getString(mIndexHeaderEndDate));
@@ -249,7 +407,7 @@ public class TransactionCursorAdapter extends AbstractCursorAdapter<RecyclerView
         @Override
         public void onClick(View v) {
             if (mActionListener != null) {
-                Cursor cursor = getSafeCursor(getAdapterPosition());
+                Cursor cursor = getSafeCursor(cursorPosition(getAdapterPosition()));
                 if (cursor != null) {
                     mActionListener.onTransactionClick(cursor.getLong(mIndexTransactionId));
                 }
