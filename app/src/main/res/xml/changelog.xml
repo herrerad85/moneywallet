@@ -20,6 +20,21 @@
 
 <changelog>
 
+    <version versionName="1.8.0" versionDate="Sep 9, 2026">
+        <change>[b]New![/b] Tap into the amount on the keypad to put a cursor there, then type or delete at that spot.</change>
+        <change>[b]New![/b] A period's transactions fold under their header on the transactions list, so a long list reads as a column of period totals.</change>
+        <change>External Memory can be set up as a backup destination on Android 13 and newer, where it never connected before.</change>
+        <change>Setting up a backup destination no longer closes the app.</change>
+        <change>Deleting a wallet, a transaction or a transfer no longer freezes the screen while it runs.</change>
+        <change>A restore that fails leaves your ledger exactly as it was, and an import that fails part way leaves nothing of it behind.</change>
+        <change>A row the app refuses during an import now stops the import and says so, where it used to be skipped in silence.</change>
+        <change>A budget save the app refused no longer closes the editor as if it had saved, an edited past period keeps its start day, and a budget takes its currency from its wallets.</change>
+        <change>A wallet in a currency this installation does not know stores a typed 12.50 as 12.50, where it stored 12.</change>
+        <change>The currency converter keeps updating while rates download.</change>
+        <change>A backup restored from another installation no longer leaves the app with no currency to offer.</change>
+        <change>Saving a budget, opening a wallet or the Overview no longer crashes on a currency the app cannot resolve.</change>
+        <change>An import can no longer lock up against a currency reload.</change>
+    </version>
     <version versionName="1.7.0" versionDate="Aug 30, 2026">
         <change>[b]New![/b] A home screen widget that shows one wallet's balance.</change>
         <change>[b]New![/b] A budget can cover more than one category.</change>

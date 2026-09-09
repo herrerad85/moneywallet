@@ -1,0 +1,3 @@
+New: tap into the amount on the keypad to put a cursor there and type or delete at that spot. A period's transactions fold under their header on the transactions list.
+
+Fixes: External Memory works as a backup destination on Android 13 and newer, and setting one up no longer closes the app. A failed restore or import leaves the ledger as it was. Deleting a wallet no longer freezes the screen. A budget keeps the right currency and start day. An amount in an unknown currency keeps its decimals.
