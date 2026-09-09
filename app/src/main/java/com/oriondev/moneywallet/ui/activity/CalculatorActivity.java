@@ -21,11 +21,15 @@ package com.oriondev.moneywallet.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputFilter;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.EditText;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.CurrencyUnit;
@@ -42,6 +46,8 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
     public static final String CURRENCY = "CalculatorActivity::Parameters::Currency";
     public static final String MONEY = "CalculatorActivity::Parameters::Money";
     public static final String ALLOW_NEGATIVE = "CalculatorActivity::Parameters::AllowNegative";
+
+    private static final String SS_CURSOR = "CalculatorActivity::SavedState::Cursor";
 
     public static final int MODE_CALCULATOR = 0;
     public static final int MODE_KEYPAD = 1;
@@ -66,17 +72,51 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
     private static final String OP_DIVISION = "D";
     private static final String OP_EXECUTE = "E";
 
-    private TextView mDisplayTextView;
+    private static final ActionMode.Callback NO_TEXT_ACTION_MODE = new ActionMode.Callback() {
+
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            return false;
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+        }
+    };
+
+    private EditText mDisplayEditText;
     private Button mActionButton;
     private EquationSolver mSolver;
 
     private boolean mKeypadMode;
     private boolean mAllowNegative;
+    private boolean mRendering;
 
     @Override
     protected void onCreatePanelView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_panel_calculator, parent, true);
-        mDisplayTextView = view.findViewById(R.id.display_text_view);
+        mDisplayEditText = view.findViewById(R.id.display_text_view);
+        // The keypad is the only writer of the field, and the filter refuses every other change.
+        // The field's own state restore would go through that filter and come back empty, so the
+        // render from the solver is the only source of the text and the cursor is carried here.
+        mDisplayEditText.setShowSoftInputOnFocus(false);
+        mDisplayEditText.setFilters(new InputFilter[] {(source, start, end, dest, dstart, dend) ->
+                mRendering ? null : dest.subSequence(dstart, dend)});
+        mDisplayEditText.setSaveEnabled(false);
+        // The popup's cut and paste could not reach the field, so the popup goes.
+        mDisplayEditText.setCustomSelectionActionModeCallback(NO_TEXT_ACTION_MODE);
+        mDisplayEditText.setCustomInsertionActionModeCallback(NO_TEXT_ACTION_MODE);
+        mDisplayEditText.requestFocus();
         mActionButton = view.findViewById(R.id.keyboard_action_button);
         registerListener(view.findViewById(R.id.keyboard_000_button), OP_000);
         registerListener(view.findViewById(R.id.keyboard_0_button), OP_0);
@@ -98,6 +138,9 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
         registerListener(view.findViewById(R.id.keyboard_subtraction_button), OP_SUBTRACTION);
         registerListener(view.findViewById(R.id.keyboard_action_button), OP_EXECUTE);
         mSolver = new EquationSolver(savedInstanceState, this);
+        if (savedInstanceState != null) {
+            setCursor(savedInstanceState.getInt(SS_CURSOR, mDisplayEditText.length()));
+        }
     }
 
     @Override
@@ -136,7 +179,7 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
                 mSolver.clear();
                 break;
             case OP_CANCEL:
-                mSolver.cancel();
+                setCursor(mSolver.backspace(mDisplayEditText.getSelectionStart()));
                 break;
             case OP_EXECUTE:
                 execute();
@@ -154,18 +197,27 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
                 mSolver.appendOperation(EquationSolver.Operation.DIVISION);
                 break;
             case OP_POINT:
-                mSolver.appendPoint();
+                setCursor(mSolver.insertPoint(mDisplayEditText.getSelectionStart()));
                 break;
             default:
-                mSolver.appendNumber(operation);
+                setCursor(mSolver.insertNumber(operation, mDisplayEditText.getSelectionStart()));
                 break;
         }
+    }
+
+    /**
+     * The three editing keys render from inside the solver call, and that render puts the cursor
+     * at the end of the display, so this is what moves it back to where the edit landed.
+     */
+    private void setCursor(int cursor) {
+        mDisplayEditText.setSelection(Math.min(Math.max(cursor, 0), mDisplayEditText.length()));
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         mSolver.onSaveInstanceState(outState);
+        outState.putInt(SS_CURSOR, mDisplayEditText.getSelectionStart());
     }
 
     private void execute() {
@@ -195,7 +247,10 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
 
     @Override
     public void onUpdateDisplay(String text) {
-        mDisplayTextView.setText(text);
+        mRendering = true;
+        mDisplayEditText.setText(text);
+        mRendering = false;
+        mDisplayEditText.setSelection(text.length());
         updateActionButton();
     }
 

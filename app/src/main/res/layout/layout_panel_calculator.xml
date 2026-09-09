@@ -32,18 +32,21 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.40"/>
 
-    <com.oriondev.moneywallet.ui.view.theme.ThemedTextView
+    <com.oriondev.moneywallet.ui.view.theme.ThemedEditText
         android:id="@+id/display_text_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:background="@null"
         android:gravity="center_vertical|end"
+        android:hint="@string/hint_money"
+        android:importantForAutofill="no"
         android:textSize="@dimen/activity_calculator_display_text_size"
         android:padding="@dimen/activity_calculator_display_padding"
         app:layout_constraintBottom_toTopOf="@+id/vertical_guideline"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:theme_textColor="textColorPrimary"
+        app:theme_backgroundColor="colorWindowForeground"
         tools:text="568,89 * 3,56" />
 
     <androidx.constraintlayout.widget.ConstraintLayout

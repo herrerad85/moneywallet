@@ -17,6 +17,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -29,6 +30,12 @@ public class EquationSolverTest {
 
     @InjectMocks
     private EquationSolver equationSolver;
+
+    /**
+     * A cursor outside the display, which every editing key reads as the end of the display: the
+     * position the keypad edited at before it grew a cursor.
+     */
+    private static final int END = -1;
 
     private void mockCurrencyUnit(int decimals) {
         equationSolver.mCurrency = new CurrencyUnit("", "", "", decimals);
@@ -320,9 +327,9 @@ public class EquationSolverTest {
     private void type(String keys) {
         for (char key : keys.toCharArray()) {
             if (key == '.') {
-                equationSolver.appendPoint();
+                equationSolver.insertPoint(END);
             } else {
-                equationSolver.appendNumber(String.valueOf(key));
+                equationSolver.insertNumber(String.valueOf(key), END);
             }
         }
     }
@@ -498,7 +505,7 @@ public class EquationSolverTest {
         enter("20", EquationSolver.Operation.DIVISION, "3");
         assertTrue(equationSolver.execute(false));
 
-        equationSolver.appendNumber("0");
+        equationSolver.insertNumber("0", END);
 
         assertEquals("6.6666666666666670", equationSolver.mFirstNumber);
         assertEquals(667L, equationSolver.getResult());
@@ -514,8 +521,8 @@ public class EquationSolverTest {
         enter("20", EquationSolver.Operation.DIVISION, "3");
         assertTrue(equationSolver.execute(false));
 
-        equationSolver.appendNumber("5");
-        equationSolver.cancel();
+        equationSolver.insertNumber("5", END);
+        equationSolver.backspace(END);
 
         assertEquals("6.666666666666667", equationSolver.mFirstNumber);
         assertEquals(666L, equationSolver.getResult());
@@ -532,7 +539,7 @@ public class EquationSolverTest {
         assertEquals("7.5", equationSolver.mFirstNumber);
 
         for (int press = 0; press < 5; press++) {
-            equationSolver.cancel();
+            equationSolver.backspace(END);
         }
         type("7.5");
 
@@ -545,10 +552,10 @@ public class EquationSolverTest {
         enter("15", EquationSolver.Operation.DIVISION, "2");
         assertTrue(equationSolver.execute(false));
 
-        equationSolver.cancel();
-        equationSolver.cancel();
-        equationSolver.appendPoint();
-        equationSolver.appendNumber("5");
+        equationSolver.backspace(END);
+        equationSolver.backspace(END);
+        equationSolver.insertPoint(END);
+        equationSolver.insertNumber("5", END);
 
         assertEquals("7.5", equationSolver.mFirstNumber);
         assertEquals(7L, equationSolver.getResult());
@@ -560,7 +567,7 @@ public class EquationSolverTest {
         enter("20", EquationSolver.Operation.DIVISION, "3");
         assertTrue(equationSolver.execute(false));
 
-        equationSolver.appendNumber("5");
+        equationSolver.insertNumber("5", END);
 
         assertEquals(666L, equationSolver.getResult());
     }
@@ -571,7 +578,7 @@ public class EquationSolverTest {
         enter("20", EquationSolver.Operation.DIVISION, "3");
         assertTrue(equationSolver.execute(false));
 
-        equationSolver.cancel();
+        equationSolver.backspace(END);
 
         assertEquals(666L, equationSolver.getResult());
     }
@@ -585,7 +592,7 @@ public class EquationSolverTest {
         assertTrue(equationSolver.execute(false));
         assertEquals("0.66700", equationSolver.mFirstNumber);
 
-        equationSolver.cancel();
+        equationSolver.backspace(END);
 
         assertEquals("0.6670", equationSolver.mFirstNumber);
         assertEquals(67L, equationSolver.getResult());
@@ -612,7 +619,7 @@ public class EquationSolverTest {
         mockCurrencyUnit(2);
         type("0.999");
         equationSolver.appendOperation(EquationSolver.Operation.ADDITION);
-        equationSolver.appendPoint();
+        equationSolver.insertPoint(END);
         assertEquals(99L, equationSolver.getResult());
     }
 
@@ -622,7 +629,7 @@ public class EquationSolverTest {
         type("0.999");
         equationSolver.appendOperation(EquationSolver.Operation.ADDITION);
         type("5");
-        equationSolver.cancel();
+        equationSolver.backspace(END);
 
         assertEquals(99L, equationSolver.getResult());
     }
@@ -637,7 +644,7 @@ public class EquationSolverTest {
         assertTrue(equationSolver.execute(false));
         equationSolver.appendOperation(EquationSolver.Operation.ADDITION);
         type("1");
-        equationSolver.cancel();
+        equationSolver.backspace(END);
 
         assertEquals(667L, equationSolver.getResult());
     }
@@ -887,9 +894,261 @@ public class EquationSolverTest {
 
         assertEquals("0", equationSolver.mFirstNumber);
 
-        equationSolver.appendNumber("5");
+        equationSolver.insertNumber("5", END);
 
         assertEquals("5", equationSolver.mFirstNumber);
         assertEquals(500L, equationSolver.getResult());
+    }
+
+    // Editing at a cursor
+
+    @Test
+    public void testInsertNumber_insertsAtTheCursorInsideTheFirstNumber() {
+        equationSolver.mFirstNumber = "12";
+
+        assertEquals(2, equationSolver.insertNumber("5", 1));
+        assertEquals("152", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testInsertNumber_replacesABareZero() {
+        equationSolver.mFirstNumber = "0";
+
+        assertEquals(1, equationSolver.insertNumber("5", 0));
+        assertEquals("5", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testInsertNumber_snapsPastTheSign() {
+        equationSolver.mFirstNumber = "-12";
+
+        assertEquals(2, equationSolver.insertNumber("5", 0));
+        assertEquals("-512", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testInsertNumber_aCursorOutsideTheDisplayMeansItsEnd() {
+        equationSolver.mFirstNumber = "12";
+
+        assertEquals(3, equationSolver.insertNumber("5", END));
+        assertEquals("125", equationSolver.mFirstNumber);
+
+        equationSolver.mFirstNumber = "12";
+
+        assertEquals(3, equationSolver.insertNumber("5", 99));
+        assertEquals("125", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testInsertNumber_editsTheFirstNumberWhileAnOperationIsPending() {
+        equationSolver.mFirstNumber = "12";
+        equationSolver.mOperation = EquationSolver.Operation.ADDITION;
+        equationSolver.mSecondNumber = "34";
+
+        assertEquals(2, equationSolver.insertNumber("5", 1));
+        assertEquals("152", equationSolver.mFirstNumber);
+        assertEquals("34", equationSolver.mSecondNumber);
+    }
+
+    @Test
+    public void testInsertNumber_insertsAtTheCursorInsideTheSecondNumber() {
+        equationSolver.mFirstNumber = "12";
+        equationSolver.mOperation = EquationSolver.Operation.ADDITION;
+        equationSolver.mSecondNumber = "34";
+
+        assertEquals(8, equationSolver.insertNumber("5", 7));
+        assertEquals("345", equationSolver.mSecondNumber);
+    }
+
+    @Test
+    public void testInsertNumber_aCursorInTheOperatorSpanMeansTheStartOfTheSecondNumber() {
+        equationSolver.mFirstNumber = "12";
+        equationSolver.mOperation = EquationSolver.Operation.ADDITION;
+        equationSolver.mSecondNumber = "34";
+
+        assertEquals(6, equationSolver.insertNumber("5", 3));
+        assertEquals("534", equationSolver.mSecondNumber);
+    }
+
+    @Test
+    public void testInsertNumber_startsASecondNumberNobodyTyped() {
+        equationSolver.mFirstNumber = "12";
+        equationSolver.mOperation = EquationSolver.Operation.ADDITION;
+        equationSolver.mSecondNumber = null;
+
+        assertEquals(6, equationSolver.insertNumber("5", 4));
+        assertEquals("5", equationSolver.mSecondNumber);
+    }
+
+    @Test
+    public void testInsertPoint_atTheFrontOpensAFraction() {
+        equationSolver.mFirstNumber = "12";
+
+        assertEquals(2, equationSolver.insertPoint(0));
+        assertEquals("0.12", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testInsertPoint_splitsTheNumberAtTheCursor() {
+        equationSolver.mFirstNumber = "12";
+
+        assertEquals(2, equationSolver.insertPoint(1));
+        assertEquals("1.2", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testInsertPoint_leavesANumberThatAlreadyHasOneAlone() {
+        equationSolver.mFirstNumber = "1.2";
+
+        assertEquals(3, equationSolver.insertPoint(3));
+        assertEquals("1.2", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testInsertPoint_onABareZero() {
+        equationSolver.mFirstNumber = "0";
+
+        assertEquals(2, equationSolver.insertPoint(0));
+        assertEquals("0.", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testInsertPoint_atTheFrontOfASignedNumberOpensAFractionAfterTheSign() {
+        equationSolver.mFirstNumber = "-12";
+
+        assertEquals(3, equationSolver.insertPoint(1));
+        assertEquals("-0.12", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testBackspace_removesTheCharacterBeforeTheCursor() {
+        equationSolver.mFirstNumber = "152";
+
+        assertEquals(1, equationSolver.backspace(2));
+        assertEquals("12", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testBackspace_atTheFrontOfTheFirstNumberDoesNothing() {
+        equationSolver.mFirstNumber = "152";
+
+        assertEquals(0, equationSolver.backspace(0));
+        assertEquals("152", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testBackspace_aFirstNumberEmptiedBecomesZero() {
+        equationSolver.mFirstNumber = "5";
+
+        assertEquals(1, equationSolver.backspace(1));
+        assertEquals("0", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testBackspace_atTheFrontOfASecondNumberNobodyTypedDropsTheOperation() {
+        equationSolver.mFirstNumber = "12";
+        equationSolver.mOperation = EquationSolver.Operation.ADDITION;
+        equationSolver.mSecondNumber = null;
+
+        assertEquals(2, equationSolver.backspace(5));
+        assertNull(equationSolver.mOperation);
+        assertNull(equationSolver.mSecondNumber);
+        assertEquals("12", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testBackspace_atTheFrontOfATypedSecondNumberStepsBackOverTheOperator() {
+        equationSolver.mFirstNumber = "12";
+        equationSolver.mOperation = EquationSolver.Operation.ADDITION;
+        equationSolver.mSecondNumber = "34";
+
+        assertEquals(2, equationSolver.backspace(5));
+        assertEquals("12", equationSolver.mFirstNumber);
+        assertEquals("34", equationSolver.mSecondNumber);
+        assertEquals(EquationSolver.Operation.ADDITION, equationSolver.mOperation);
+
+        assertEquals(2, equationSolver.backspace(4));
+        assertEquals("12", equationSolver.mFirstNumber);
+        assertEquals("34", equationSolver.mSecondNumber);
+        assertEquals(EquationSolver.Operation.ADDITION, equationSolver.mOperation);
+    }
+
+    @Test
+    public void testBackspace_removesFromTheSecondNumber() {
+        equationSolver.mFirstNumber = "12";
+        equationSolver.mOperation = EquationSolver.Operation.ADDITION;
+        equationSolver.mSecondNumber = "34";
+
+        assertEquals(6, equationSolver.backspace(7));
+        assertEquals("3", equationSolver.mSecondNumber);
+    }
+
+    @Test
+    public void testInsertNumber_anInsertThatChangesTheAmountRetypesIt() {
+        equationSolver.mFirstNumber = "12";
+        equationSolver.mComputed = true;
+
+        equationSolver.insertNumber("5", 1);
+
+        assertFalse(equationSolver.mComputed);
+    }
+
+    @Test
+    public void testInsertNumber_anInsertThatDoesNotChangeTheAmountLeavesAnAnswerAnAnswer() {
+        equationSolver.mFirstNumber = "12.5";
+        equationSolver.mComputed = true;
+
+        equationSolver.insertNumber("0", END);
+
+        assertTrue(equationSolver.mComputed);
+        assertEquals("12.50", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testInsertNumber_insertsEveryDigitOfTheTripleZeroKeyAtTheCursor() {
+        equationSolver.mFirstNumber = "12";
+
+        assertEquals(4, equationSolver.insertNumber("000", 1));
+        assertEquals("10002", equationSolver.mFirstNumber);
+    }
+
+    @Test
+    public void testInsertNumber_anEditOfTheFirstNumberWhileAnOperationIsPendingRetypesIt() {
+        mockCurrencyUnit(2);
+        equationSolver.mFirstNumber = "6.666666666666667";
+        equationSolver.mComputed = true;
+        equationSolver.mOperation = EquationSolver.Operation.ADDITION;
+        equationSolver.mSecondNumber = null;
+
+        assertEquals(1, equationSolver.insertNumber("9", 0));
+        assertEquals("96.666666666666667", equationSolver.mFirstNumber);
+        assertFalse(equationSolver.mComputed);
+
+        equationSolver.backspace(END);
+
+        assertNull(equationSolver.mOperation);
+        assertEquals(9666L, equationSolver.getResult());
+    }
+
+    @Test
+    public void testInsertPoint_aPointThatChangesTheAmountRetypesIt() {
+        equationSolver.mFirstNumber = "1235";
+        equationSolver.mComputed = true;
+
+        equationSolver.insertPoint(1);
+
+        assertEquals("1.235", equationSolver.mFirstNumber);
+        assertFalse(equationSolver.mComputed);
+    }
+
+    @Test
+    public void testInsertPoint_aPointThatDoesNotChangeTheAmountLeavesAnAnswerAnAnswer() {
+        equationSolver.mFirstNumber = "12";
+        equationSolver.mComputed = true;
+
+        equationSolver.insertPoint(END);
+
+        assertEquals("12.", equationSolver.mFirstNumber);
+        assertTrue(equationSolver.mComputed);
     }
 }

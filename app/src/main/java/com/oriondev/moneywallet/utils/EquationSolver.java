@@ -45,8 +45,10 @@ public class EquationSolver {
 
     @VisibleForTesting
     /*package-local*/ String mFirstNumber;
-    private String mSecondNumber;
-    private Operation mOperation;
+    @VisibleForTesting
+    /*package-local*/ String mSecondNumber;
+    @VisibleForTesting
+    /*package-local*/ Operation mOperation;
     @VisibleForTesting
     /*package-local*/ CurrencyUnit mCurrency;
     /**
@@ -112,22 +114,6 @@ public class EquationSolver {
         updateDisplaySafely();
     }
 
-    public void cancel() {
-        if (mSecondNumber != null && !mSecondNumber.isEmpty()) {
-            mSecondNumber = mSecondNumber.substring(0, mSecondNumber.length() - 1);
-        } else if (mOperation != null) {
-            mOperation = null;
-        } else if (mFirstNumber != null && !mFirstNumber.isEmpty()) {
-            String number = mFirstNumber.substring(0, mFirstNumber.length() - 1);
-            if (number.isEmpty()) {
-                number = "0";
-            }
-            clearComputedIfValueChanged(number);
-            mFirstNumber = number;
-        }
-        updateDisplaySafely();
-    }
-
     public void appendOperation(Operation operation) {
         if (mOperation == null || execute(false)) {
             mOperation = operation;
@@ -135,31 +121,113 @@ public class EquationSolver {
         }
     }
 
-    public void appendPoint() {
-        String number = mOperation == null ? mFirstNumber : mSecondNumber;
-        if (number == null || number.isEmpty() || number.equals("0")) {
-            number = "0.";
-        } else if (!number.contains(".")) {
-            number += ".";
+    /**
+     * The three editing keys act at a cursor, an index into the string updateDisplaySafely
+     * renders, and hand back where the cursor sits once the edit is in. An index up to the length
+     * of the first number addresses the first number; anything past that addresses the second one,
+     * with the three character operator span pointing at its start. An index outside the display
+     * means the end of the display.
+     */
+    private Target locate(int cursor) {
+        int first = firstLength();
+        if (mOperation == null) {
+            return new Target(true, cursor < 0 || cursor > first ? first : cursor);
         }
-        // No clearComputedIfValueChanged here: a point is the one key that cannot change the
-        // amount. Every string this method can build parses to the number already on the display.
-        mFirstNumber = mOperation == null ? number : mFirstNumber;
-        mSecondNumber = mOperation == null ? null : number;
-        updateDisplaySafely();
+        int second = mSecondNumber == null ? 0 : mSecondNumber.length();
+        int end = first + 3 + second;
+        int at = cursor < 0 || cursor > end ? end : cursor;
+        if (at <= first) {
+            return new Target(true, at);
+        }
+        return new Target(false, Math.max(at - first - 3, 0));
     }
 
-    public void appendNumber(String digit) {
-        String number = mOperation == null ? mFirstNumber : mSecondNumber;
+    private int firstLength() {
+        return mFirstNumber == null ? 0 : mFirstNumber.length();
+    }
+
+    private int cursorOf(Target target, int offset) {
+        return target.mFirst ? offset : firstLength() + 3 + offset;
+    }
+
+    private void store(Target target, String number) {
+        if (target.mFirst) {
+            clearComputedIfValueChanged(number);
+            mFirstNumber = number;
+        } else {
+            mSecondNumber = number;
+        }
+    }
+
+    public int insertPoint(int cursor) {
+        Target target = locate(cursor);
+        String number = target.mFirst ? mFirstNumber : mSecondNumber;
+        int offset = target.mOffset;
+        if (number == null || number.isEmpty() || number.equals("0")) {
+            number = "0.";
+            offset = 2;
+        } else if (!number.contains(".")) {
+            int sign = number.startsWith("-") ? 1 : 0;
+            if (offset <= sign) {
+                // A point typed in front of the digits opens a fraction instead of splitting one.
+                number = number.substring(0, sign) + "0." + number.substring(sign);
+                offset = sign + 2;
+            } else {
+                number = number.substring(0, offset) + "." + number.substring(offset);
+                offset++;
+            }
+        }
+        store(target, number);
+        updateDisplaySafely();
+        return cursorOf(target, offset);
+    }
+
+    public int insertNumber(String digit, int cursor) {
+        Target target = locate(cursor);
+        String number = target.mFirst ? mFirstNumber : mSecondNumber;
+        int offset = target.mOffset;
         if (number == null || number.isEmpty() || number.equals("0")) {
             number = digit.equals("000") ? "0" : digit;
+            offset = number.length();
         } else {
-            number += digit;
+            if (number.startsWith("-") && offset == 0) {
+                // A digit typed in front of a sign belongs after it.
+                offset = 1;
+            }
+            number = number.substring(0, offset) + digit + number.substring(offset);
+            offset += digit.length();
         }
-        clearComputedIfValueChanged(number);
-        mFirstNumber = mOperation == null ? number : mFirstNumber;
-        mSecondNumber = mOperation == null ? null : number;
+        store(target, number);
         updateDisplaySafely();
+        return cursorOf(target, offset);
+    }
+
+    public int backspace(int cursor) {
+        Target target = locate(cursor);
+        String number = target.mFirst ? mFirstNumber : mSecondNumber;
+        int offset = target.mOffset;
+        boolean atOperator = false;
+        if (offset == 0) {
+            if (!target.mFirst && (number == null || number.isEmpty())) {
+                // Nothing left of the second number to delete, so the operator goes instead.
+                mOperation = null;
+                mSecondNumber = null;
+                atOperator = true;
+            } else if (!target.mFirst) {
+                // Nothing to delete here, so the cursor steps back over the operator instead.
+                atOperator = true;
+            }
+        } else {
+            number = number.substring(0, offset - 1) + number.substring(offset);
+            offset--;
+            if (target.mFirst && number.isEmpty()) {
+                number = "0";
+                offset = 1;
+            }
+            store(target, number);
+        }
+        updateDisplaySafely();
+        return atOperator ? firstLength() : cursorOf(target, offset);
     }
 
     public boolean isPendingOperation() {
@@ -249,7 +317,7 @@ public class EquationSolver {
      * changes nothing does not retype what is there.
      */
     private void clearComputedIfValueChanged(String number) {
-        if (mOperation == null && parseNumber(number).compareTo(parseNumber(mFirstNumber)) != 0) {
+        if (parseNumber(number).compareTo(parseNumber(mFirstNumber)) != 0) {
             mComputed = false;
         }
     }
@@ -263,6 +331,17 @@ public class EquationSolver {
             return new BigDecimal(safe);
         } catch (NumberFormatException ignore) {}
         return BigDecimal.valueOf(0);
+    }
+
+    private static class Target {
+
+        private final boolean mFirst;
+        private final int mOffset;
+
+        private Target(boolean first, int offset) {
+            mFirst = first;
+            mOffset = offset;
+        }
     }
 
     public enum Operation {
