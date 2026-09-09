@@ -19,6 +19,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowActivity;
 
 import static org.junit.Assert.assertEquals;
@@ -26,8 +27,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.robolectric.Shadows.shadowOf;
 
 /**
- * The cover button is tapped while the activity is resumed, which is where a backend used to
- * register its launcher and where AndroidX refuses a registration.
+ * Every test drives the backup screen inside a resumed activity, which is where a backend used
+ * to register its launcher and where AndroidX refuses a registration.
  */
 @RunWith(RobolectricTestRunner.class)
 public class BackupHandlerFragmentTest {
@@ -38,6 +39,7 @@ public class BackupHandlerFragmentTest {
     }
 
     @Test
+    @Config(sdk = 32)
     public void theExternalMemoryCoverButtonAsksForStoragePermission() {
         try (ActivityScenario<BackupListActivity> scenario = ActivityScenario.launch(BackupListActivity.class)) {
             scenario.onActivity(activity -> {
@@ -47,6 +49,18 @@ public class BackupHandlerFragmentTest {
                 assertEquals(Manifest.permission.WRITE_EXTERNAL_STORAGE, request.requestedPermissions[0]);
             });
         }
+    }
+
+    @Test
+    @Config(sdk = {33, 36})
+    public void theExternalMemoryScreenOpensFromAndroid13WithoutTheStoragePermission() {
+        assertCoverVisibility(BackendServiceFactory.SERVICE_ID_EXTERNAL_MEMORY, View.GONE, View.VISIBLE);
+    }
+
+    @Test
+    @Config(sdk = 32)
+    public void theExternalMemoryScreenStaysCoveredWithoutTheStoragePermissionBelowAndroid13() {
+        assertCoverVisibility(BackendServiceFactory.SERVICE_ID_EXTERNAL_MEMORY, View.VISIBLE, View.GONE);
     }
 
     @Test
@@ -62,13 +76,30 @@ public class BackupHandlerFragmentTest {
     }
 
     private void clickTheCoverButton(FragmentActivity activity, String backendId) {
+        Fragment fragment = showBackupHandler(activity, backendId);
+        View coverActionButton = fragment.requireView().findViewById(R.id.cover_action_button);
+        assertNotNull(coverActionButton);
+        coverActionButton.performClick();
+    }
+
+    private Fragment showBackupHandler(FragmentActivity activity, String backendId) {
         Fragment fragment = BackupHandlerFragment.newInstance(backendId, true, true);
         activity.getSupportFragmentManager()
                 .beginTransaction()
                 .add(android.R.id.content, fragment, "BackupHandlerFragmentTest")
                 .commitNow();
-        View coverActionButton = fragment.requireView().findViewById(R.id.cover_action_button);
-        assertNotNull(coverActionButton);
-        coverActionButton.performClick();
+        return fragment;
+    }
+
+    private void assertCoverVisibility(String backendId, int expectedCover, int expectedPrimary) {
+        try (ActivityScenario<BackupListActivity> scenario = ActivityScenario.launch(BackupListActivity.class)) {
+            scenario.onActivity(activity -> {
+                Fragment fragment = showBackupHandler(activity, backendId);
+                View cover = fragment.requireView().findViewById(R.id.cover_layout);
+                View primary = fragment.requireView().findViewById(R.id.primary_layout);
+                assertEquals(expectedCover, cover.getVisibility());
+                assertEquals(expectedPrimary, primary.getVisibility());
+            });
+        }
     }
 }

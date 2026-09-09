@@ -23,6 +23,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.os.Build;
 
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.api.AbstractBackendServiceDelegate;
@@ -70,8 +71,16 @@ public class DiskBackendService extends AbstractBackendServiceDelegate {
         return R.string.cover_message_backup_external_memory_button;
     }
 
+    /**
+     * From Android 13 the platform denies WRITE_EXTERNAL_STORAGE to an app targeting 33 or
+     * higher without showing any dialog, so gating on it there leaves the cover screen up
+     * forever and {@link #setup} can never clear it.
+     */
     @Override
     public boolean isServiceEnabled(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return true;
+        }
         String permission = Manifest.permission.WRITE_EXTERNAL_STORAGE;
         int result = ContextCompat.checkSelfPermission(context, permission);
         return result == PackageManager.PERMISSION_GRANTED;
