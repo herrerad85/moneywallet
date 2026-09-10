@@ -106,6 +106,7 @@
     <string name="hint_show_category_report">"Show this category inside the reports"</string>
     <string name="hint_show_category_report_on">"This category is included inside the reports"</string>
     <string name="hint_show_category_report_off">"This category is not included inside the reports"</string>
+    <string name="hint_show_category_report_off_parent">"This category is not included inside the reports, because %1$s is not"</string>
     <string name="hint_confirmed">"Confirmed"</string>
     <string name="hint_show_in_total">"Show in total wallet"</string>
     <string name="hint_income">"Income"</string>

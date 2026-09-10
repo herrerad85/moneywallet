@@ -194,7 +194,8 @@ public class CategoryItemFragment extends SecondaryPanelFragment implements Load
                     Contract.Category.PARENT,
                     Contract.Category.PARENT_NAME,
                     Contract.Category.TYPE,
-                    Contract.Category.SHOW_REPORT
+                    Contract.Category.SHOW_REPORT,
+                    Contract.Category.PARENT_SHOW_REPORT
             };
             return new CursorLoader(getActivity(), uri, projection, null, null, null);
         }
@@ -233,7 +234,18 @@ public class CategoryItemFragment extends SecondaryPanelFragment implements Load
             }
             if (cursor.getInt(cursor.getColumnIndex(Contract.Category.SHOW_REPORT)) == 1) {
                 mShowReportCheckBox.setChecked(true);
-                mShowReportCheckBox.setText(R.string.hint_show_category_report_on);
+                // the reports keep a transaction only when its category and its parent are both
+                // included, so a subcategory under a hidden parent is out however its own box
+                // reads. A top level category joins no parent row, and the null that leaves here
+                // means included, which is how the report filter reads it too.
+                int parentShowReport = cursor.getColumnIndex(Contract.Category.PARENT_SHOW_REPORT);
+                int parentName = cursor.getColumnIndex(Contract.Category.PARENT_NAME);
+                if (!cursor.isNull(parentShowReport) && cursor.getInt(parentShowReport) == 0) {
+                    mShowReportCheckBox.setText(getString(R.string.hint_show_category_report_off_parent,
+                            cursor.getString(parentName)));
+                } else {
+                    mShowReportCheckBox.setText(R.string.hint_show_category_report_on);
+                }
             } else {
                 mShowReportCheckBox.setChecked(false);
                 mShowReportCheckBox.setText(R.string.hint_show_category_report_off);
