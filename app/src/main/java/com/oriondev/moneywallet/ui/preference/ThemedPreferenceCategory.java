@@ -20,10 +20,13 @@
 package com.oriondev.moneywallet.ui.preference;
 
 import android.content.Context;
+import androidx.annotation.NonNull;
 import androidx.preference.PreferenceCategory;
+import androidx.preference.PreferenceViewHolder;
 import android.util.AttributeSet;
 
 import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.ui.view.theme.ThemeEngine;
 
 /**
  * Created by andrea on 28/07/18.
@@ -52,5 +55,12 @@ public class ThemedPreferenceCategory extends PreferenceCategory {
 
     private void initialize() {
         setLayoutResource(R.layout.layout_preference_category_material_design);
+    }
+
+    // see ThemedPreference.onBindViewHolder
+    @Override
+    public void onBindViewHolder(@NonNull PreferenceViewHolder holder) {
+        super.onBindViewHolder(holder);
+        ThemeEngine.applyTheme(holder.itemView, true);
     }
 }

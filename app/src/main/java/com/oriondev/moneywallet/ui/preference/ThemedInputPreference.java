@@ -20,16 +20,19 @@
 package com.oriondev.moneywallet.ui.preference;
 
 import android.content.Context;
+import androidx.annotation.NonNull;
 import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
+import androidx.preference.PreferenceViewHolder;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 
 import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.ui.view.theme.ThemeEngine;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 
 /**
@@ -123,5 +126,12 @@ public class ThemedInputPreference extends Preference {
                 .setNegativeButton(android.R.string.cancel, null)
                 .create();
         ThemedDialog.showWithInput(dialog, inputEditText, mAllowEmptyInput);
+    }
+
+    // see ThemedPreference.onBindViewHolder
+    @Override
+    public void onBindViewHolder(@NonNull PreferenceViewHolder holder) {
+        super.onBindViewHolder(holder);
+        ThemeEngine.applyTheme(holder.itemView, true);
     }
 }
