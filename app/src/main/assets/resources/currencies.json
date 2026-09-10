@@ -19,8 +19,7 @@
   {
     "name": "Armenian Dram",
     "symbol": "֏",
-    "code": "AMD",
-    "decimals": 0
+    "code": "AMD"
   },
   {
     "name": "Netherlands Antillian Guilder",
@@ -165,8 +164,7 @@
   {
     "name": "Costa Rican Colon",
     "symbol": "₡",
-    "code": "CRC",
-    "decimals": 0
+    "code": "CRC"
   },
   {
     "name": "Cuban Peso",
@@ -222,8 +220,7 @@
   {
     "name": "Ethiopian Birr",
     "symbol": "Br.",
-    "code": "ETB",
-    "decimals": 0
+    "code": "ETB"
   },
   {
     "name": "Euro",
@@ -280,8 +277,7 @@
   {
     "name": "Guyana Dollar",
     "symbol": "$",
-    "code": "GYD",
-    "decimals": 0
+    "code": "GYD"
   },
   {
     "name": "Hong Kong Dollar",
@@ -470,8 +466,7 @@
   {
     "name": "Mongolian Tugrik",
     "symbol": "₮",
-    "code": "MNT",
-    "decimals": 0
+    "code": "MNT"
   },
   {
     "name": "Macanese Pataca",
@@ -487,8 +482,7 @@
   {
     "name": "Mauritius Rupee",
     "symbol": "₨",
-    "code": "MUR",
-    "decimals": 0
+    "code": "MUR"
   },
   {
     "name": "Maildivian Rufiyaa",
@@ -601,8 +595,7 @@
   {
     "name": "Serbian Dinar",
     "symbol": "Дин.",
-    "code": "RSD",
-    "decimals": 0
+    "code": "RSD"
   },
   {
     "name": "Russian Ruble",
@@ -733,8 +726,7 @@
   {
     "name": "Tanzanian Shilling",
     "symbol": "Sh",
-    "code": "TZS",
-    "decimals": 0
+    "code": "TZS"
   },
   {
     "name": "Ukrainian Hryvnia",
@@ -761,8 +753,7 @@
   {
     "name": "Uzbekistan Som",
     "symbol": "som",
-    "code": "UZS",
-    "decimals": 0
+    "code": "UZS"
   },
   {
     "name": "Venezuelan Bolivar Fuerte",
