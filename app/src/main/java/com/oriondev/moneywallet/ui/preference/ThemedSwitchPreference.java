@@ -20,10 +20,13 @@
 package com.oriondev.moneywallet.ui.preference;
 
 import android.content.Context;
+import androidx.annotation.NonNull;
 import androidx.preference.SwitchPreferenceCompat;
+import androidx.preference.PreferenceViewHolder;
 import android.util.AttributeSet;
 
 import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.ui.view.theme.ThemeEngine;
 
 /**
  * Created by andrea on 25/07/18.
@@ -47,5 +50,12 @@ public class ThemedSwitchPreference extends SwitchPreferenceCompat {
 
     private void initialize() {
         setLayoutResource(R.layout.layout_preference_material_design);
+    }
+
+    // see ThemedPreference.onBindViewHolder
+    @Override
+    public void onBindViewHolder(@NonNull PreferenceViewHolder holder) {
+        super.onBindViewHolder(holder);
+        ThemeEngine.applyTheme(holder.itemView, true);
     }
 }
