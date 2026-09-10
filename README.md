@@ -1,49 +1,60 @@
+<div align="center">
+
+<img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="120" alt="">
+
 # Tallybook
+
+An expense and budget tracker for Android that keeps your money on your own phone.
 
 [![License: GPLv3](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 [![F-Droid](https://img.shields.io/f-droid/v/io.github.herrerad85.tallybook.svg)](https://f-droid.org/packages/io.github.herrerad85.tallybook/)
+[![GitHub release](https://img.shields.io/github/v/release/herrerad85/tallybook)](https://github.com/herrerad85/tallybook/releases/latest)
 
-Tallybook is a private, offline-first expense and budget tracker for Android: multiple wallets, categories, budgets, recurring transactions, multi-currency, reports, an optional PIN, pattern or fingerprint lock, and backup to a local folder or your own WebDAV server, with no account required.
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="70">](https://f-droid.org/packages/io.github.herrerad85.tallybook/)
 
-New to the app, or wondering whether it already does something? See the [FAQ](docs/FAQ.md).
+</div>
 
-## Install
+Tallybook tracks what you spend and what you have, across as many wallets as you keep. It runs with no network connection and asks for no account. [PRIVACY.md](PRIVACY.md) lists every way data leaves the app.
 
-Tallybook is on F-Droid: [f-droid.org/packages/io.github.herrerad85.tallybook](https://f-droid.org/packages/io.github.herrerad85.tallybook/)
+The F-Droid build is reproducible and carries the developer signature, so the app from F-Droid and the APK attached to each [release](https://github.com/herrerad85/tallybook/releases) are interchangeable.
 
-Signed APKs are also attached to each [GitHub release](https://github.com/herrerad85/tallybook/releases). The F-Droid build is reproducible and carries the developer signature, so the two are interchangeable.
+<div align="center">
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/02_transactions.png" width="24%">
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/03_overview.png" width="24%">
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/04_budgets.png" width="24%">
+<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/05_add_transaction.png" width="24%">
+</div>
 
-**Tallybook is a maintained fork of [MoneyWallet](https://github.com/AndreAle94/moneywallet)** by AndreAle94, a GPL-licensed Android expense manager whose last release was in 2021. This fork modernizes the open-source build, fixes the startup crash that stopped the app launching on recent Android, and continues maintenance under a new name and application id.
+## What it does
 
-> **Tallybook is a separate app, not an automatic update to MoneyWallet.** It uses a different application id (`io.github.herrerad85.tallybook`), so it installs side by side with the original and does not replace it or migrate its data automatically. See [MIGRATION.md](MIGRATION.md) for the verified manual migration path.
+- **Wallets.** Keep as many as you need, each in its own currency.
+- **Categories.** Group spending into categories and subcategories, and open a category total into the ones underneath it.
+- **Budgets.** Set a limit for a period, cover more than one category with it, and let it repeat into the next period on its own.
+- **Recurring transactions.** Post on a schedule you set, including transfers between wallets.
+- **Debts and savings goals.** Track what you owe, what you are owed, and what you are putting aside.
+- **Reports.** See a period's income and spending, with charts by category.
+- **Calendar.** A day strip marks the days that have transactions.
+- **Widget.** A home screen widget shows one wallet's balance.
+- **Backup.** Write to a local folder, to your own WebDAV server such as Nextcloud or a NAS, or through Android's own backup.
+- **Import and export.** CSV in, and CSV, XLS or PDF out, plus the older MoneyWallet backup file.
+- **Lock.** An optional PIN, pattern or fingerprint when the app opens.
 
-This fork is independent and is not endorsed by or affiliated with the original author.
+## Coming from MoneyWallet
 
-![Showcase](pictures/showcase.png)
+Tallybook is a maintained fork of [MoneyWallet](https://github.com/AndreAle94/moneywallet), which last had a release in 2021. It is a separate app with its own application id, so it installs beside the original and does not replace it or carry its data across on its own. [MIGRATION.md](MIGRATION.md) has the path that was tested.
 
-## Status
-Tallybook is published on F-Droid and actively maintained. The current version in this repository is **1.8.0**, so F-Droid may show an older one.
+## Docs
 
-1.8.0 lets you tap into an amount on the keypad and edit it at the cursor, folds a period's transactions under their header on the transactions list, makes External Memory work as a backup destination on Android 13 and newer, and keeps a failed restore or import from touching your ledger. Before that: 1.7.0 added a home screen widget showing one wallet's balance, let a budget cover more than one category, opened a category's Overview total into the subcategories it is made of, and added 73 category icons; 1.6.0 let a budget repeat, said what came in and what went out on a transactions list, and marked the days that have transactions in the calendar day strip; 1.5.0 fixed Android's own backup, which stored nothing, so a restore brought back an empty app; and 1.4.0 added duplicating a transaction and hiding a category's child categories, after WebDAV backup (1.1.0), a per app language setting (1.2.0), and a map you can point at any tile server (1.3.0).
+- [FAQ](docs/FAQ.md)
+- [Moving from MoneyWallet](MIGRATION.md)
+- [CSV import format](docs/CSV.md)
+- [Privacy](PRIVACY.md)
+- [Third party notices](THIRD_PARTY_NOTICES.md)
 
-Earlier work, all shipped: Android 14/15 compatibility on a modernized FOSS/OpenStreetMap build, the Android 12+ manifest and PendingIntent updates, a fix for the startup crash caused by a legacy auto-backup path (reported upstream as [#177](https://github.com/AndreAle94/moneywallet/issues/177) and [#286](https://github.com/AndreAle94/moneywallet/issues/286)), the rebrand to a new name and application id, a verified backup and restore migration path (see [MIGRATION.md](MIGRATION.md)), export and import under scoped storage, a local-folder backup option that works with file sync tools, and Android 15 edge-to-edge UI polish.
-
-Progress is tracked in this repository's [issues](https://github.com/herrerad85/tallybook/issues).
-
-## The CSV import format
-The header row carries the raw column keys, and a file written by hand needs the same ones. Five columns are required on every row: `wallet`, `currency`, `category`, `datetime` and `money`. Five more are optional: `description`, `event`, `people`, `place` and `note`.
-
-`datetime` is `yyyy-MM-dd HH:mm:ss`, or `yyyy-MM-dd` for a row with no time of day. `currency` is the ISO code, and it has to be one the app already has. `money` is negative for an expense, and zero or above for income.
-
-```
-"wallet","currency","category","datetime","money","description"
-"Everyday","USD","Groceries","2026-08-12 09:30:00","-12.34","market"
-"Everyday","USD","Salary","2026-08-12","2000.00","august"
-```
-
-A row the importer will not read ends the import before anything from the file is saved, and the message names the line it stopped on. A row the CSV reader itself will not read, such as one with the wrong number of fields, ends it the same way but with the reader's own wording.
+Every release note is on the [releases page](https://github.com/herrerad85/tallybook/releases).
 
 ## Build from source
+
 Build the `floss` + `osm` flavors, which use OpenStreetMap and no proprietary services:
 
 ```
@@ -52,14 +63,16 @@ Build the `floss` + `osm` flavors, which use OpenStreetMap and no proprietary se
 
 Requirements: a recent Android SDK and JDK 17 or newer. Release builds use JDK 21, which is what the F-Droid build server uses, so a release built on an older JDK will not reproduce.
 
-Note on icons: the launcher and the intro illustrations are original artwork for this fork, released under the GPLv3. The category picker icons place glyphs from Phosphor Icons (MIT), Tabler Icons (MIT), Lucide (ISC), and Bootstrap Icons (MIT) on original GPLv3 disc backgrounds; a few remain original artwork. The interface also uses Material Design Icons, licensed under Apache-2.0.
+## Contributing
 
-## Roadmap
-The original plan is complete: Android 14/15 compatibility, the rebrand, backup and export fixes, F-Droid submission and publication, and self-hosted WebDAV sync (upstream [#67](https://github.com/AndreAle94/moneywallet/issues/67)) have all shipped.
+Bug reports and pull requests are welcome in the [issue tracker](https://github.com/herrerad85/tallybook/issues). Current direction and open work live in the pinned [roadmap issue](https://github.com/herrerad85/tallybook/issues/15).
 
-Current direction, open work and anything under consideration live in the pinned [roadmap issue](https://github.com/herrerad85/tallybook/issues/15).
+Translating needs no tooling. Copy `app/src/main/res/values/strings.xml` into a folder named for the language, such as `values-de`, translate the entries and open a pull request.
 
-## Upstream and license
-Tallybook is a fork of [AndreAle94/moneywallet](https://github.com/AndreAle94/moneywallet). MoneyWallet is free software licensed under the GNU General Public License v3.0, and Tallybook remains under the same license. See [LICENSE.md](LICENSE.md).
+## Credits and license
 
-Original work and credits: MoneyWallet was created by its upstream author and contributors. The Tallybook app icon and the intro illustrations are original artwork for this fork, released under the same GPLv3 license. The category icons combine original GPLv3 disc backgrounds with glyphs from Phosphor Icons (MIT), Tabler Icons (MIT), Lucide (ISC), and Bootstrap Icons (MIT); a few category icons remain original artwork. Full copyright and license texts for these icon libraries are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The interface also uses Material Design Icons, licensed under Apache-2.0.
+Tallybook is free software under the GNU General Public License v3.0 or later, the same license as the project it came from. See [LICENSE.md](LICENSE.md).
+
+MoneyWallet was written by AndreAle94 and its contributors, and this fork exists to keep that work usable. Tallybook is independent and is not endorsed by or affiliated with the original author.
+
+The app icon and the intro illustrations are original artwork for this fork, released under the GPLv3. The category picker icons place glyphs from Phosphor Icons (MIT), Tabler Icons (MIT), Lucide (ISC) and Bootstrap Icons (MIT) on original GPLv3 disc backgrounds, and a few are original artwork. The interface also uses Material Design Icons, licensed under Apache-2.0. Full license texts are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
