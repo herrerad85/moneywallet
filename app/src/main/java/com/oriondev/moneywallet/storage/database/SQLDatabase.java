@@ -3045,6 +3045,7 @@ import java.util.function.Supplier;
                 "LEFT JOIN " + Schema.BudgetWallet.TABLE + " AS bw2 " +
                 "ON t2." + Schema.Transaction.WALLET + " = bw2." + Schema.BudgetWallet.WALLET + " " +
                 "WHERE bw2." + Schema.BudgetWallet.BUDGET + " = b." + Schema.Budget.ID + " " +
+                "AND bw2." + Schema.BudgetWallet.DELETED + " = 0 " +
                 "AND bw2." + Schema.BudgetWallet.WALLET + " != b._wallet_id " +
                 ") " +
                 "GROUP BY b." + Schema.Budget.ID + ",b._wallet_id " +
@@ -3075,6 +3076,7 @@ import java.util.function.Supplier;
                 "LEFT JOIN " + Schema.BudgetWallet.TABLE + " AS bw2 " +
                 "ON t2." + Schema.Transaction.WALLET + " = bw2." + Schema.BudgetWallet.WALLET + " " +
                 "WHERE bw2." + Schema.BudgetWallet.BUDGET + " = b." + Schema.Budget.ID + " " +
+                "AND bw2." + Schema.BudgetWallet.DELETED + " = 0 " +
                 "AND bw2." + Schema.BudgetWallet.WALLET + " != b._wallet_id " +
                 ") " +
 
@@ -3244,6 +3246,7 @@ import java.util.function.Supplier;
                 "LEFT JOIN " + Schema.BudgetWallet.TABLE + " AS bw2 " +
                 "ON t2." + Schema.Transaction.WALLET + " = bw2." + Schema.BudgetWallet.WALLET + " " +
                 "WHERE bw2." + Schema.BudgetWallet.BUDGET + " = b." + Schema.Budget.ID + " " +
+                "AND bw2." + Schema.BudgetWallet.DELETED + " = 0 " +
                 ") " +
                 "UNION " +
 
@@ -3272,6 +3275,7 @@ import java.util.function.Supplier;
                 "LEFT JOIN " + Schema.BudgetWallet.TABLE + " AS bw2 " +
                 "ON t2." + Schema.Transaction.WALLET + " = bw2." + Schema.BudgetWallet.WALLET + " " +
                 "WHERE bw2." + Schema.BudgetWallet.BUDGET + " = b." + Schema.Budget.ID + " " +
+                "AND bw2." + Schema.BudgetWallet.DELETED + " = 0 " +
                 ") " +
                 "UNION " +
 
