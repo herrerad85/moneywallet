@@ -67,6 +67,11 @@ public class PeriodDetailSummaryLoader extends AbstractGenericLoader<PeriodDetai
     }
 
     @Override
+    protected Uri getObservedUri() {
+        return DataContentProvider.CONTENT_ALL;
+    }
+
+    @Override
     public PeriodDetailSummaryData loadInBackground() {
         Money totalNetIncomes = new Money();
         List<PeriodMoney> periodMoneyList = new ArrayList<>();

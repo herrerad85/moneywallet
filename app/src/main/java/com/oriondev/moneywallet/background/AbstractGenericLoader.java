@@ -20,6 +20,7 @@
 package com.oriondev.moneywallet.background;
 
 import android.content.Context;
+import android.net.Uri;
 import androidx.loader.content.AsyncTaskLoader;
 
 /**
@@ -27,6 +28,7 @@ import androidx.loader.content.AsyncTaskLoader;
  */
 public abstract class AbstractGenericLoader<T> extends AsyncTaskLoader<T> {
 
+    private ForceLoadContentObserver mObserver;
     private T mGenericData;
 
     public AbstractGenericLoader(Context context) {
@@ -35,6 +37,15 @@ public abstract class AbstractGenericLoader<T> extends AsyncTaskLoader<T> {
 
     @Override
     public abstract T loadInBackground();
+
+    /**
+     * The uri to watch for writes, or null for a loader whose data cannot change while the app
+     * runs. Without one nothing ever marks the content changed, so the reload below can never
+     * happen and the screen keeps whatever it read the first time.
+     */
+    protected Uri getObservedUri() {
+        return null;
+    }
 
     /* Runs on the UI thread */
     @Override
@@ -54,10 +65,26 @@ public abstract class AbstractGenericLoader<T> extends AsyncTaskLoader<T> {
      */
     @Override
     protected void onStartLoading() {
-        if (mGenericData != null) {
+        Uri observed = getObservedUri();
+        if (observed != null && mObserver == null) {
+            // built here and not in a field, because the observer binds a Handler to the thread
+            // that builds it and a loader is only ever started on the main one. The loaders that
+            // watch nothing then build nothing.
+            mObserver = new ForceLoadContentObserver();
+            // descendants, because no write names the uri above and an observer that did not ask
+            // for them would never hear one
+            getContext().getContentResolver().registerContentObserver(observed, true, mObserver);
+        }
+        // takeContentChanged clears the flag, so it is read once. The cached result goes out only
+        // when nothing is about to replace it, otherwise a screen coming back to a write that
+        // landed while it was away shows the old figures and then the new ones a moment later. A
+        // write that lands while the screen is showing forces a load through the observer instead,
+        // and the two orders race, so that case can still show both.
+        boolean reload = takeContentChanged() || mGenericData == null;
+        if (mGenericData != null && !reload) {
             deliverResult(mGenericData);
         }
-        if (takeContentChanged() || mGenericData == null) {
+        if (reload) {
             forceLoad();
         }
     }
@@ -71,11 +98,33 @@ public abstract class AbstractGenericLoader<T> extends AsyncTaskLoader<T> {
         cancelLoad();
     }
 
+    /**
+     * These screens ask for a fresh loader every time their view is created, and that hands the
+     * old one to the new one to reset once it has delivered. A replacement that never delivers,
+     * because the screen was left or built again first, takes its predecessor down with it and
+     * nothing resets it, so an unregister that lived in onReset alone would leave a watcher
+     * behind for the life of the process. An abandoned loader's result is thrown away, so it has
+     * no use for one either way.
+     */
+    @Override
+    protected void onAbandon() {
+        super.onAbandon();
+        stopWatching();
+    }
+
     @Override
     protected void onReset() {
         super.onReset();
         // Ensure the loader is stopped
         onStopLoading();
+        stopWatching();
         mGenericData = null;
+    }
+
+    private void stopWatching() {
+        if (mObserver != null) {
+            getContext().getContentResolver().unregisterContentObserver(mObserver);
+            mObserver = null;
+        }
     }
 }

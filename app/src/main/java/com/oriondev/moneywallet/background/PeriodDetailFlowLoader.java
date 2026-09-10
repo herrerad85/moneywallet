@@ -63,6 +63,11 @@ public class PeriodDetailFlowLoader extends AbstractGenericLoader<PeriodDetailFl
         mIncomes = incomes;
     }
 
+    @Override
+    protected Uri getObservedUri() {
+        return DataContentProvider.CONTENT_ALL;
+    }
+
     @Override @SuppressLint("UseSparseArrays")
     public PeriodDetailFlowData loadInBackground() {
         Money totalMoney = new Money();

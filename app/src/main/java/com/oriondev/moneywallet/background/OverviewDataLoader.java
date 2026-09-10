@@ -75,6 +75,11 @@ public class OverviewDataLoader extends AbstractGenericLoader<OverviewData> {
     }
 
     @Override
+    protected Uri getObservedUri() {
+        return DataContentProvider.CONTENT_ALL;
+    }
+
+    @Override
     public OverviewData loadInBackground() {
         Money totalNetIncomes = new Money();
         List<PeriodMoney> periodMoneyList = new ArrayList<>();
