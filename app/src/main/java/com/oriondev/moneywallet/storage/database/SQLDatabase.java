@@ -76,7 +76,17 @@ import java.util.function.Supplier;
     private static final String TAG = "SQLDatabase";
 
     /*package-local*/ static final String DATABASE_NAME = "database.db";
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
+
+    /**
+     * The currencies whose shipped decimals were taken from the number of digits a country
+     * uses in cash, where it circulates no minor coin. A ledger records bank statements,
+     * cards and transfers, so the count used in a formal setting is the right one, and
+     * ISO 4217 puts all nine at two as well.
+     */
+    /*package-local*/ static final String[] CURRENCIES_MOVED_TO_TWO_DECIMALS = new String[] {
+            "AMD", "CRC", "ETB", "GYD", "MNT", "MUR", "RSD", "TZS", "UZS"
+    };
 
     /**
      * The helper a restore builds its import in, set only on the thread running that import.
@@ -431,6 +441,49 @@ import java.util.function.Supplier;
             db.execSQL(Schema.CLEAR_BUDGET_CATEGORY_OF_OTHER_TYPES);
             db.execSQL(Schema.CLEAR_BUDGET_COLUMN_OF_OTHER_TYPES);
         }
+        if (oldVersion < 6) {
+            // the nine currencies named above move to two decimals, and every amount
+            // already stored in one of them is rescaled to match, so what the ledger says
+            // does not change. A row is moved only while it still reads zero, which is what
+            // lets this run twice without doubling the scale. It can run twice, because
+            // onDowngrade leaves the schema alone and only stamps the version back, so an
+            // older release installed over this database and upgraded again arrives here a
+            // second time.
+            for (String iso : CURRENCIES_MOVED_TO_TWO_DECIMALS) {
+                if (readCurrencyDecimals(db, iso) == 0) {
+                    ContentValues currency = new ContentValues();
+                    currency.put(Schema.Currency.DECIMALS, 2);
+                    currency.put(Schema.Currency.LAST_EDIT, System.currentTimeMillis());
+                    db.update(Schema.Currency.TABLE, currency,
+                            Schema.Currency.ISO + " = ?", new String[] {iso});
+                    fixCurrencyAmounts(db, iso, 2);
+                }
+            }
+        }
+    }
+
+    /**
+     * How many decimals a currency is stored at, or -1 when the database holds no row for
+     * it. A database that has never been opened by the app carries an empty currency
+     * table, since the default set is seeded on the first read and not by onCreate.
+     *
+     * @param db database being upgraded.
+     * @param iso currency to read.
+     * @return the decimals held, or -1 when there is no such row.
+     */
+    private int readCurrencyDecimals(SQLiteDatabase db, String iso) {
+        Cursor cursor = db.query(Schema.Currency.TABLE, new String[] {Schema.Currency.DECIMALS},
+                Schema.Currency.ISO + " = ?", new String[] {iso}, null, null, null);
+        if (cursor != null) {
+            try {
+                if (cursor.moveToFirst()) {
+                    return cursor.getInt(0);
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        return -1;
     }
 
     /**
@@ -5544,7 +5597,12 @@ import java.util.function.Supplier;
             };
             String selection = Contract.Wallet.CURRENCY + " = ?";
             String[] selectionArgs = new String[] {iso};
-            Cursor cursor = getWallets(projections, selection, selectionArgs, null);
+            // the wallet table itself and not getWallets, which opens the database through the
+            // helper. That helper is already open and part way through onUpgrade when a
+            // migration calls this, so the call throws getDatabase called recursively. Reading
+            // the table also drops that method's subquery, so a row flagged deleted is
+            // rescaled here where it used to be skipped.
+            Cursor cursor = db.query(Schema.Wallet.TABLE, projections, selection, selectionArgs, null, null, null);
             if (cursor != null) {
                 int indexId = cursor.getColumnIndex(Contract.Wallet.ID);
                 int indexStartMoney = cursor.getColumnIndex(Contract.Wallet.START_MONEY);

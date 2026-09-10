@@ -7,11 +7,17 @@ import android.database.sqlite.SQLiteConstraintException;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +44,11 @@ import static org.junit.Assert.fail;
  * release older than the one that wrote it leaves, since onDowngrade does nothing and the helper
  * stamps the version anyway. That one uses Schema, the schema being the one it wrote. A fifth is a
  * database the migration cannot convert at all.
+ *
+ * Four cases after those cover the step that moves nine currencies to two decimals, all on a
+ * database this app wrote at version 5: the money it carries, the same database arriving a second
+ * time, a currency the owner had already set above zero, and the asset file agreeing with the list
+ * the step walks.
  *
  * No budget here is flagged deleted, because none can be. The delete is a real delete on every
  * build ever shipped, the soft delete beside it was gated on a constant that has read false since
@@ -144,6 +155,10 @@ public class SQLDatabaseUpgradeTest {
         old.execSQL(CREATE_TABLE_WALLET_BEFORE_3);
         old.execSQL(CREATE_TABLE_CATEGORY_BEFORE_3);
         old.execSQL(CREATE_TABLE_BUDGET_BEFORE_4);
+        // every release has shipped a currency table, and the decimals step reads it. The
+        // declaration has not changed since the initial commit, so Schema is the one a
+        // release of any of these versions wrote
+        old.execSQL(Schema.CREATE_TABLE_CURRENCY);
         // each release added its own columns by its own upgrade, so they are added here the same
         // way instead of being declared, and the fixture stays the tables that release shipped
         if (version >= 3) {
@@ -178,7 +193,7 @@ public class SQLDatabaseUpgradeTest {
         SQLiteDatabase upgraded = helper.getWritableDatabase();
 
         // written out so that the next version bump has to come through here
-        assertEquals(5, upgraded.getVersion());
+        assertEquals(6, upgraded.getVersion());
         assertEquals("ok", text(upgraded, "PRAGMA integrity_check"));
         assertEquals(0L, count(upgraded, "pragma_foreign_key_check", null));
         assertSchemaMatchesAFreshInstall(upgraded);
@@ -287,6 +302,10 @@ public class SQLDatabaseUpgradeTest {
         old.execSQL(Schema.CREATE_TABLE_CATEGORY);
         old.execSQL(Schema.CREATE_TABLE_BUDGET);
         old.execSQL(Schema.CREATE_TABLE_BUDGET_CATEGORY);
+        // every release has shipped a currency table, and the decimals step reads it. The
+        // declaration has not changed since the initial commit, so Schema is the one a
+        // release of any of these versions wrote
+        old.execSQL(Schema.CREATE_TABLE_CURRENCY);
         insertCategory(old, 1, "Food");
         insertCategory(old, 5, "Rent");
         insertCategory(old, 7, "Fun");
@@ -323,7 +342,7 @@ public class SQLDatabaseUpgradeTest {
         SQLDatabase helper = new SQLDatabase(mContext, NAME);
         SQLiteDatabase upgraded = helper.getWritableDatabase();
 
-        assertEquals(5, upgraded.getVersion());
+        assertEquals(6, upgraded.getVersion());
         assertEquals("ok", text(upgraded, "PRAGMA integrity_check"));
         assertEquals(0L, count(upgraded, "pragma_foreign_key_check", null));
         assertEquals(7L, count(upgraded, Schema.BudgetCategory.TABLE, null));
@@ -380,6 +399,307 @@ public class SQLDatabaseUpgradeTest {
                     declaration(upgraded, "foreign_key_list", table));
         }
         helper.close();
+    }
+
+    /**
+     * The migration and the asset file are two sources of truth for the same nine currencies, and
+     * an upgraded install reads one while a fresh install reads the other. Putting a
+     * "decimals" key of zero back on any of them would leave the two disagreeing with nothing
+     * else to catch it.
+     */
+    @Test
+    public void theAssetFileAgreesWithTheCurrenciesTheStepMoves() throws Exception {
+        StringBuilder json = new StringBuilder();
+        InputStream stream = mContext.getAssets().open("resources/currencies.json");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+        try {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                json.append(line);
+            }
+        } finally {
+            reader.close();
+        }
+        JSONArray shipped = new JSONArray(json.toString());
+        for (String iso : SQLDatabase.CURRENCIES_MOVED_TO_TWO_DECIMALS) {
+            boolean found = false;
+            for (int i = 0; i < shipped.length(); i++) {
+                JSONObject currency = shipped.getJSONObject(i);
+                if (iso.equals(currency.getString("code"))) {
+                    found = true;
+                    // the same read CurrencyManager.loadDefaultCurrencies makes
+                    assertEquals(iso + " is seeded at the wrong scale on a fresh install",
+                            2, currency.optInt("decimals", 2));
+                }
+            }
+            assertTrue(iso + " is not in the asset file at all", found);
+        }
+    }
+
+    /**
+     * The nine currencies that move to two decimals. Every amount stored in one of them is
+     * multiplied so the ledger reads the same afterwards, and a currency the step does not name is
+     * left where it is, which is what the second wallet and its rows are here for.
+     */
+    @Test
+    public void aCurrencyMovedToTwoDecimalsCarriesItsMoneyWithIt() {
+        writeADatabaseAtVersionFive(0);
+
+        SQLDatabase helper = new SQLDatabase(mContext, NAME);
+        SQLiteDatabase upgraded = helper.getWritableDatabase();
+
+        assertEquals(6, upgraded.getVersion());
+        assertEquals(Long.valueOf(2L), decimalsOf(upgraded, "AMD"));
+        assertEquals(Long.valueOf(15000000L), startMoneyOf(upgraded, 901));
+        assertEquals(Long.valueOf(150000L), moneyOf(upgraded, 910));
+        assertEquals(Long.valueOf(3000000L), budgetMoneyOf(upgraded, 920));
+        // a row flagged deleted is reached as well, which the query getWallets used to run was
+        // not. No shipped build writes that flag on a wallet, so this pins the query and not a
+        // state a user can produce
+        assertEquals(Long.valueOf(70000L), startMoneyOf(upgraded, 903));
+        assertEquals(Long.valueOf(20000L), moneyOf(upgraded, 911));
+
+        // the euro rows are the control. A step that walked every row instead of the currency it
+        // names would move these as well, and every assert above would still read the same
+        assertEquals(Long.valueOf(2L), decimalsOf(upgraded, "EUR"));
+        assertEquals(Long.valueOf(5000L), startMoneyOf(upgraded, 902));
+        assertEquals(Long.valueOf(250L), moneyOf(upgraded, 912));
+        assertEquals(Long.valueOf(41000L), budgetMoneyOf(upgraded, 921));
+
+        // the seven tables a wallet based walk reaches through wallet 901
+        assertEquals(Long.valueOf(410000L), number(upgraded,
+                "SELECT debt_money FROM debts WHERE debt_id = 930"));
+        assertEquals(Long.valueOf(520000L), number(upgraded,
+                "SELECT saving_start_money FROM savings WHERE saving_id = 940"));
+        assertEquals(Long.valueOf(630000L), number(upgraded,
+                "SELECT saving_end_money FROM savings WHERE saving_id = 940"));
+        assertEquals(Long.valueOf(740000L), number(upgraded,
+                "SELECT model_transaction_money FROM transaction_models WHERE model_id = 950"));
+        assertEquals(Long.valueOf(190000L), number(upgraded,
+                "SELECT recurrent_transaction_money FROM recurrent_transactions WHERE recurrent_transaction_id = 970"));
+
+        // the leg leaving the dram wallet and the tax paid with it move, the leg arriving in
+        // the euro wallet does not
+        assertEquals(Long.valueOf(850000L), number(upgraded,
+                "SELECT model_transfer_from_money FROM transfer_models WHERE model_id = 960"));
+        assertEquals(Long.valueOf(170000L), number(upgraded,
+                "SELECT model_transfer_tax_money FROM transfer_models WHERE model_id = 960"));
+        assertEquals(Long.valueOf(9600L), number(upgraded,
+                "SELECT model_transfer_to_money FROM transfer_models WHERE model_id = 960"));
+
+        // and crossing the other way, only the amount arriving moves
+        assertEquals(Long.valueOf(2100L), number(upgraded,
+                "SELECT model_transfer_from_money FROM transfer_models WHERE model_id = 961"));
+        assertEquals(Long.valueOf(400L), number(upgraded,
+                "SELECT model_transfer_tax_money FROM transfer_models WHERE model_id = 961"));
+        assertEquals(Long.valueOf(320000L), number(upgraded,
+                "SELECT model_transfer_to_money FROM transfer_models WHERE model_id = 961"));
+
+        assertEquals(Long.valueOf(260000L), number(upgraded,
+                "SELECT recurrent_transfer_from_money FROM recurrent_transfers WHERE recurrent_transfer_id = 980"));
+        assertEquals(Long.valueOf(30000L), number(upgraded,
+                "SELECT recurrent_transfer_tax_money FROM recurrent_transfers WHERE recurrent_transfer_id = 980"));
+        assertEquals(Long.valueOf(2700L), number(upgraded,
+                "SELECT recurrent_transfer_to_money FROM recurrent_transfers WHERE recurrent_transfer_id = 980"));
+        assertEquals(Long.valueOf(3300L), number(upgraded,
+                "SELECT recurrent_transfer_from_money FROM recurrent_transfers WHERE recurrent_transfer_id = 981"));
+        assertEquals(Long.valueOf(500L), number(upgraded,
+                "SELECT recurrent_transfer_tax_money FROM recurrent_transfers WHERE recurrent_transfer_id = 981"));
+        assertEquals(Long.valueOf(340000L), number(upgraded,
+                "SELECT recurrent_transfer_to_money FROM recurrent_transfers WHERE recurrent_transfer_id = 981"));
+        helper.close();
+    }
+
+    /**
+     * The same database arriving a second time, which is what installing a release older than this
+     * one and upgrading again leaves, since onDowngrade only stamps the version back. The step
+     * reads the decimals it is about to write, so the second pass finds two and does nothing. A
+     * pass that keyed off the version alone would multiply by a hundred again.
+     */
+    @Test
+    public void theSecondTimeTheStepRunsItMovesNothing() {
+        writeADatabaseAtVersionFive(0);
+
+        SQLDatabase first = new SQLDatabase(mContext, NAME);
+        first.getWritableDatabase();
+        first.close();
+
+        SQLiteDatabase downgraded = mContext.openOrCreateDatabase(NAME, Context.MODE_PRIVATE, null);
+        downgraded.setVersion(5);
+        downgraded.close();
+
+        SQLDatabase second = new SQLDatabase(mContext, NAME);
+        SQLiteDatabase upgraded = second.getWritableDatabase();
+
+        assertEquals(6, upgraded.getVersion());
+        assertEquals(Long.valueOf(2L), decimalsOf(upgraded, "AMD"));
+        assertEquals(Long.valueOf(15000000L), startMoneyOf(upgraded, 901));
+        assertEquals(Long.valueOf(150000L), moneyOf(upgraded, 910));
+        assertEquals(Long.valueOf(3000000L), budgetMoneyOf(upgraded, 920));
+        second.close();
+    }
+
+    /**
+     * A currency the owner set to something other than zero in Manage currencies. Only a row
+     * reading zero is moved, so this one and the money scaled to it are both left alone. An
+     * owner who chooses zero is not covered, because that value is the shipped one and the step
+     * cannot tell the two apart.
+     */
+    @Test
+    public void decimalsTheOwnerSetAboveZeroAreLeftAlone() {
+        writeADatabaseAtVersionFive(3);
+
+        SQLDatabase helper = new SQLDatabase(mContext, NAME);
+        SQLiteDatabase upgraded = helper.getWritableDatabase();
+
+        assertEquals(Long.valueOf(3L), decimalsOf(upgraded, "AMD"));
+        assertEquals(Long.valueOf(150000L), startMoneyOf(upgraded, 901));
+        assertEquals(Long.valueOf(1500L), moneyOf(upgraded, 910));
+        assertEquals(Long.valueOf(30000L), budgetMoneyOf(upgraded, 920));
+        helper.close();
+    }
+
+    /**
+     * A database this app wrote, holding one of the nine currencies at the decimals given and the
+     * euro beside it, with a wallet, a transaction and a budget in each. The third wallet carries
+     * the deleted flag, which no shipped build writes on a wallet, so it is there to pin the query
+     * the step runs and not a state a user can reach. Its transaction is live like the others.
+     */
+    private void writeADatabaseAtVersionFive(int amdDecimals) {
+        // onCreate writes the tables and the version is then put back, instead of the tables
+        // being declared here the way the join table fixtures declare theirs. The step adds no
+        // table and no column, so the schema either side of it is the same one, and the rescale
+        // reaches nine tables that all have to be there for it to get to the end
+        SQLDatabase writer = new SQLDatabase(mContext, NAME);
+        SQLiteDatabase old = writer.getWritableDatabase();
+        insertCurrency(old, "AMD", amdDecimals);
+        insertCurrency(old, "EUR", 2);
+        // above every id onCreate seeds, since it writes the default set of categories
+        insertCategory(old, 900, "Food");
+        insertWalletIn(old, 901, "Dram", "AMD", 150000L, false);
+        insertWalletIn(old, 902, "Euro", "EUR", 5000L, false);
+        insertWalletIn(old, 903, "Old dram", "AMD", 700L, true);
+        insertTransaction(old, 910, 901, 1500L);
+        insertTransaction(old, 911, 903, 200L);
+        insertTransaction(old, 912, 902, 250L);
+        insertBudgetIn(old, 920, "AMD", 30000L);
+        insertBudgetIn(old, 921, "EUR", 41000L);
+        // the rescale walks nine tables and every one of them needs a row, or the branch that
+        // reaches it is free to do nothing. Every amount here is its own number, so a pass
+        // that wrote the right value to the wrong column would still be caught
+        insertDebt(old, 930, 901, 4100L);
+        insertSaving(old, 940, 901, 5200L, 6300L);
+        insertTransactionModel(old, 950, 901, 7400L);
+        // out of the dram wallet and into the euro one. The tax follows the leg it is paid
+        // from, so this row has two of its three amounts rescaled and the third left alone
+        insertTransferModel(old, 960, 901, 902, 8500L, 9600L, 1700L);
+        // and the same crossing the other way, where only the amount arriving is rescaled
+        insertTransferModel(old, 961, 902, 901, 2100L, 3200L, 400L);
+        insertRecurrentTransaction(old, 970, 901, 1900L);
+        insertRecurrentTransfer(old, 980, 901, 902, 2600L, 2700L, 300L);
+        // and one arriving in the dram wallet, or the pass that matches the wallet the
+        // money lands in has nothing to move and reads the same either way
+        insertRecurrentTransfer(old, 981, 902, 901, 3300L, 3400L, 500L);
+        old.setVersion(5);
+        writer.close();
+    }
+
+    private void insertCurrency(SQLiteDatabase db, String iso, int decimals) {
+        db.execSQL("INSERT INTO currencies (currency_iso, currency_name, currency_symbol, " +
+                        "currency_decimals, uuid, last_edit, deleted) VALUES (?, ?, ?, ?, ?, ?, 0)",
+                new Object[] {iso, iso, iso, decimals, "currency-" + iso, EDIT});
+    }
+
+    private void insertWalletIn(SQLiteDatabase db, long id, String name, String iso,
+                                long startMoney, boolean deleted) {
+        db.execSQL("INSERT INTO wallets (wallet_id, wallet_name, wallet_currency, " +
+                        "wallet_start_money, uuid, last_edit, deleted) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                new Object[] {id, name, iso, startMoney, "wallet-" + id, EDIT, deleted ? 1 : 0});
+    }
+
+    private void insertTransaction(SQLiteDatabase db, long id, long wallet, long money) {
+        db.execSQL("INSERT INTO transactions (transaction_id, transaction_money, " +
+                        "transaction_date, transaction_category, transaction_direction, " +
+                        "transaction_type, transaction_wallet, uuid, last_edit, deleted) " +
+                        "VALUES (?, ?, '2026-09-01 12:00:00', 900, ?, ?, ?, ?, ?, 0)",
+                new Object[] {id, money, Schema.Direction.EXPENSE,
+                        Contract.TransactionType.STANDARD, wallet, "transaction-" + id, EDIT});
+    }
+
+    private void insertBudgetIn(SQLiteDatabase db, long id, String iso, long money) {
+        db.execSQL("INSERT INTO budgets (budget_id, budget_type, budget_start_date, " +
+                        "budget_end_date, budget_money, budget_currency, uuid, last_edit, " +
+                        "deleted) VALUES (?, ?, '2026-09-01', '2026-09-30', ?, ?, ?, ?, 0)",
+                new Object[] {id, Schema.BudgetType.EXPENSES, money, iso, "budget-" + id, EDIT});
+    }
+
+    private void insertDebt(SQLiteDatabase db, long id, long wallet, long money) {
+        db.execSQL("INSERT INTO debts (debt_id, debt_type, debt_icon, debt_description, " +
+                        "debt_date, debt_wallet, debt_money, uuid, last_edit, deleted) " +
+                        "VALUES (?, 0, ?, 'Loan', '2026-09-01', ?, ?, ?, ?, 0)",
+                new Object[] {id, ICON, wallet, money, "debt-" + id, EDIT});
+    }
+
+    private void insertSaving(SQLiteDatabase db, long id, long wallet, long start, long end) {
+        db.execSQL("INSERT INTO savings (saving_id, saving_description, saving_icon, " +
+                        "saving_start_money, saving_end_money, saving_wallet, uuid, last_edit, " +
+                        "deleted) VALUES (?, 'Goal', ?, ?, ?, ?, ?, ?, 0)",
+                new Object[] {id, ICON, start, end, wallet, "saving-" + id, EDIT});
+    }
+
+    private void insertTransactionModel(SQLiteDatabase db, long id, long wallet, long money) {
+        db.execSQL("INSERT INTO transaction_models (model_id, " +
+                        "model_transaction_money, model_transaction_category, " +
+                        "model_transaction_direction, model_transaction_wallet, uuid, last_edit, " +
+                        "deleted) VALUES (?, ?, 900, ?, ?, ?, ?, 0)",
+                new Object[] {id, money, Schema.Direction.EXPENSE, wallet, "model-" + id, EDIT});
+    }
+
+    private void insertTransferModel(SQLiteDatabase db, long id, long from, long to, long moneyFrom,
+                                     long moneyTo, long tax) {
+        db.execSQL("INSERT INTO transfer_models (model_id, model_transfer_from_wallet, " +
+                        "model_transfer_to_wallet, model_transfer_from_money, " +
+                        "model_transfer_to_money, model_transfer_tax_money, uuid, last_edit, " +
+                        "deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)",
+                new Object[] {id, from, to, moneyFrom, moneyTo, tax, "transfer-model-" + id, EDIT});
+    }
+
+    private void insertRecurrentTransaction(SQLiteDatabase db, long id, long wallet, long money) {
+        db.execSQL("INSERT INTO recurrent_transactions (recurrent_transaction_id, " +
+                        "recurrent_transaction_money, recurrent_transaction_category, " +
+                        "recurrent_transaction_direction, recurrent_transaction_wallet, " +
+                        "recurrent_transaction_start_date, recurrent_transaction_last_occurrence, " +
+                        "recurrent_transaction_rule, uuid, last_edit, deleted) " +
+                        "VALUES (?, ?, 900, ?, ?, '2026-09-01', '2026-09-01', 'FREQ=MONTHLY', ?, ?, 0)",
+                new Object[] {id, money, Schema.Direction.EXPENSE, wallet, "recurrence-" + id, EDIT});
+    }
+
+    private void insertRecurrentTransfer(SQLiteDatabase db, long id, long from, long to,
+                                         long moneyFrom, long moneyTo, long tax) {
+        db.execSQL("INSERT INTO recurrent_transfers (recurrent_transfer_id, " +
+                        "recurrent_transfer_from_wallet, recurrent_transfer_to_wallet, " +
+                        "recurrent_transfer_from_money, recurrent_transfer_to_money, " +
+                        "recurrent_transfer_tax_money, recurrent_transfer_start_date, " +
+                        "recurrent_transfer_last_occurrence, recurrent_transfer_rule, uuid, " +
+                        "last_edit, deleted) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, '2026-09-01', '2026-09-01', 'FREQ=MONTHLY', ?, ?, 0)",
+                new Object[] {id, from, to, moneyFrom, moneyTo, tax, "recurrent-transfer-" + id, EDIT});
+    }
+
+    private Long decimalsOf(SQLiteDatabase db, String iso) {
+        return number(db, "SELECT currency_decimals FROM currencies WHERE currency_iso = '" + iso + "'");
+    }
+
+    private Long startMoneyOf(SQLiteDatabase db, long wallet) {
+        return number(db, "SELECT wallet_start_money FROM wallets WHERE wallet_id = " + wallet);
+    }
+
+    private Long moneyOf(SQLiteDatabase db, long transaction) {
+        return number(db, "SELECT transaction_money FROM transactions WHERE transaction_id = " + transaction);
+    }
+
+    private Long budgetMoneyOf(SQLiteDatabase db, long budget) {
+        return number(db, "SELECT budget_money FROM budgets WHERE budget_id = " + budget);
     }
 
     /** One line per row of the pragma, sorted, with the position columns left out. */
