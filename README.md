@@ -11,7 +11,7 @@ New to the app, or wondering whether it already does something? See the [FAQ](do
 
 Tallybook is on F-Droid: [f-droid.org/packages/io.github.herrerad85.tallybook](https://f-droid.org/packages/io.github.herrerad85.tallybook/)
 
-Signed APKs are also attached to each [GitHub release](https://github.com/herrerad85/moneywallet/releases). The F-Droid build is reproducible and carries the developer signature, so the two are interchangeable.
+Signed APKs are also attached to each [GitHub release](https://github.com/herrerad85/tallybook/releases). The F-Droid build is reproducible and carries the developer signature, so the two are interchangeable.
 
 **Tallybook is a maintained fork of [MoneyWallet](https://github.com/AndreAle94/moneywallet)** by AndreAle94, a GPL-licensed Android expense manager whose last release was in 2021. This fork modernizes the open-source build, fixes the startup crash that stopped the app launching on recent Android, and continues maintenance under a new name and application id.
 
@@ -28,7 +28,7 @@ Tallybook is published on F-Droid and actively maintained. The current version i
 
 Earlier work, all shipped: Android 14/15 compatibility on a modernized FOSS/OpenStreetMap build, the Android 12+ manifest and PendingIntent updates, a fix for the startup crash caused by a legacy auto-backup path (reported upstream as [#177](https://github.com/AndreAle94/moneywallet/issues/177) and [#286](https://github.com/AndreAle94/moneywallet/issues/286)), the rebrand to a new name and application id, a verified backup and restore migration path (see [MIGRATION.md](MIGRATION.md)), export and import under scoped storage, a local-folder backup option that works with file sync tools, and Android 15 edge-to-edge UI polish.
 
-Progress is tracked in this repository's [issues](https://github.com/herrerad85/moneywallet/issues).
+Progress is tracked in this repository's [issues](https://github.com/herrerad85/tallybook/issues).
 
 ## The CSV import format
 The header row carries the raw column keys, and a file written by hand needs the same ones. Five columns are required on every row: `wallet`, `currency`, `category`, `datetime` and `money`. Five more are optional: `description`, `event`, `people`, `place` and `note`.
@@ -57,7 +57,7 @@ Note on icons: the launcher and the intro illustrations are original artwork for
 ## Roadmap
 The original plan is complete: Android 14/15 compatibility, the rebrand, backup and export fixes, F-Droid submission and publication, and self-hosted WebDAV sync (upstream [#67](https://github.com/AndreAle94/moneywallet/issues/67)) have all shipped.
 
-Current direction, open work and anything under consideration live in the pinned [roadmap issue](https://github.com/herrerad85/moneywallet/issues/15).
+Current direction, open work and anything under consideration live in the pinned [roadmap issue](https://github.com/herrerad85/tallybook/issues/15).
 
 ## Upstream and license
 Tallybook is a fork of [AndreAle94/moneywallet](https://github.com/AndreAle94/moneywallet). MoneyWallet is free software licensed under the GNU General Public License v3.0, and Tallybook remains under the same license. See [LICENSE.md](LICENSE.md).

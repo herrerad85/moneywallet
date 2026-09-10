@@ -72,4 +72,4 @@ The one your phone is set to. On Android 13 and later you can give Tallybook its
 
 ## Something here is wrong or missing
 
-Open an issue: https://github.com/herrerad85/moneywallet/issues
+Open an issue: https://github.com/herrerad85/tallybook/issues

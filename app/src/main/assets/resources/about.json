@@ -1,7 +1,7 @@
 {
   "repository": {
-    "code_url": "https://github.com/herrerad85/moneywallet",
-    "issue_url": "https://github.com/herrerad85/moneywallet/issues"
+    "code_url": "https://github.com/herrerad85/tallybook",
+    "issue_url": "https://github.com/herrerad85/tallybook/issues"
   },
   "other_info": [
     {
@@ -20,7 +20,7 @@
         },{
           "icon": "ic_github_circle_black_24dp",
           "title_resource": "about_hint_fork",
-          "link": "https://github.com/herrerad85/moneywallet"
+          "link": "https://github.com/herrerad85/tallybook"
         }
       ]
     },{

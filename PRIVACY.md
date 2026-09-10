@@ -46,4 +46,4 @@ Changes are commits in this repository, so the history is public and dated.
 
 ## Contact
 
-Open an issue: https://github.com/herrerad85/moneywallet/issues
+Open an issue: https://github.com/herrerad85/tallybook/issues
