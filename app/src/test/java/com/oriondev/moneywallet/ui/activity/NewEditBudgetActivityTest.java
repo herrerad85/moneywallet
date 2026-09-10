@@ -246,6 +246,50 @@ public class NewEditBudgetActivityTest {
     }
 
     @Test
+    public void anIncomeBudgetEditedOffTheWalletThatPaysCountsTheTransferAgain() {
+        long budget = insertBudget(Contract.BudgetType.INCOMES, 700000L, "EUR",
+                new long[] {mWalletA, mWalletB}, null, APRIL_START, APRIL_END, null, null, null);
+        // the one Salary income in wallet A. The leg the transfer pays into wallet B is left out
+        // while wallet A, the wallet it comes from, is in the budget too
+        assertEquals(4000000L, progressOf(budget));
+        assertEquals(4000000L, listedMoneyOf(budget));
+        try (ActivityScenario<NewEditBudgetActivity> scenario =
+                     ActivityScenario.launch(editIntent(budget))) {
+            scenario.onActivity(activity -> {
+                walletsPicker(activity).onWalletsSelected(new Wallet[] {
+                        wallet(mWalletB, "Bank", "EUR")});
+                save(activity);
+                assertTrue(activity.isFinishing());
+            });
+        }
+        assertEquals(Collections.singletonList(mWalletB), walletIdsOf(budget));
+        // the edit takes wallet A out of the budget, so the leg the transfer pays into wallet B
+        // counts, and it is the only income wallet B holds in April
+        assertEquals(4000000000000000L, progressOf(budget));
+        assertEquals(4000000000000000L, listedMoneyOf(budget));
+    }
+
+    @Test
+    public void anExpensesBudgetEditedOffTheWalletThatReceivesCountsTheTransferAgain() {
+        long budget = insertBudget(Contract.BudgetType.EXPENSES, 900000L, "EUR",
+                new long[] {mWalletA, mWalletB}, null, APRIL_START, APRIL_END, null, null, null);
+        assertEquals(aprilExpensesProgress(), progressOf(budget));
+        assertEquals(aprilExpensesProgress(), listedMoneyOf(budget));
+        try (ActivityScenario<NewEditBudgetActivity> scenario =
+                     ActivityScenario.launch(editIntent(budget))) {
+            scenario.onActivity(activity -> {
+                walletsPicker(activity).onWalletsSelected(new Wallet[] {
+                        wallet(mWalletA, "Cash", "EUR")});
+                save(activity);
+                assertTrue(activity.isFinishing());
+            });
+        }
+        assertEquals(Collections.singletonList(mWalletA), walletIdsOf(budget));
+        assertEquals(aprilExpensesInWalletAWithTheTransfer(), progressOf(budget));
+        assertEquals(aprilExpensesInWalletAWithTheTransfer(), listedMoneyOf(budget));
+    }
+
+    @Test
     public void aNewBudgetOnAYenWalletSavesInYen() {
         PreferenceManager.setCurrentWallet(mContext, mWalletD);
         int before = countBudgets();
@@ -1482,6 +1526,14 @@ public class NewEditBudgetActivityTest {
         return 1000L + 20000L + 300000L + 50000000L + 7000000000L + 300000000000000L;
     }
 
+    /**
+     * The April expenses of wallet A alone, where the leg the transfer pays out of it counts
+     * because wallet B is no longer in the budget, and the wallet B row of 9 April is gone.
+     */
+    private static long aprilExpensesInWalletAWithTheTransfer() {
+        return 1000L + 20000L + 300000L + 7000000000L + 300000000000000L + 4000000000000000L;
+    }
+
     // fixtures
 
     private void cancelRollAlarm() {
@@ -1870,6 +1922,23 @@ public class NewEditBudgetActivityTest {
         long progress = cursor.getLong(cursor.getColumnIndex(Contract.Budget.PROGRESS));
         cursor.close();
         return progress;
+    }
+
+    /**
+     * The money on every transaction the budget's own list carries, added up.
+     */
+    private long listedMoneyOf(long budgetId) {
+        Uri uri = Uri.withAppendedPath(
+                ContentUris.withAppendedId(DataContentProvider.CONTENT_BUDGETS, budgetId),
+                "transactions");
+        Cursor cursor = mResolver.query(uri, new String[] {Contract.Transaction.MONEY},
+                null, null, null);
+        long total = 0L;
+        while (cursor.moveToNext()) {
+            total += cursor.getLong(0);
+        }
+        cursor.close();
+        return total;
     }
 
     private void assertRepeatingRow(long budgetId, String startDate, String endDate, String rule,
