@@ -428,4 +428,21 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
                 break;
         }
     }
+
+    @Override
+    public boolean onColorPreview(String tag, int color) {
+        switch (tag) {
+            case TAG_COLOR_PRIMARY:
+                return ThemeEngine.previewColorPrimary(color);
+            case TAG_COLOR_ACCENT:
+                return ThemeEngine.previewColorAccent(color);
+            default:
+                return false;
+        }
+    }
+
+    @Override
+    public void onColorPreviewEnded() {
+        ThemeEngine.clearPreview();
+    }
 }

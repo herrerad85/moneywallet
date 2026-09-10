@@ -29,6 +29,8 @@ import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.GridView;
@@ -62,6 +64,7 @@ public class ColorChooserDialog extends DialogFragment {
     private static final String SS_HUE_INDEX = "ColorChooserDialog::SavedState::HueIndex";
     private static final String SS_SHADE_INDEX = "ColorChooserDialog::SavedState::ShadeIndex";
     private static final String SS_SELECTED_COLOR = "ColorChooserDialog::SavedState::SelectedColor";
+    private static final String SS_PREVIEWING = "ColorChooserDialog::SavedState::Previewing";
 
     private static final int HEX_DIGITS = 6;
 
@@ -81,6 +84,8 @@ public class ColorChooserDialog extends DialogFragment {
     private int[][] mShades;
 
     private boolean mInShadeLevel;
+    private boolean mPreviewing;
+    private boolean mWritingHex;
     private int mHueIndex;
     private int mShadeIndex;
     private int mSelectedColor;
@@ -111,6 +116,7 @@ public class ColorChooserDialog extends DialogFragment {
             mHueIndex = savedInstanceState.getInt(SS_HUE_INDEX);
             mShadeIndex = savedInstanceState.getInt(SS_SHADE_INDEX);
             mSelectedColor = savedInstanceState.getInt(SS_SELECTED_COLOR);
+            mPreviewing = savedInstanceState.getBoolean(SS_PREVIEWING);
         } else {
             mSelectedColor = 0xFF000000 | (arguments != null ? arguments.getInt(ARG_PRESELECT_COLOR) : Color.BLACK);
             findPreselect(mSelectedColor);
@@ -186,6 +192,12 @@ public class ColorChooserDialog extends DialogFragment {
 
         });
         invalidateNegativeButton();
+        if (mPreviewing) {
+            // The screens behind are new ones that know nothing about a preview the old ones
+            // were showing, and the field cannot put it back on its own, because its watcher is what
+            // restores it, and it ignores a value that is not six digits of a real color.
+            previewSelection();
+        }
     }
 
     @Override
@@ -195,6 +207,7 @@ public class ColorChooserDialog extends DialogFragment {
         outState.putInt(SS_HUE_INDEX, mHueIndex);
         outState.putInt(SS_SHADE_INDEX, mShadeIndex);
         outState.putInt(SS_SELECTED_COLOR, mSelectedColor);
+        outState.putBoolean(SS_PREVIEWING, mPreviewing);
     }
 
     @Override
@@ -239,7 +252,7 @@ public class ColorChooserDialog extends DialogFragment {
     }
 
     private void onHexTyped(String text) {
-        if (text.length() != HEX_DIGITS) {
+        if (mWritingHex || text.length() != HEX_DIGITS) {
             return;
         }
         try {
@@ -247,7 +260,7 @@ public class ColorChooserDialog extends DialogFragment {
         } catch (IllegalArgumentException e) {
             return;
         }
-        mPreviewView.setColor(mSelectedColor);
+        previewSelection();
         if (mInShadeLevel) {
             mShadeIndex = mHueIndex >= 0 ? findShade(mHueIndex, mSelectedColor) : -1;
         } else {
@@ -256,8 +269,14 @@ public class ColorChooserDialog extends DialogFragment {
         ((BaseAdapter) mGridView.getAdapter()).notifyDataSetChanged();
     }
 
+    /**
+     * The field's own watcher is what makes a typed color take effect, and it cannot tell a
+     * keystroke from this, so a write of a color the dialog already knows about is held off it.
+     */
     private void writeHex(@ColorInt int color) {
+        mWritingHex = true;
         mHexEditText.setText(String.format(Locale.US, "%06X", 0xFFFFFF & color));
+        mWritingHex = false;
     }
 
     private void onSwatchClicked(int position) {
@@ -275,8 +294,29 @@ public class ColorChooserDialog extends DialogFragment {
             mInShadeLevel = true;
         }
         writeHex(mSelectedColor);
-        mPreviewView.setColor(mSelectedColor);
+        previewSelection();
         invalidate();
+    }
+
+    /**
+     * The dim goes while a preview is up, because the surface being previewed is behind this
+     * dialog and the dim is over it, and it comes back when the engine turns a preview down.
+     * Walking back to the color that is stored is one of those, and it has to look like the
+     * chooser did when it opened on that same color.
+     */
+    private void previewSelection() {
+        mPreviewView.setColor(mSelectedColor);
+        mPreviewing = mCallback.onColorPreview(this, mSelectedColor);
+        Dialog dialog = getDialog();
+        Window window = dialog != null ? dialog.getWindow() : null;
+        if (window == null) {
+            return;
+        }
+        if (mPreviewing) {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        } else {
+            window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        }
     }
 
     private void invalidate() {
@@ -296,6 +336,15 @@ public class ColorChooserDialog extends DialogFragment {
         void onColorSelection(ColorChooserDialog dialog, @ColorInt int color);
 
         void onColorChooserDismissed(ColorChooserDialog dialog);
+
+        /**
+         * The color under the cursor, before OK and possibly never chosen. Returning true says
+         * something outside this dialog is now showing it, which is what the dim behind the dialog
+         * is dropped for.
+         */
+        default boolean onColorPreview(ColorChooserDialog dialog, @ColorInt int color) {
+            return false;
+        }
     }
 
     private class SwatchAdapter extends BaseAdapter {

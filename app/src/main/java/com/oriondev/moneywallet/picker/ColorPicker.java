@@ -58,6 +58,7 @@ public class ColorPicker extends Fragment implements ColorChooserDialog.Callback
 
     private int mCurrentColor;
     private boolean mAccentPalette;
+    private boolean mPreviewed;
 
     @Override
     public void onAttach(Context context) {
@@ -135,12 +136,27 @@ public class ColorPicker extends Fragment implements ColorChooserDialog.Callback
     }
 
     @Override
+    public boolean onColorPreview(ColorChooserDialog dialog, int color) {
+        mPreviewed = mController != null && mController.onColorPreview(getTag(), color);
+        return mPreviewed;
+    }
+
+    /** Only a picker that showed something ends anything, since ending it is not per picker. */
+    @Override
     public void onColorChooserDismissed(ColorChooserDialog dialog) {
-        // nothing to do: the dialog is built fresh on every showPicker
+        if (mPreviewed && mController != null) {
+            mPreviewed = false;
+            mController.onColorPreviewEnded();
+        }
     }
 
     public interface Controller {
 
         void onColorChanged(String tag, int color, boolean autoFired);
+
+        /** @return true if the color is now showing somewhere, so the chooser can drop its dim. */
+        boolean onColorPreview(String tag, int color);
+
+        void onColorPreviewEnded();
     }
 }
