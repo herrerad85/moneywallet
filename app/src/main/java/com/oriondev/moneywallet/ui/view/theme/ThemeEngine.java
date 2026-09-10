@@ -29,6 +29,7 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class is responsible to dynamically theme the user interface at runtime.
@@ -138,6 +139,9 @@ public class ThemeEngine implements ITheme {
 
     private static ThemeEngine sInstance;
 
+    private static Integer sPreviewColorPrimary;
+    private static Integer sPreviewColorAccent;
+
     public static void initialize(Context context) {
         if (sInstance == null) {
             sInstance = new ThemeEngine(context);
@@ -152,10 +156,69 @@ public class ThemeEngine implements ITheme {
         mThemeObserverList.remove(observer);
     }
 
+    /**
+     * Shows a color without storing it, so a chooser can repaint the screen behind it while it
+     * is open. The stored value is untouched, which is what makes cancelling free. Clear it from
+     * clearPreview once the chooser is gone.
+     * <p>
+     * The color that is stored is never an override, and a chooser opens on it and can be walked
+     * back to it. That is not only to save a repaint of every observer. The stored dark primary
+     * is its own value while a previewed one is derived from the primary, and out of the box
+     * those two are not the same color, so showing the stored primary as an override would move
+     * the status bar to a color no screen will have once the chooser is gone.
+     *
+     * @return whether the screen is now showing something other than what is stored
+     */
+    @UiThread
+    public static boolean previewColorPrimary(int colorPrimary) {
+        if (sInstance == null) {
+            return false;
+        }
+        Integer showing = colorPrimary == sInstance.getStoredColorPrimary() ? null : colorPrimary;
+        if (!Objects.equals(showing, sPreviewColorPrimary)) {
+            sPreviewColorPrimary = showing;
+            notifyObservers();
+        }
+        return sPreviewColorPrimary != null;
+    }
+
+    @UiThread
+    public static boolean previewColorAccent(int colorAccent) {
+        if (sInstance == null) {
+            return false;
+        }
+        Integer showing = colorAccent == sInstance.getStoredColorAccent() ? null : colorAccent;
+        if (!Objects.equals(showing, sPreviewColorAccent)) {
+            sPreviewColorAccent = showing;
+            notifyObservers();
+        }
+        return sPreviewColorAccent != null;
+    }
+
+    @UiThread
+    public static void clearPreview() {
+        if (sPreviewColorPrimary == null && sPreviewColorAccent == null) {
+            return;
+        }
+        // OK stores the color it was previewing, so by the time the chooser is gone the override
+        // and the stored value are the same color and dropping it moves nothing on screen.
+        boolean showsSomethingElse = sInstance == null
+                || (sPreviewColorPrimary != null && sPreviewColorPrimary != sInstance.getStoredColorPrimary())
+                || (sPreviewColorAccent != null && sPreviewColorAccent != sInstance.getStoredColorAccent());
+        sPreviewColorPrimary = null;
+        sPreviewColorAccent = null;
+        if (showsSomethingElse) {
+            notifyObservers();
+        }
+    }
+
     @UiThread
     public static void setColorPrimary(int colorPrimary) {
         if (sInstance != null) {
-            if (colorPrimary != sInstance.getColorPrimary()) {
+            // Against the stored value, never the getter: a preview of this same color is showing
+            // while the chooser's OK button is what calls this, and comparing with the getter would
+            // read that preview and skip the write.
+            if (colorPrimary != sInstance.getStoredColorPrimary()) {
                 sInstance.mPreferences.edit().putInt(COLOR_PRIMARY, colorPrimary).apply();
                 sInstance.mPreferences.edit().putInt(COLOR_PRIMARY_DARK, Util.darkenColor(colorPrimary)).apply();
                 notifyObservers();
@@ -168,7 +231,7 @@ public class ThemeEngine implements ITheme {
     @UiThread
     public static void setColorAccent(int colorAccent) {
         if (sInstance != null) {
-            if (colorAccent != sInstance.getColorAccent()) {
+            if (colorAccent != sInstance.getStoredColorAccent()) {
                 sInstance.mPreferences.edit().putInt(COLOR_ACCENT, colorAccent).apply();
                 notifyObservers();
             }
@@ -223,18 +286,34 @@ public class ThemeEngine implements ITheme {
         mPreferences = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
     }
 
+    // Each getter holds the override it read, since it can be cleared between a null check
+    // and a use.
     @Override
     public int getColorPrimary() {
-        return noAlpha(mPreferences.getInt(COLOR_PRIMARY, DEFAULT_COLOR_PRIMARY));
+        Integer preview = sPreviewColorPrimary;
+        return preview != null ? noAlpha(preview) : getStoredColorPrimary();
     }
 
     @Override
     public int getColorPrimaryDark() {
+        Integer preview = sPreviewColorPrimary;
+        if (preview != null) {
+            return noAlpha(Util.darkenColor(preview));
+        }
         return noAlpha(mPreferences.getInt(COLOR_PRIMARY_DARK, DEFAULT_COLOR_PRIMARY_DARK));
     }
 
     @Override
     public int getColorAccent() {
+        Integer preview = sPreviewColorAccent;
+        return preview != null ? noAlpha(preview) : getStoredColorAccent();
+    }
+
+    private int getStoredColorPrimary() {
+        return noAlpha(mPreferences.getInt(COLOR_PRIMARY, DEFAULT_COLOR_PRIMARY));
+    }
+
+    private int getStoredColorAccent() {
         return noAlpha(mPreferences.getInt(COLOR_ACCENT, DEFAULT_COLOR_ACCENT));
     }
 

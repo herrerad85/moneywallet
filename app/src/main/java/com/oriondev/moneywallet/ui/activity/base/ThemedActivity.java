@@ -221,8 +221,10 @@ public abstract class ThemedActivity extends AppCompatActivity implements ThemeE
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        // Before the teardown, not after it: a fragment being torn down inside super.onDestroy
+        // can change the theme, and this activity is in no state to be repainted.
         ThemeEngine.unregisterObserver(this);
+        super.onDestroy();
     }
 
     @Override
