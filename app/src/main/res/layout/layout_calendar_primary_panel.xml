@@ -39,6 +39,8 @@
     </com.oriondev.moneywallet.ui.view.theme.ThemedCardView>
 
     <com.oriondev.moneywallet.ui.view.AdvancedRecyclerView
+        app:systemBarInsetSides="@bool/panel_fills_window"
+        app:systemBarInsetBottom="true"
         android:id="@+id/advanced_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"

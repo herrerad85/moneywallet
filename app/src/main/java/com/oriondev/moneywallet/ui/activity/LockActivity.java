@@ -41,6 +41,8 @@ import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.LockMode;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.base.ThemedActivity;
+import com.oriondev.moneywallet.ui.view.theme.ITheme;
+import com.oriondev.moneywallet.utils.SystemBars;
 
 import java.util.List;
 
@@ -232,8 +234,23 @@ public class LockActivity extends ThemedActivity {
         }
     }
 
+    /**
+     * This screen has no toolbar and no list. It paints the primary color over the whole window,
+     * so that is what is behind both bars.
+     */
+    @Override
+    protected int getColorBehindStatusBar(ITheme theme) {
+        return theme.getColorPrimary();
+    }
+
+    @Override
+    protected int getColorBehindNavigationBar(ITheme theme) {
+        return theme.getColorPrimary();
+    }
+
     private void initializeUi(Bundle savedInstanceState) {
         setContentView(R.layout.activity_lock);
+        SystemBars.pad(findViewById(R.id.lock_layout), true, true, true);
         mPinLayout = findViewById(R.id.pin_layout);
         mPinHelpTextView = findViewById(R.id.pin_help_text_view);
         IndicatorDots indicatorDotsView = findViewById(R.id.indicator_dots);

@@ -48,6 +48,7 @@ import com.oriondev.moneywallet.broadcast.LocalAction;
 import com.oriondev.moneywallet.model.LockMode;
 import com.oriondev.moneywallet.service.AbstractCurrencyRateDownloadIntentService;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
+import com.oriondev.moneywallet.utils.SystemBars;
 import com.oriondev.moneywallet.ui.activity.CurrencyListActivity;
 import com.oriondev.moneywallet.ui.activity.LockActivity;
 import com.oriondev.moneywallet.ui.preference.ThemedInputPreference;
@@ -314,6 +315,10 @@ public class UtilitySettingFragment extends PreferenceFragmentCompat {
     public RecyclerView onCreateRecyclerView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
         RecyclerView recyclerView = super.onCreateRecyclerView(inflater, parent, savedInstanceState);
         recyclerView.setPadding(0, 0, 0, 0);
+        // After the reset above, not before it, or the navigation bar clearance is the
+        // padding that gets zeroed.
+        SystemBars.pad(recyclerView,
+                false, getResources().getBoolean(R.bool.secondary_panel_fills_window), true);
         return recyclerView;
     }
 

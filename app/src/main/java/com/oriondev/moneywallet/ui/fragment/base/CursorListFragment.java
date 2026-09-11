@@ -37,7 +37,9 @@ import android.view.ViewGroup;
 import com.oriondev.moneywallet.storage.preference.CurrentWalletController;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.adapter.recycler.AbstractCursorAdapter;
+import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.ui.view.AdvancedRecyclerView;
+import com.oriondev.moneywallet.utils.SystemBars;
 
 /**
  * Created by andrea on 11/02/18.
@@ -66,6 +68,11 @@ public abstract class CursorListFragment extends Fragment implements SwipeRefres
     @Nullable
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mAdvancedRecyclerView = new AdvancedRecyclerView(getActivity());
+        // Built here and not inflated, so the layout attribute that asks for the navigation bar
+        // clearance never reaches it. These are the pager pages behind most of the drawer, so
+        // without this the last row of the app's main lists cannot be scrolled clear of the bar.
+        SystemBars.pad(mAdvancedRecyclerView.getRecyclerView(),
+                false, getResources().getBoolean(R.bool.panel_fills_window), true);
         onPrepareRecyclerView(mAdvancedRecyclerView);
         mAbstractCursorAdapter = onCreateAdapter();
         mAdvancedRecyclerView.setAdapter(mAbstractCursorAdapter);

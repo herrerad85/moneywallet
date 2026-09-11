@@ -130,11 +130,17 @@
 
         </LinearLayout>
 
+        <!--
+          ~ The one button in the app that is centered instead of anchored to the bottom of the
+          ~ window, so it must not move for the navigation bar. It sits on the divider between the
+          ~ two currency rows and an inset would lift it off.
+          -->
         <com.oriondev.moneywallet.ui.view.theme.ThemedFloatingActionButton
             android:id="@+id/floating_action_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
+            app:systemBarInsetBottom="false"
             android:src="@drawable/ic_swap_vert_black_24dp" />
 
     </RelativeLayout>
@@ -263,6 +269,7 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/keypad_last_row"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.25"

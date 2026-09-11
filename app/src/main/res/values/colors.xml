@@ -34,4 +34,12 @@
     <color name="dialogDarkTextSecondary">#B3FFFFFF</color>
     <color name="dialogDarkTextHint">#80FFFFFF</color>
     <color name="dialogDarkControlHighlight">#33FFFFFF</color>
+
+    <!--
+      ~ Painted over a system bar that the platform will not darken for us: the navigation bar below
+      ~ Android 8, and the strip of the drawer behind the status bar. Half black over anything the
+      ~ app draws leaves the light icons readable. Taken from androidx, which faces the same problem.
+      -->
+    <color name="system_bar_scrim_dark">#801B1B1B</color>
+
 </resources>

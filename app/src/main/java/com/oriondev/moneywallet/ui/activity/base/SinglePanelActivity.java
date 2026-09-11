@@ -32,6 +32,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.utils.SystemBars;
 import com.oriondev.moneywallet.utils.Utils;
 
 /**
@@ -46,6 +47,8 @@ public abstract class SinglePanelActivity extends BaseActivity implements Toolba
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         onInflateRootLayout();
+        // Only the width qualified copies of these layouts carry one.
+        SystemBars.offsetGuidelineByStatusBar(findViewById(R.id.toolbar_delimiter_horizontal_guideline));
         onSetupRootLayout();
         onConfigureRootLayout(savedInstanceState);
         onSetupFloatingActionButton(mFloatingActionButton);

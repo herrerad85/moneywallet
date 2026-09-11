@@ -23,8 +23,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:layout_height="match_parent">
+
+    <!--
+      ~ No fitsSystemWindows here on purpose. DrawerLayout reads that flag in its constructor and,
+      ~ when it is set, installs a listener that consumes the insets and writes them into the
+      ~ margins of the content child, which would hold every screen inside the drawer clear of the
+      ~ bars again. The navigation view below is unaffected, it installs its own listener from
+      ~ ScrimInsetsFrameLayout regardless of the parent, so the drawer still pads its own menu.
+      -->
 
     <FrameLayout
         android:id="@+id/fragment_container"
@@ -37,6 +44,9 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:maxWidth="320dp"
-        app:headerLayout="@layout/layout_navigation_drawer_header" />
+        app:headerLayout="@layout/layout_navigation_drawer_header"
+        app:insetForeground="@color/system_bar_scrim_dark"
+        app:startInsetScrimEnabled="false"
+        app:endInsetScrimEnabled="false" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

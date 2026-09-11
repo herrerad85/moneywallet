@@ -27,6 +27,10 @@ import android.text.TextUtils;
 import android.view.MotionEvent;
 import android.view.View;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.Coordinates;
 import com.oriondev.moneywallet.model.Place;
@@ -177,9 +181,55 @@ public class MapViewWrapper {
         return true;
     }
 
+    /**
+     * What CopyrightOverlay's own constructor sets both offsets to in osmdroid 6.1.1, in pixels and
+     * not scaled. Repeated here because the fields are package private, so setting an offset at all
+     * means replacing that default instead of adding to it.
+     */
+    private static final int COPYRIGHT_EDGE_MARGIN = 10;
+
+    private CopyrightOverlay mCopyrightOverlay;
+
+    private boolean mOffsetCopyrightForSystemBars;
+
+    /**
+     * Only the maps that fill a window ask for this. Two of the four do; the other two are short
+     * maps inside a card on the place screens, where offsetting the notice by a navigation bar they
+     * never touch would park it in the middle of the card.
+     */
+    public void keepCopyrightClearOfSystemBars() {
+        mOffsetCopyrightForSystemBars = true;
+        if (mCopyrightOverlay != null) {
+            applyCopyrightOffset();
+        }
+    }
+
     private void setupCopyrightOverlay() {
         // OpenStreetMap requires that you add “© OpenStreetMap contributors” to the map
-        mMapView.getOverlayManager().add(0, new CopyrightOverlay(mMapView.getContext()));
+        mCopyrightOverlay = new CopyrightOverlay(mMapView.getContext());
+        mMapView.getOverlayManager().add(0, mCopyrightOverlay);
+        applyCopyrightOffset();
+    }
+
+    /**
+     * A map that fills a window is not padded, because it is meant to run under the navigation bar.
+     * The notice still has to stay readable, and it is drawn on the canvas instead of laid out, so
+     * it moves by its own offset. A larger offset draws it higher, since it is aligned to the
+     * bottom of the canvas.
+     */
+    private void applyCopyrightOffset() {
+        if (!mOffsetCopyrightForSystemBars) {
+            return;
+        }
+        final CopyrightOverlay overlay = mCopyrightOverlay;
+        ViewCompat.setOnApplyWindowInsetsListener(mMapView, (view, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars()
+                    | WindowInsetsCompat.Type.displayCutout());
+            overlay.setOffset(bars.left + COPYRIGHT_EDGE_MARGIN, bars.bottom + COPYRIGHT_EDGE_MARGIN);
+            view.invalidate();
+            return insets;
+        });
+        mMapView.requestApplyInsets();
     }
 
     public void onCreate(Bundle savedInstanceState) {

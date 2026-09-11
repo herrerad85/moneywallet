@@ -49,6 +49,8 @@
         </androidx.viewpager.widget.ViewPager>
 
         <com.oriondev.moneywallet.ui.view.theme.ThemedRecyclerView
+            app:systemBarInsetSides="@bool/panel_fills_window"
+            app:systemBarInsetBottom="true"
             android:id="@+id/recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

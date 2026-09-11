@@ -31,6 +31,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.utils.SystemBars;
 import com.oriondev.moneywallet.ui.activity.BackupListActivity;
 import com.oriondev.moneywallet.ui.activity.ImportExportActivity;
 
@@ -93,6 +94,10 @@ public class DatabaseSettingFragment extends PreferenceFragmentCompat {
     public RecyclerView onCreateRecyclerView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
         RecyclerView recyclerView = super.onCreateRecyclerView(inflater, parent, savedInstanceState);
         recyclerView.setPadding(0, 0, 0, 0);
+        // After the reset above, not before it, or the navigation bar clearance is the
+        // padding that gets zeroed.
+        SystemBars.pad(recyclerView,
+                false, getResources().getBoolean(R.bool.secondary_panel_fills_window), true);
         return recyclerView;
     }
 }

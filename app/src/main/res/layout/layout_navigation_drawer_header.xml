@@ -19,21 +19,28 @@
   -->
 
 <!-- The drawer header: the current wallet, two more wallets one tap away, and the arrow that
-     swaps the sections below for the wallet list. Below Android 15 the drawer slides under the
-     status bar, so the root fits the system windows and grows by that height. -->
+     swaps the sections below for the wallet list. It sits behind the status bar and takes the top
+     inset, but from MainActivity and not from fitsSystemWindows, because that flag applies all
+     four edges and would put a navigation bar of empty space under the header as well. -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/navigation_drawer_header"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:clickable="true"
-    android:fitsSystemWindows="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground">
 
+    <!--
+      ~ The two cannot be collapsed. The parent is the tap target and the ripple, it is what the
+      ~ status bar padding is applied to, and it wraps its height so that padding grows it; this
+      ~ one is a fixed height that positions the wallet rows against each other.
+      -->
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="148dp">
+        android:layout_height="148dp"
+        tools:ignore="UselessParent">
 
         <ImageView
             android:id="@+id/wallet_icon_image_view"

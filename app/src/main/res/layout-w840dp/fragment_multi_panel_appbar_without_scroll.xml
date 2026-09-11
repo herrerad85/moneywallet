@@ -31,13 +31,6 @@
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.5"/>
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/toolbar_delimiter_horizontal_guideline"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_begin="?attr/actionBarSize" />
-
     <com.oriondev.moneywallet.ui.view.theme.ThemedAppBarLayout
         android:id="@+id/primary_app_bar_container"
         android:layout_width="match_parent"
@@ -101,7 +94,7 @@
         android:layout_marginRight="@dimen/layout_multi_panel_primary_panel_margin_right"
         android:layout_marginEnd="@dimen/layout_multi_panel_primary_panel_margin_right"
         android:translationZ="@dimen/layout_multi_panel_secondary_panel_elevation"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar_delimiter_horizontal_guideline"
+        app:layout_constraintTop_toBottomOf="@+id/primary_app_bar_container"
         app:layout_constraintStart_toEndOf="@+id/half_screen_vertical_guideline"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" >

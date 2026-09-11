@@ -18,15 +18,9 @@
   ~ along with MoneyWallet.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<merge
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto" >
+<resources>
 
-    <com.oriondev.moneywallet.ui.view.AdvancedRecyclerView
-        app:systemBarInsetSides="@bool/panel_fills_window"
-        app:systemBarInsetBottom="true"
-        android:id="@+id/advanced_recycler_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+    <!-- Here the secondary panel is a card below the app bar, not the whole window. -->
+    <bool name="secondary_panel_fills_window">false</bool>
 
-</merge>
+</resources>

@@ -41,7 +41,9 @@ import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.base.ThemedActivity;
+import com.oriondev.moneywallet.ui.view.theme.ITheme;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
+import com.oriondev.moneywallet.utils.SystemBars;
 
 import java.util.Arrays;
 
@@ -58,11 +60,21 @@ public class LauncherActivity extends ThemedActivity {
 
     private View mProgressWheel;
 
+    /**
+     * Neither screen this activity shows has a toolbar. Both paint the window foreground across the
+     * whole window, so that is what is behind both bars and the icons have to be picked for it.
+     */
+    @Override
+    protected int getColorBehindStatusBar(ITheme theme) {
+        return theme.getColorWindowForeground();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (UpgradeLegacyEditionIntentService.isLegacyEditionDetected(this)) {
             setContentView(R.layout.activity_launcher_legacy_edition_upgrade);
+            SystemBars.pad(findViewById(R.id.legacy_upgrade_layout), true, true, true);
             mProgressWheel = findViewById(R.id.progress_wheel);
             // prepare the broadcast receiver
             IntentFilter intentFilter = new IntentFilter();
@@ -81,6 +93,7 @@ public class LauncherActivity extends ThemedActivity {
         } else {
             if (isFirstStart()) {
                 setContentView(R.layout.activity_launcher_first_start);
+                SystemBars.pad(findViewById(R.id.first_start_layout), true, true, true);
                 Button firstStartButton = findViewById(R.id.first_start_button);
                 Button restoreBackupButton = findViewById(R.id.restore_backup_button);
                 firstStartButton.setOnClickListener(new View.OnClickListener() {

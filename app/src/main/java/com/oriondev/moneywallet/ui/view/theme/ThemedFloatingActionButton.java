@@ -21,15 +21,23 @@ package com.oriondev.moneywallet.ui.view.theme;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import androidx.annotation.Nullable;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.util.AttributeSet;
 
+import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.utils.SystemBars;
+
 /**
  * Created by andrea on 11/04/18.
  */
 public class ThemedFloatingActionButton extends FloatingActionButton implements ThemeEngine.ThemeConsumer {
+
+    private boolean mInsetBottom = true;
+
+    private boolean mInsetApplied;
 
     public ThemedFloatingActionButton(Context context) {
         super(context);
@@ -37,10 +45,35 @@ public class ThemedFloatingActionButton extends FloatingActionButton implements 
 
     public ThemedFloatingActionButton(Context context, AttributeSet attrs) {
         super(context, attrs);
+        readInsetAttribute(context, attrs);
     }
 
     public ThemedFloatingActionButton(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        readInsetAttribute(context, attrs);
+    }
+
+    private void readInsetAttribute(Context context, AttributeSet attrs) {
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.ThemedFloatingActionButton, 0, 0);
+        try {
+            mInsetBottom = typedArray.getBoolean(R.styleable.ThemedFloatingActionButton_systemBarInsetBottom, true);
+        } finally {
+            typedArray.recycle();
+        }
+    }
+
+    /**
+     * Not the constructor: the parent sets the layout params during inflation, after the view is
+     * built, so there is no margin to read yet at that point. Once only, because a second pass
+     * would read a margin that already carries the inset and treat it as the baseline.
+     */
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (mInsetBottom && !mInsetApplied) {
+            mInsetApplied = true;
+            SystemBars.marginBottomAndSides(this);
+        }
     }
 
     @Override

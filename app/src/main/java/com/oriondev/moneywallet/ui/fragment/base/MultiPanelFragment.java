@@ -45,6 +45,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.utils.SystemBars;
+import com.oriondev.moneywallet.ui.activity.base.ThemedActivity;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.preference.CurrentWalletController;
@@ -103,6 +105,8 @@ public abstract class MultiPanelFragment extends Fragment implements MultiPanelC
     @Nullable
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = onInflateRootLayout(inflater, container, savedInstanceState);
+        // Only the width qualified copies of these layouts carry one.
+        SystemBars.offsetGuidelineByStatusBar(view.findViewById(R.id.toolbar_delimiter_horizontal_guideline));
         onSetupRootLayout(view);
         onConfigureRootLayout(inflater, container, savedInstanceState);
         setupPrimaryToolbar(mPrimaryToolbar);
@@ -227,6 +231,9 @@ public abstract class MultiPanelFragment extends Fragment implements MultiPanelC
     }
 
     protected void hideSecondaryPanel() {
+        if (getActivity() instanceof ThemedActivity) {
+            ((ThemedActivity) getActivity()).resetStatusBarIconsToAppBar();
+        }
         if (!mExtendedLayout) {
             mSecondaryPanelVisible = false;
             mPrimaryPanel.setVisibility(View.VISIBLE);

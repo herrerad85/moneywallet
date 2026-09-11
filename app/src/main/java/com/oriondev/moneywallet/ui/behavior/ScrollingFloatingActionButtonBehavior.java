@@ -20,8 +20,6 @@
 package com.oriondev.moneywallet.ui.behavior;
 
 import android.content.Context;
-import android.content.res.TypedArray;
-import com.google.android.material.appbar.AppBarLayout;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -33,34 +31,23 @@ import com.oriondev.moneywallet.R;
 import java.util.List;
 
 /**
- * This class implements a custom behavior of the Floating Action Button when attached to a
- * CoordinatorLayout: it allows to show and hide the fab when a nested view is scrolled.
+ * A custom behavior for the Floating Action Button when it is attached to a CoordinatorLayout. It
+ * shrinks the button as a snackbar comes up under it, so the two do not overlap.
  */
 public class ScrollingFloatingActionButtonBehavior extends CoordinatorLayout.Behavior<FloatingActionButton> {
 
-    private int mToolbarHeight;
-
     public ScrollingFloatingActionButtonBehavior(Context context, AttributeSet attrs) {
         super(context, attrs);
-        TypedArray styledAttributes = context.getTheme().obtainStyledAttributes(new int[]{android.R.attr.actionBarSize});
-        mToolbarHeight = (int) styledAttributes.getDimension(0, 0);
-        styledAttributes.recycle();
     }
 
     @Override
     public boolean layoutDependsOn(CoordinatorLayout parent, FloatingActionButton fab, View dependency) {
-        return dependency instanceof AppBarLayout || dependency instanceof Snackbar.SnackbarLayout;
+        return dependency instanceof Snackbar.SnackbarLayout;
     }
 
     @Override
     public boolean onDependentViewChanged(CoordinatorLayout parent, FloatingActionButton fab, View dependency) {
-        if (dependency instanceof AppBarLayout) {
-            CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
-            int fabBottomMargin = lp.bottomMargin;
-            int distanceToScroll = fab.getHeight() + fabBottomMargin;
-            float ratio = dependency.getY() / (float) mToolbarHeight;
-            fab.setTranslationY(distanceToScroll * ratio * -1);
-        } else if (dependency instanceof Snackbar.SnackbarLayout) {
+        if (dependency instanceof Snackbar.SnackbarLayout) {
             float translationY = getFabTranslationYForSnackBar(parent, fab);
             float percentComplete = -translationY / dependency.getHeight();
             float scaleFactor = 1 - percentComplete;
