@@ -56,6 +56,8 @@ public class MapActivity extends SinglePanelActivity implements LoaderManager.Lo
     protected void onCreatePanelView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_panel_map, parent, true);
         mMapView = new MapViewWrapper(view.findViewById(R.id.map_view));
+        // This map fills the panel down to the bottom of the window.
+        mMapView.keepCopyrightClearOfSystemBars();
         mMapView.onCreate(savedInstanceState);
         mMapView.loadMapAsync(this);
     }

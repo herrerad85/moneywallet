@@ -45,8 +45,7 @@
                 android:id="@+id/primary_toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:theme_backgroundColor="colorPrimary"
-                app:layout_scrollFlags="scroll|enterAlways" />
+                app:theme_backgroundColor="colorPrimary" />
 
             <!-- In this area will be placed the primary panel layout -->
 

@@ -33,7 +33,9 @@
         <com.oriondev.moneywallet.ui.view.theme.ThemedAppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorPrimary" >
+            android:background="@color/colorPrimary"
+            app:systemBarInsetTop="@bool/secondary_panel_fills_window"
+            app:systemBarInsetSides="@bool/secondary_panel_fills_window" >
 
             <com.oriondev.moneywallet.ui.view.theme.ThemedToolbar
                 android:id="@+id/secondary_toolbar"
@@ -48,6 +50,8 @@
             android:layout_height="match_parent">
 
             <com.oriondev.moneywallet.ui.view.AdvancedRecyclerView
+                app:systemBarInsetSides="@bool/secondary_panel_fills_window"
+                app:systemBarInsetBottom="true"
                 android:id="@+id/advanced_recycler_view"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
@@ -98,12 +102,26 @@
 
         </LinearLayout>
 
-        <com.oriondev.moneywallet.ui.view.theme.ThemedToolbar
-            android:id="@+id/cover_toolbar"
+        <!--
+          ~ The only toolbar in the app that was not inside an app bar layout, which is what asks
+          ~ for the status bar. This cover is what a user sees on Backup before a service is signed
+          ~ in to, and its back arrow was drawn behind the clock. Wrapped to match the header above.
+          -->
+        <com.oriondev.moneywallet.ui.view.theme.ThemedAppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
-            app:theme_backgroundColor="colorPrimary" />
+            android:background="@color/colorPrimary"
+            app:systemBarInsetTop="@bool/secondary_panel_fills_window"
+            app:systemBarInsetSides="@bool/secondary_panel_fills_window" >
+
+            <com.oriondev.moneywallet.ui.view.theme.ThemedToolbar
+                android:id="@+id/cover_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:theme_backgroundColor="colorPrimary" />
+
+        </com.oriondev.moneywallet.ui.view.theme.ThemedAppBarLayout>
 
     </com.oriondev.moneywallet.ui.view.theme.ThemedRelativeLayout>
 

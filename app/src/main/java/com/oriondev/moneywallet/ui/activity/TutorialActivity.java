@@ -24,14 +24,13 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.Insets;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.view.WindowInsets;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.StringRes;
+import androidx.core.view.ViewGroupCompat;
+import androidx.core.view.WindowCompat;
 import androidx.fragment.app.Fragment;
 
 import com.github.paolorotolo.appintro.AppIntro2;
@@ -44,6 +43,7 @@ import com.oriondev.moneywallet.model.Icon;
 import com.oriondev.moneywallet.storage.database.Contract;
 import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.utils.IconLoader;
+import com.oriondev.moneywallet.utils.SystemBars;
 import com.oriondev.moneywallet.utils.Utils;
 
 import java.util.ArrayList;
@@ -59,6 +59,7 @@ public class TutorialActivity extends AppIntro2 {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WindowCompat.enableEdgeToEdge(getWindow());
         addSlide(R.drawable.ic_intro_slide_1, R.string.activity_intro_title_slide_1, R.string.activity_intro_description_slide_1, Color.parseColor("#76bec0"));
         addSlide(R.drawable.ic_intro_slide_2, R.string.activity_intro_title_slide_2, R.string.activity_intro_description_slide_2, Color.parseColor("#8464a9"));
         addSlide(R.drawable.ic_intro_slide_3, R.string.activity_intro_title_slide_3, R.string.activity_intro_description_slide_3, Color.parseColor("#19beed"));
@@ -69,25 +70,23 @@ public class TutorialActivity extends AppIntro2 {
         applySystemBarInsets();
     }
 
-    // This intro screen does not go through ThemedActivity (it extends the AppIntro base class), so it
-    // needs its own edge to edge handling on Android 15 (API 35), otherwise the bottom navigation with
-    // the Next and Done actions sits under the navigation bar. Pad the content with the system bar and
-    // display cutout insets so those controls stay reachable.
+    // This intro screen does not go through ThemedActivity, it extends the AppIntro base class, so it
+    // asks for edge to edge itself. Only the bar holding Skip, Next and Done is held clear of the
+    // navigation bar; the slides keep their full bleed colors, which is what the color transition
+    // between them is for. The status bar is hidden here, so nothing is owed at the top.
     private void applySystemBarInsets() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        View content = findViewById(android.R.id.content);
+        if (content != null) {
+            // Below Android 11 the first child to consume an inset stops its siblings from seeing
+            // it, and something in the intro's own layout does. Without this the bar below never
+            // hears about the navigation bar at all, which is what it looked like on Android 7.
+            ViewGroupCompat.installCompatInsetsDispatch(content);
+        }
+        View bottomBar = findViewById(com.github.paolorotolo.appintro.R.id.bottom);
+        if (bottomBar == null) {
             return;
         }
-        final View content = findViewById(android.R.id.content);
-        if (content == null) {
-            return;
-        }
-        content.setOnApplyWindowInsetsListener((view, insets) -> {
-            Insets bars = insets.getInsets(WindowInsets.Type.systemBars()
-                    | WindowInsets.Type.displayCutout());
-            view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
-            return WindowInsets.CONSUMED;
-        });
-        content.requestApplyInsets();
+        SystemBars.pad(bottomBar, false, true, true);
     }
 
     private void addSlide(@DrawableRes int drawable, @StringRes int title, @StringRes int description, int backgroundColor) {

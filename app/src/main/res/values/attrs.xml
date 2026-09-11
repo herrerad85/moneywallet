@@ -46,8 +46,46 @@
         <attr name="theme_backgroundColor" />
     </declare-styleable>
 
+    <!--
+      ~ The app draws behind the system bars, so a view at the edge of the window has to be told to
+      ~ hold its own content clear of one. Each default is whichever value is right for most uses of
+      ~ that widget. An app bar takes the top unless told not to, since only the ones inside a card
+      ~ or a secondary panel are anywhere but the top of a window. A floating action button takes
+      ~ the bottom unless told not to, since only the currency converter's is centered instead of
+      ~ anchored to the bottom. A list does not take the bottom unless told to, since one is just as
+      ~ often nested inside another scroller, a dialog or a pager page, where it would open a space
+      ~ in the middle of the content instead of clearing a bar. The sides are taken unless told not
+      ~ to, and the exceptions are the views that are not at the edge of the window at all: an app
+      ~ bar inside a scroll view that already took them, and a scroll view inside a centered card.
+      -->
+    <attr name="systemBarInsetTop" format="boolean" />
+    <attr name="systemBarInsetSides" format="boolean" />
+    <attr name="systemBarInsetBottom" format="boolean" />
+
     <declare-styleable name="ThemedAppBarLayout">
         <attr name="theme_backgroundColor" />
+        <attr name="systemBarInsetTop" />
+        <attr name="systemBarInsetSides" />
+    </declare-styleable>
+
+    <declare-styleable name="ThemedRecyclerView">
+        <attr name="systemBarInsetSides" />
+        <attr name="systemBarInsetBottom" />
+    </declare-styleable>
+
+    <declare-styleable name="ThemedScrollView">
+        <attr name="systemBarInsetTop" />
+        <attr name="systemBarInsetSides" />
+        <attr name="systemBarInsetBottom" />
+    </declare-styleable>
+
+    <declare-styleable name="AdvancedRecyclerView">
+        <attr name="systemBarInsetSides" />
+        <attr name="systemBarInsetBottom" />
+    </declare-styleable>
+
+    <declare-styleable name="ThemedFloatingActionButton">
+        <attr name="systemBarInsetBottom" />
     </declare-styleable>
 
     <declare-styleable name="ThemedConstraintLayout">

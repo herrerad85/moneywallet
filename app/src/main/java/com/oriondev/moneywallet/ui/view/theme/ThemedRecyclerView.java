@@ -20,9 +20,13 @@
 package com.oriondev.moneywallet.ui.view.theme;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 import android.util.AttributeSet;
+
+import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.utils.SystemBars;
 
 /**
  * Created by andrea on 20/08/18.
@@ -35,10 +39,27 @@ public class ThemedRecyclerView extends RecyclerView implements ThemeEngine.Them
 
     public ThemedRecyclerView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        initialize(context, attrs);
     }
 
     public ThemedRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        initialize(context, attrs);
+    }
+
+    private void initialize(Context context, AttributeSet attrs) {
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.ThemedRecyclerView, 0, 0);
+        boolean insetSides;
+        boolean insetBottom;
+        try {
+            insetSides = typedArray.getBoolean(R.styleable.ThemedRecyclerView_systemBarInsetSides, true);
+            insetBottom = typedArray.getBoolean(R.styleable.ThemedRecyclerView_systemBarInsetBottom, false);
+        } finally {
+            typedArray.recycle();
+        }
+        if (insetBottom) {
+            SystemBars.pad(this, false, insetSides, true);
+        }
     }
 
     @Override

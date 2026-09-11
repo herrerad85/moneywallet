@@ -21,6 +21,12 @@ package com.oriondev.moneywallet.ui.fragment.single;
 
 import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
 import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.net.Uri;
@@ -43,6 +49,7 @@ import com.oriondev.moneywallet.ui.fragment.dialog.ChangeLogDialog;
 import com.oriondev.moneywallet.ui.fragment.dialog.LicenseDialog;
 import com.oriondev.moneywallet.ui.view.theme.ITheme;
 import com.oriondev.moneywallet.ui.view.theme.ThemeEngine;
+import com.oriondev.moneywallet.utils.SystemBars;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,6 +66,21 @@ public class AboutFragment extends MaterialAboutFragment {
 
     private static final String TAG_CHANGE_LOG = "AboutFragment::Tag::ChangeLogDialog";
     private static final String TAG_LICENSE = "AboutFragment::Tag::LicenseDialog";
+
+    /**
+     * The list on this screen is built by the about library, not by a layout of ours, so it is
+     * reached through the library's own id once the view exists. Without this its last card sits
+     * under the navigation bar.
+     */
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = super.onCreateView(inflater, container, savedInstanceState);
+        if (view != null) {
+            SystemBars.pad(view.findViewById(com.danielstone.materialaboutlibrary.R.id.mal_recyclerview),
+                    false, getResources().getBoolean(R.bool.panel_fills_window), true);
+        }
+        return view;
+    }
 
     @Override
     protected MaterialAboutList getMaterialAboutList(Context context) {

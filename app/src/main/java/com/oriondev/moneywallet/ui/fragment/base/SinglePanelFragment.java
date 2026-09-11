@@ -48,6 +48,7 @@ import com.oriondev.moneywallet.storage.database.DataContentProvider;
 import com.oriondev.moneywallet.storage.preference.CurrentWalletController;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.ToolbarController;
+import com.oriondev.moneywallet.utils.SystemBars;
 import com.oriondev.moneywallet.utils.Utils;
 
 /**
@@ -91,6 +92,8 @@ public abstract class SinglePanelFragment extends Fragment implements Toolbar.On
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_single_panel, container, false);
+        // Only the width qualified copies of these layouts carry one.
+        SystemBars.offsetGuidelineByStatusBar(view.findViewById(R.id.toolbar_delimiter_horizontal_guideline));
         mToolbar = view.findViewById(R.id.primary_toolbar);
         ViewGroup parent = Utils.findViewGroupByIds(view,
                 R.id.primary_panel_container_frame_layout,

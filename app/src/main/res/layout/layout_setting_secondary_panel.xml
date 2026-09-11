@@ -28,6 +28,8 @@
     <com.oriondev.moneywallet.ui.view.theme.ThemedAppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:systemBarInsetTop="@bool/secondary_panel_fills_window"
+        app:systemBarInsetSides="@bool/secondary_panel_fills_window"
         app:theme_backgroundColor="colorPrimary" >
 
         <com.oriondev.moneywallet.ui.view.theme.ThemedToolbar

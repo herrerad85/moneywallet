@@ -20,8 +20,12 @@
 package com.oriondev.moneywallet.ui.view.theme;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.widget.ScrollView;
+
+import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.utils.SystemBars;
 
 /**
  * Created by andrea on 20/08/18.
@@ -34,14 +38,34 @@ public class ThemedScrollView extends ScrollView implements ThemeEngine.ThemeCon
 
     public ThemedScrollView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        initialize(context, attrs);
     }
 
     public ThemedScrollView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        initialize(context, attrs);
     }
 
     public ThemedScrollView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
+        initialize(context, attrs);
+    }
+
+    private void initialize(Context context, AttributeSet attrs) {
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.ThemedScrollView, 0, 0);
+        boolean insetTop;
+        boolean insetSides;
+        boolean insetBottom;
+        try {
+            insetTop = typedArray.getBoolean(R.styleable.ThemedScrollView_systemBarInsetTop, false);
+            insetSides = typedArray.getBoolean(R.styleable.ThemedScrollView_systemBarInsetSides, true);
+            insetBottom = typedArray.getBoolean(R.styleable.ThemedScrollView_systemBarInsetBottom, false);
+        } finally {
+            typedArray.recycle();
+        }
+        if (insetTop || insetBottom) {
+            SystemBars.pad(this, insetTop, insetSides, insetBottom);
+        }
     }
 
     @Override

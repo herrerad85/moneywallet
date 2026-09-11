@@ -68,6 +68,8 @@
             android:id="@+id/header_secondary_panel_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:systemBarInsetTop="@bool/secondary_panel_fills_window"
+            app:systemBarInsetSides="@bool/secondary_panel_fills_window"
             app:theme_backgroundColor="colorPrimary" >
 
             <com.oriondev.moneywallet.ui.view.theme.ThemedToolbar
@@ -81,6 +83,8 @@
         </com.oriondev.moneywallet.ui.view.theme.ThemedAppBarLayout>
 
         <com.oriondev.moneywallet.ui.view.theme.ThemedScrollView
+            app:systemBarInsetSides="@bool/secondary_panel_fills_window"
+            app:systemBarInsetBottom="true"
             android:layout_width="match_parent"
             android:layout_height="match_parent" >
 

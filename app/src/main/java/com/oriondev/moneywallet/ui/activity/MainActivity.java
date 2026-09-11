@@ -42,6 +42,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.view.GravityCompat;
@@ -92,6 +93,7 @@ import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 import com.oriondev.moneywallet.ui.view.theme.ThemedRecyclerView;
 import com.oriondev.moneywallet.utils.IconLoader;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
+import com.oriondev.moneywallet.utils.SystemBars;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -141,6 +143,7 @@ public class MainActivity extends BaseActivity implements DrawerController, Navi
     private NavigationView mNavigationView;
     private ActionBarDrawerToggle mDrawerToggle;
     private View mHeaderView;
+
     private ImageView mWalletIconView;
     private ImageView mFirstWalletView;
     private ImageView mSecondWalletView;
@@ -178,7 +181,23 @@ public class MainActivity extends BaseActivity implements DrawerController, Navi
      */
     private void initializeNavigationDrawer() {
         mDrawerLayout = findViewById(R.id.drawer_layout);
+        // Here and not beside the toggle in setToolbar, which every section calls, so a listener
+        // added there would be added again on each one and never taken off.
+        mDrawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                onThemeSystemBarIcons(ThemeEngine.getTheme());
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                onThemeSystemBarIcons(ThemeEngine.getTheme());
+            }
+
+        });
         mNavigationView = findViewById(R.id.navigation_view);
+        SystemBars.padDrawerStart(mDrawerLayout, mNavigationView);
         mNavigationView.setNavigationItemSelectedListener(this);
         // the section icons are tinted one by one below, so the wallet icons keep their colors
         mNavigationView.setItemIconTintList(null);
@@ -202,6 +221,10 @@ public class MainActivity extends BaseActivity implements DrawerController, Navi
         addEntry(menu, GROUP_SETTINGS, ID_SECTION_SETTING, R.drawable.ic_settings_24dp, R.string.menu_setting).setCheckable(true);
         addEntry(menu, GROUP_SETTINGS, ID_SECTION_ABOUT, R.drawable.ic_info_outline_24dp, R.string.menu_about);
         mHeaderView = mNavigationView.getHeaderView(0);
+        // Top only, to match the menu below it. The navigation view pads its own list from the
+        // top and bottom and leaves the sides to its inset scrims, so a header that also took
+        // the sides would sit inset from the rows under it.
+        SystemBars.pad(mHeaderView, true, false, false);
         mHeaderView.setOnClickListener(view -> showWalletList(!mWalletListShown));
         mWalletIconView = mHeaderView.findViewById(R.id.wallet_icon_image_view);
         mFirstWalletView = mHeaderView.findViewById(R.id.first_wallet_image_view);
@@ -495,6 +518,9 @@ public class MainActivity extends BaseActivity implements DrawerController, Navi
      * @param identifier of the section.
      */
     private void loadSection(int identifier) {
+        // The outgoing screen may have left the icons set for a scrolled panel, and nothing
+        // else runs on this path.
+        resetStatusBarIconsToAppBar();
         FragmentManager manager = getSupportFragmentManager();
         String tag = getTagById(identifier);
         mCurrentFragment = manager.findFragmentByTag(tag);
@@ -762,14 +788,19 @@ public class MainActivity extends BaseActivity implements DrawerController, Navi
     }
 
     /**
-     * Below Android 15 the drawer slides under a see through status bar and the drawer layout
-     * paints the band behind it, so the window's own color is cleared here. From Android 15 the
-     * base class pads the content and paints that band itself.
+     * An open drawer covers the toolbar, and the menu scrolls under the status bar, so what is up
+     * there is the drawer's own scrim over its background, not anything the rest of the app
+     * painted. The two are composited here instead of guessed, since the drawer background follows
+     * the theme and the scrim does not. The drawer is asked directly, because a drawer restored
+     * already open after a rotation never fires the opened callback.
      */
     @Override
-    protected void onThemeStatusBar(ITheme theme) {
-        getWindow().setStatusBarColor(Color.TRANSPARENT);
-        mDrawerLayout.setStatusBarBackgroundColor(theme.getColorPrimaryDark());
+    protected int getColorBehindStatusBar(ITheme theme) {
+        if (!mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+            return super.getColorBehindStatusBar(theme);
+        }
+        int scrim = ContextCompat.getColor(this, R.color.system_bar_scrim_dark);
+        return ColorUtils.compositeColors(scrim, theme.getDrawerBackgroundColor());
     }
 
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {

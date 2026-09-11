@@ -38,6 +38,7 @@ import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.Group;
 import com.oriondev.moneywallet.picker.ColorPicker;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
+import com.oriondev.moneywallet.utils.SystemBars;
 import com.oriondev.moneywallet.ui.fragment.dialog.CustomDigitSetupDialog;
 import com.oriondev.moneywallet.ui.preference.ColorPreference;
 import com.oriondev.moneywallet.ui.preference.ThemedListPreference;
@@ -295,6 +296,10 @@ public class UserInterfaceSettingFragment extends PreferenceFragmentCompat imple
     public RecyclerView onCreateRecyclerView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
         RecyclerView recyclerView = super.onCreateRecyclerView(inflater, parent, savedInstanceState);
         recyclerView.setPadding(0, 0, 0, 0);
+        // After the reset above, not before it, or the navigation bar clearance is the
+        // padding that gets zeroed.
+        SystemBars.pad(recyclerView,
+                false, getResources().getBoolean(R.bool.secondary_panel_fills_window), true);
         return recyclerView;
     }
 

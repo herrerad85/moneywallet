@@ -25,6 +25,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <!--
+      ~ Where the panel cards start, which is partway up the extended app bar so they overlap it;
+      ~ the translationZ each card carries is what draws them over it. A guideline and not the app
+      ~ bar's own bottom, because that bottom now includes the status bar and the cards would leave
+      ~ a band of primary color above them. SystemBars pushes this down by the status bar at runtime.
+      -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/toolbar_delimiter_horizontal_guideline"
         android:layout_width="0dp"
@@ -33,6 +39,7 @@
         app:layout_constraintGuide_begin="?attr/actionBarSize" />
 
     <com.oriondev.moneywallet.ui.view.theme.ThemedAppBarLayout
+        android:id="@+id/window_app_bar_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -69,6 +76,8 @@
 
             <com.oriondev.moneywallet.ui.view.theme.ThemedAppBarLayout
                 android:id="@+id/app_bar_container"
+                app:systemBarInsetTop="false"
+                app:systemBarInsetSides="false"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"

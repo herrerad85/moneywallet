@@ -46,8 +46,10 @@ import com.oriondev.moneywallet.picker.CurrencyPicker;
 import com.oriondev.moneywallet.service.AbstractCurrencyRateDownloadIntentService;
 import com.oriondev.moneywallet.storage.preference.PreferenceManager;
 import com.oriondev.moneywallet.ui.activity.base.SinglePanelActivity;
+import com.oriondev.moneywallet.ui.view.theme.ITheme;
 import com.oriondev.moneywallet.utils.CurrencyManager;
 import com.oriondev.moneywallet.utils.MoneyFormatter;
+import com.oriondev.moneywallet.utils.SystemBars;
 
 import java.math.BigDecimal;
 
@@ -98,9 +100,23 @@ public class CurrencyConverterActivity extends SinglePanelActivity implements Vi
         return false;
     }
 
+    /**
+     * The keypad fills the bottom of this screen and carries the primary color, so that is what is
+     * behind the navigation bar here, not the list background the base class assumes.
+     */
+    @Override
+    protected int getColorBehindNavigationBar(ITheme theme) {
+        return theme.getColorPrimary();
+    }
+
     @Override
     protected void onCreatePanelView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_panel_currency_converter, parent, true);
+        // The bottom row of keys reaches the bottom of the window and cannot be scrolled out of the
+        // way of the navigation bar. It carries the primary color, so the color keeps running under
+        // the bar and only the keys move up.
+        SystemBars.pad(view.findViewById(R.id.keypad_last_row),
+                false, getResources().getBoolean(R.bool.panel_fills_window), true);
         mImageCurrencyFrom = view.findViewById(R.id.image_currency_from);
         mImageCurrencyTo = view.findViewById(R.id.image_currency_to);
         mTextCurrencyFrom = view.findViewById(R.id.text_currency_from);

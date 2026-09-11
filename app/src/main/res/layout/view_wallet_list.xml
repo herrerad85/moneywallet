@@ -23,6 +23,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto" >
 
     <com.oriondev.moneywallet.ui.view.AdvancedRecyclerView
+        app:systemBarInsetSides="@bool/panel_fills_window"
+        app:systemBarInsetBottom="true"
         android:id="@+id/advanced_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

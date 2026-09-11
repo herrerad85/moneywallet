@@ -34,8 +34,10 @@ import android.widget.EditText;
 import com.oriondev.moneywallet.R;
 import com.oriondev.moneywallet.model.CurrencyUnit;
 import com.oriondev.moneywallet.ui.activity.base.SinglePanelActivity;
+import com.oriondev.moneywallet.ui.view.theme.ITheme;
 import com.oriondev.moneywallet.ui.view.theme.ThemedDialog;
 import com.oriondev.moneywallet.utils.EquationSolver;
+import com.oriondev.moneywallet.utils.SystemBars;
 
 /**
  * Created by andre on 23/03/2018.
@@ -102,9 +104,22 @@ public class CalculatorActivity extends SinglePanelActivity implements View.OnCl
     private boolean mAllowNegative;
     private boolean mRendering;
 
+    /**
+     * The keypad fills the bottom of this screen and carries the primary color, so that is what is
+     * behind the navigation bar here, not the list background the base class assumes.
+     */
+    @Override
+    protected int getColorBehindNavigationBar(ITheme theme) {
+        return theme.getColorPrimary();
+    }
+
     @Override
     protected void onCreatePanelView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_panel_calculator, parent, true);
+        // The keypad fills the lower half of the window and nothing here scrolls, so the keys
+        // would otherwise sit partly under the navigation bar.
+        SystemBars.pad(view.findViewById(R.id.keypad_container),
+                false, getResources().getBoolean(R.bool.panel_fills_window), true);
         mDisplayEditText = view.findViewById(R.id.display_text_view);
         // The keypad is the only writer of the field, and the filter refuses every other change.
         // The field's own state restore would go through that filter and come back empty, so the

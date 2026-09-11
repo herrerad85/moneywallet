@@ -24,6 +24,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.ui.view.theme.ITheme;
 import com.oriondev.moneywallet.utils.Utils;
 
 /**
@@ -47,6 +48,7 @@ public abstract class SinglePanelScrollActivity extends SinglePanelActivity {
         );
         onCreateHeaderView(inflater, headerContainer, savedInstanceState);
         onCreatePanelView(inflater, panelContainer, savedInstanceState);
+        followScrollForStatusBarIcons(findViewById(R.id.primary_panel_scroll_view), headerContainer);
     }
 
     protected abstract void onCreateHeaderView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState);

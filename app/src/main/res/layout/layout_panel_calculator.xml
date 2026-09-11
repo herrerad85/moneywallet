@@ -49,13 +49,21 @@
         app:theme_backgroundColor="colorWindowForeground"
         tools:text="568,89 * 3,56" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!--
+      ~ The keys each paint the primary color and the container painted nothing, so once the keys
+      ~ were held clear of the navigation bar the window background showed through behind it. The
+      ~ container carries the color now, and from the theme instead of the static attribute,
+      ~ so it follows a color the user picks.
+      -->
+    <com.oriondev.moneywallet.ui.view.theme.ThemedConstraintLayout
+        android:id="@+id/keypad_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/vertical_guideline"
-        app:layout_constraintBottom_toBottomOf="parent" >
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:theme_backgroundColor="colorPrimary" >
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/vertical_guideline_1"
@@ -372,6 +380,6 @@
             app:theme_backgroundColor="colorAccent"
             style="?android:attr/borderlessButtonStyle" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.oriondev.moneywallet.ui.view.theme.ThemedConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

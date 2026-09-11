@@ -37,6 +37,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.oriondev.moneywallet.R;
+import com.oriondev.moneywallet.ui.activity.base.ThemedActivity;
 import com.oriondev.moneywallet.storage.database.SQLiteDataException;
 import com.oriondev.moneywallet.utils.Utils;
 
@@ -79,6 +80,10 @@ public abstract class SecondaryPanelFragment extends Fragment implements Toolbar
         ViewGroup bodyLayout = view.findViewById(R.id.body_secondary_panel_layout);
         onCreateHeaderView(inflater, headerLayout, savedInstanceState);
         onCreateBodyView(inflater, bodyLayout, savedInstanceState);
+        if (getActivity() instanceof ThemedActivity) {
+            ((ThemedActivity) getActivity()).followScrollForStatusBarIcons(
+                    view.findViewById(R.id.main_screen_secondary_panel_scroll_view), headerLayout);
+        }
         if (mToolbar != null) {
             if (getParentFragment() instanceof MultiPanelController && !((MultiPanelController) getParentFragment()).isExtendedLayout()) {
                 mToolbar.setNavigationIcon(R.drawable.ic_arrow_back_black_24dp);
