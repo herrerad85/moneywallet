@@ -184,6 +184,12 @@ public class MonthView extends RecyclerView {
             if (centerOnPosition) {
                 centerOnPosition(selectedPosition);
             }
+            // the month tapped is the one already marked. That used to be a request for the month
+            // the selected day was already in, and the listener was skipped; the mark now follows
+            // a strip that scrolls, so this is somebody asking to go to the month they can see
+            if (callListener && onMonthSelectedListener != null) {
+                onMonthSelectedListener.onMonthSelected(year, month, selectedPosition);
+            }
             return;
         }
 
