@@ -67,7 +67,7 @@ Requirements: a recent Android SDK and JDK 17 or newer. Release builds use JDK 2
 
 Bug reports and pull requests are welcome in the [issue tracker](https://github.com/herrerad85/tallybook/issues). Current direction and open work live in the pinned [roadmap issue](https://github.com/herrerad85/tallybook/issues/15).
 
-Translating needs no tooling. Copy `app/src/main/res/values/strings.xml` into a folder named for the language, such as `values-de`, translate the entries and open a pull request.
+[CONTRIBUTING.md](CONTRIBUTING.md) has the bar a pull request is held to, including an AI written one, and the steps for translating.
 
 ## Credits and license
 
