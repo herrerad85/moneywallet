@@ -456,7 +456,7 @@ public class TimelineView extends RecyclerView {
             this.month = month;
             this.day = day;
             lblDay.setText(dayLabel(dayOfWeek));
-            lblDate.setText(String.valueOf(day));
+            lblDate.setText(String.format(Locale.getDefault(), "%d", day));
             // The line below has never run here and neither drawable it names is in this project,
             // so the accent color is the only mark on a cell and it marks today and the shown day
             // alike. Weight is what separates them: the shown day is the bold one.
