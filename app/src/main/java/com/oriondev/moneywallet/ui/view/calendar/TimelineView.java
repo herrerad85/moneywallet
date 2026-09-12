@@ -56,6 +56,7 @@ public class TimelineView extends RecyclerView {
     private TimelineAdapter adapter;
     private LinearLayoutManager layoutManager;
     private OnDateSelectedListener onDateSelectedListener;
+    private OnMonthScrolledListener onMonthScrolledListener;
     private MonthView.DateLabelAdapter dateLabelAdapter;
 
     private Set<Integer> markedDays = Collections.emptySet();
@@ -150,6 +151,49 @@ public class TimelineView extends RecyclerView {
         adapter = new TimelineAdapter();
         setLayoutManager(layoutManager);
         setAdapter(adapter);
+        addOnScrollListener(new OnScrollListener() {
+
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                // A layout that changes which cells are laid out arrives here with nothing
+                // scrolled, and the first layout of all lays the strip out on its own first day,
+                // before the runnable that puts it on the selected day has run. A cell the strip
+                // was placed on is reported by centerOnPosition instead.
+                if (dx != 0) {
+                    reportMonthAt(centerPosition());
+                }
+            }
+
+        });
+    }
+
+    /**
+     * The cell in the middle of the strip, or {@link #NO_POSITION} when there is no cell there.
+     *
+     * The middle and not the first visible cell, which would name a month while every cell of it
+     * is still off the screen.
+     */
+    private int centerPosition() {
+        View center = findChildViewUnder(getWidth() / 2f, getHeight() / 2f);
+        return center == null ? NO_POSITION : getChildAdapterPosition(center);
+    }
+
+    /**
+     * Hands the listener the month of one cell.
+     *
+     * Reported on every scroll and not only when that month changes, because what a listener does
+     * with it depends on what the listener is showing, which this view cannot see. The month
+     * comes from the same count the adapter binds a cell with, so the month reported is the month
+     * of the numbers a person is looking at.
+     */
+    private void reportMonthAt(int position) {
+        if (onMonthScrolledListener == null || position == NO_POSITION) {
+            return;
+        }
+        resetCalendar();
+        calendar.add(Calendar.DAY_OF_YEAR, position);
+        onMonthScrolledListener.onMonthScrolled(calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH));
     }
 
     private void resetCalendar() {
@@ -190,6 +234,10 @@ public class TimelineView extends RecyclerView {
         // Animate scroll
         int offset = getMeasuredWidth() / 2 - getChildAt(0).getMeasuredWidth() / 2;
         layoutManager.scrollToPositionWithOffset(position, offset);
+        // the cell this lands on, which the scroll listener above does not report because
+        // nothing is scrolled to get here. Tapping the day already selected reaches only this,
+        // and it is how the strip is first put on the selected day
+        reportMonthAt(position);
     }
 
     public void centerOnSelection() {
@@ -232,6 +280,10 @@ public class TimelineView extends RecyclerView {
 
     public void setOnDateSelectedListener(OnDateSelectedListener onDateSelectedListener) {
         this.onDateSelectedListener = onDateSelectedListener;
+    }
+
+    public void setOnMonthScrolledListener(OnMonthScrolledListener onMonthScrolledListener) {
+        this.onMonthScrolledListener = onMonthScrolledListener;
     }
 
     /**
@@ -415,5 +467,15 @@ public class TimelineView extends RecyclerView {
             dotMarker.setColor(dateColor);
             dotMarker.setVisibility(marked ? VISIBLE : INVISIBLE);
         }
+    }
+
+    /**
+     * Told the month of the cell in the middle of the strip, every time the strip scrolls. A day
+     * number on its own does not say which month it belongs to, so anything naming that month
+     * elsewhere on the screen listens here to keep the name and the numbers in step.
+     */
+    public interface OnMonthScrolledListener {
+
+        void onMonthScrolled(int year, int month);
     }
 }
