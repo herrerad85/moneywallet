@@ -61,7 +61,7 @@ import java.util.Set;
 /**
  * Created by andrea on 06/04/18.
  */
-public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment implements MonthView.OnMonthSelectedListener, OnDateSelectedListener, SwipeRefreshLayout.OnRefreshListener, TransactionCursorAdapter.ActionListener, LoaderManager.LoaderCallbacks<Cursor>, CurrentWalletController {
+public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment implements MonthView.OnMonthSelectedListener, OnDateSelectedListener, TimelineView.OnMonthScrolledListener, SwipeRefreshLayout.OnRefreshListener, TransactionCursorAdapter.ActionListener, LoaderManager.LoaderCallbacks<Cursor>, CurrentWalletController {
 
     private static final String SECONDARY_PANEL_FRAGMENT_TAG = "CalendarMultiPanelFragment::Tag::TransactionItemFragment";
 
@@ -135,6 +135,7 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
         // After setFirstDate above that day is 1 January 1900, which a restored date can equal.
         mTimelineView.setSelectedDate(year, month, day);
         mTimelineView.setOnDateSelectedListener(this);
+        mTimelineView.setOnMonthScrolledListener(this);
         onDateSelected(year, month, day, mTimelineView.getSelectedPosition());
         LoaderManager.getInstance(this).initLoader(MARKED_DAYS_LOADER_ID, null, mMarkedDaysCallbacks);
     }
@@ -187,6 +188,27 @@ public class CalendarMultiPanelFragment extends MultiPanelAppBarItemFragment imp
         mMonthView.setSelectedMonth(year, month, false, true);
         loadTransactions(year, month, day);
         mAdvancedRecyclerView.setState(AdvancedRecyclerView.State.LOADING);
+    }
+
+    /**
+     * The month row names the month the strip is on, so dragging the strip into another month
+     * moves the row with it. A day number says nothing about which month it belongs to, and the
+     * row is the only thing on the screen that appears to answer that.
+     *
+     * Nothing is done while the strip is still inside the month the row already shows, because
+     * setSelectedMonth centers the row on every call and the row would slide under the finger
+     * through a whole month of cells.
+     *
+     * Without callListener the row would call back into onMonthSelected below, which sends the
+     * strip to the first of the month and takes it out from under the drag. The day selected and
+     * the list under the strip are left alone, which is why the transactions are not loaded again.
+     */
+    @Override
+    public void onMonthScrolled(int year, int month) {
+        if (year == mMonthView.getSelectedYear() && month == mMonthView.getSelectedMonth()) {
+            return;
+        }
+        mMonthView.setSelectedMonth(year, month, false, true);
     }
 
     @Override
