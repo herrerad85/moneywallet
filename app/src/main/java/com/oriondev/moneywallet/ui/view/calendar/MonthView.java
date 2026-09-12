@@ -110,13 +110,15 @@ public class MonthView extends RecyclerView {
         if (yearDigitCount <= 0) {
             return "";
         }
-        char widest = '0';
-        float widestWidth = 0f;
-        for (char digit = '0'; digit <= '9'; digit++) {
-            float width = paint.measureText(String.valueOf(digit));
+        // the digits as the locale writes them, which is not the Latin set in every language
+        String widest = String.format(Locale.getDefault(), "%d", 0);
+        float widestWidth = paint.measureText(widest);
+        for (int value = 1; value <= 9; value++) {
+            String rendered = String.format(Locale.getDefault(), "%d", value);
+            float width = paint.measureText(rendered);
             if (width > widestWidth) {
                 widestWidth = width;
-                widest = digit;
+                widest = rendered;
             }
         }
         StringBuilder year = new StringBuilder(" ");
@@ -410,7 +412,10 @@ public class MonthView extends RecyclerView {
             String text = monthName(month);
             if (yearDigitCount > 0) {
                 text += " ";
-                text += year % (int) Math.pow(10, yearDigitCount);
+                // padded, because a year ending in 00 through 09 leaves a remainder of one
+                // digit, and 2009 unpadded reads as the year 9
+                text += String.format(Locale.getDefault(), "%0" + yearDigitCount + "d",
+                        year % (int) Math.pow(10, yearDigitCount));
             }
             lbl.setText(text);
             int color = selected ? colorSelected : beforeSelection ? colorBeforeSelection : defaultColor;
